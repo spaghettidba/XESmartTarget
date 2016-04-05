@@ -10,7 +10,7 @@ namespace XESmartTarget
     {
         static void Main(string[] args)
         {
-            ///
+            
         }
     }
 }
