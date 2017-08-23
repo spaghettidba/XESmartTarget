@@ -1,0 +1,17 @@
+{
+  "ServerName": "(local)",
+  "Target": {
+    "Responses": [
+      {
+        "__type": "TableAppenderResponse",
+        "TargetTable": "someTable",
+        "DelaySeconds": 0,
+        "Filter": "someField = SomeValue",
+        "Events": [
+          "SomeEvent"
+        ]
+      }
+    ],
+    "SessionName": "system_health"
+  }
+}
