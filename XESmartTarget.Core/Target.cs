@@ -22,6 +22,8 @@ namespace XESmartTarget.Core
         public string ServerName { get; set; }
         public string SessionName { get; set; }
 
+        private bool stopped = false;
+
         public void Start()
         {
             string connectionString = "Data Source=" + ServerName + "; Initial Catalog=master; Integrated Security = SSPI";
@@ -40,6 +42,10 @@ namespace XESmartTarget.Core
             {
                 foreach (PublishedEvent xevent in eventStream)
                 {
+                    if (stopped)
+                    {
+                        break;
+                    }
                     // Pass events to the responses
                     foreach (Response r in Responses)
                     {
@@ -62,6 +68,12 @@ namespace XESmartTarget.Core
                 throw;
             }
 
+            logger.Info("Quitting");
+        }
+
+        public void Stop()
+        {
+            stopped = true;
         }
     }
 }

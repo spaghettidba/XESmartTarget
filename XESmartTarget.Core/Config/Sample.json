@@ -1,17 +1,19 @@
 {
-  "ServerName": "(local)",
   "Target": {
+    "ServerName": "(local)",
+    "SessionName": "test_session",
     "Responses": [
       {
         "__type": "TableAppenderResponse",
-        "TargetTable": "someTable",
-        "DelaySeconds": 0,
-        "Filter": "someField = 'SomeValue'",
+        "TargetServer": "(local)",
+        "TargetDatabase": "XESmartTargetTest",
+        "TargetTable": "Test_session_data",
+        "AutoCreateTargetTable": true,
+        "UploadIntervalSeconds": 10,
         "Events": [
-          "SomeEvent"
+          "sql_batch_completed"
         ]
       }
-    ],
-    "SessionName": "system_health"
+    ]
   }
 }

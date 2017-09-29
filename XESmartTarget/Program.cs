@@ -21,7 +21,6 @@ namespace XESmartTarget
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
             string version = fvi.FileMajorPart.ToString() + "." + fvi.FileMinorPart.ToString() + "." + fvi.FileBuildPart.ToString(); 
             string name = assembly.FullName;
-
             logger.Info(name + " " + version);
 
             var options = new Options();
@@ -37,6 +36,12 @@ namespace XESmartTarget
             logger.Info(String.Format("Reading configuration from '{0}'", options.ConfigurationFile));
 
             TargetConfig config = TargetConfig.LoadFromFile(options.ConfigurationFile);
+
+            Console.CancelKeyPress += delegate (object sender, ConsoleCancelEventArgs e) {
+                e.Cancel = true;
+                logger.Info("Received shutdown signal...");
+                config.Target.Stop();
+            };
 
             logger.Info("Starting Target");
             config.Target.Start();

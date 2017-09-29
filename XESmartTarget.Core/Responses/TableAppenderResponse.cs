@@ -84,7 +84,7 @@ namespace XESmartTarget.Core.Responses
         {
             if (AutoCreateTargetTable)
             {
-                logger.Trace("Creating target table {0}.{1}.{2}",TargetServer,TargetDatabase,TargetTable);
+                logger.Info("Creating target table {0}.{1}.{2}",TargetServer,TargetDatabase,TargetTable);
                 CreateTargetTable();
                 TargetTableCreated = true;
             }
@@ -109,7 +109,7 @@ namespace XESmartTarget.Core.Responses
 
         protected void Upload()
         {
-            logger.Trace("Writing XE data");
+            logger.Info("Writing XE data");
 
             int numRows;
 
@@ -135,7 +135,7 @@ namespace XESmartTarget.Core.Responses
                 }
 
             }
-            logger.Trace(String.Format("{0} rows written",numRows));
+            logger.Info(String.Format("{0} rows written",numRows));
         }
 
 
@@ -221,6 +221,7 @@ namespace XESmartTarget.Core.Responses
 
             DataRow row = eventsTable.NewRow();
             row.SetField("Name", evt.Name);
+            row.SetField("collection_time", evt.Timestamp.LocalDateTime);
 
             foreach (PublishedEventField fld in evt.Fields)
             {
