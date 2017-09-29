@@ -26,4 +26,8 @@ For instance, the following configuration file instructs XESmartTarget to connec
         }
     }
 
+Here is the output it produces: Inline-style: 
+![alt text](https://github.com/spaghettidba/markdown-here/raw/master/src/common/images/icon48.png "Screenshot")
+
+
 XESmartTarget is the simplest way to write Extended Events data to a database table.
