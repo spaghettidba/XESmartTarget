@@ -1,4 +1,5 @@
 ﻿using Microsoft.SqlServer.XEvent.Linq;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,9 @@ namespace XESmartTarget.Core
 {
     public class Target
     {
+
+        private static Logger logger = LogManager.GetCurrentClassLogger();
+
         public Target()
         {
 
@@ -22,19 +26,40 @@ namespace XESmartTarget.Core
         {
             string connectionString = "Data Source=" + ServerName + "; Initial Catalog=master; Integrated Security = SSPI";
 
+            logger.Info(String.Format("Connecting to XE session '{0}' on server '{1}'", SessionName,ServerName));
+
             QueryableXEventData eventStream = new QueryableXEventData(
                 connectionString, 
                 SessionName, 
                 EventStreamSourceOptions.EventStream, 
-                EventStreamCacheOptions.DoNotCache); 
+                EventStreamCacheOptions.DoNotCache);
 
-            foreach(PublishedEvent xevent in eventStream)
+            logger.Info("Connected.");
+
+            try
             {
-                // Pass events to the responses
-                foreach (Response r in Responses)
+                foreach (PublishedEvent xevent in eventStream)
                 {
-                    r.Process(xevent);
+                    // Pass events to the responses
+                    foreach (Response r in Responses)
+                    {
+                        // filter out unwanted events
+                        // if no events are specified, will process all
+                        if (r.Events.Count > 0)
+                        {
+                            if (!r.Events.Contains(xevent.Name))
+                            {
+                                continue;
+                            }
+                        }
+                        r.Process(xevent);
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                logger.Error(e);
+                throw;
             }
 
         }

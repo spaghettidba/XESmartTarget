@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,28 +10,40 @@ namespace XESmartTarget.Core.Config
 {
     public class TargetConfig
     {
-        public string ServerName { get; set; }
         public Target Target { get; set; }
 
 
-        public static void test()
+        public static void Test()
         {
             JavaScriptSerializer ser = new JavaScriptSerializer(new TargetConfigTypeResolver());
-            TargetConfig x = new TargetConfig();
-            x.ServerName = "(local)";
-            x.Target = new Target();
+            TargetConfig x = new TargetConfig()
+            {
+                Target = new Target()
+            };
             x.Target.SessionName = "system_health";
-            Responses.TableAppenderResponse res = new Responses.TableAppenderResponse();
-            res.DelaySeconds = 0;
-            res.TargetTable = "someTable";
-            res.Filter = "someField = \"SomeValue\"";
+            Responses.TableAppenderResponse res = new Responses.TableAppenderResponse()
+            {
+                UploadIntervalSeconds = 0,
+                TargetTable = "someTable",
+                Filter = "someField = \"SomeValue\""
+            };
             res.Events.Add("SomeEvent");
             x.Target.Responses.Add(res);
             string s = ser.Serialize(x);
 
             TargetConfig tc = ser.Deserialize<TargetConfig>(Samples.Sample.ToString());
-
             
+        }
+
+
+        public static TargetConfig LoadFromFile(string path)
+        {
+            JavaScriptSerializer ser = new JavaScriptSerializer(new TargetConfigTypeResolver());
+            using (StreamReader r = new StreamReader(path))
+            {
+                string json = r.ReadToEnd();
+                return ser.Deserialize<TargetConfig>(json);
+            }
         }
 
     }

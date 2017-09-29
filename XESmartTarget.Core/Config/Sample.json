@@ -6,7 +6,7 @@
         "__type": "TableAppenderResponse",
         "TargetTable": "someTable",
         "DelaySeconds": 0,
-        "Filter": "someField = SomeValue",
+        "Filter": "someField = 'SomeValue'",
         "Events": [
           "SomeEvent"
         ]
