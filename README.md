@@ -1,5 +1,7 @@
 # XESmartTarget
 
+XESmartTarget is the simplest way to write Extended Events data to a database table.
+
 XESmartTarget is a command line tool to help you working with SQL Server Extended Events. It offers the ability to perform custom actions in response to Events, in a way that is not possible by using the built-in targets.
 
 While you are free to extend XESmartTarget with your own Response types, XESmartTarget does not require any coding. Instead, it can be configured with simple `.json` configuration files.
@@ -32,4 +34,4 @@ Here is the output it produces:
 And here is the output it produces in the database:
 ![Screenshot 2](https://github.com/spaghettidba/XESmartTarget/blob/master/Images/Screenshot2.png?raw=true "Screenshot")
 
-XESmartTarget is the simplest way to write Extended Events data to a database table.
+For the moment, only `TableAppenderResponse` is available, but new Response types are in the works, such as `EmailResponse` (why not getting an email for some type of events?) and `GroupedTableAppenderResponse` (groups data before writing to a table). Suggestions for Response Types are more than welcome.
