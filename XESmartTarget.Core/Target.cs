@@ -21,12 +21,32 @@ namespace XESmartTarget.Core
         public List<Response> Responses { get; set; } = new List<Response>();
         public string ServerName { get; set; }
         public string SessionName { get; set; }
+        public string UserName { get; set; }
+        public string Password { get; set; }
+        public string DatabaseName { get; set; }
 
         private bool stopped = false;
 
         public void Start()
         {
-            string connectionString = "Data Source=" + ServerName + "; Initial Catalog=master; Integrated Security = SSPI";
+            string connectionString = "Data Source=" + ServerName + ";";
+            if (String.IsNullOrEmpty(DatabaseName))
+            {
+                connectionString += "Initial Catalog = master; ";
+            }
+            else
+            {
+                connectionString += "Initial Catalog = " + DatabaseName + "; ";
+            }
+            if (String.IsNullOrEmpty(UserName))
+            {
+                connectionString += "Integrated Security = SSPI; ";
+            }
+            else
+            {
+                connectionString += "User Id = " + UserName + "; ";
+                connectionString += "Password = " + Password + "; ";
+            }
 
             logger.Info(String.Format("Connecting to XE session '{0}' on server '{1}'", SessionName,ServerName));
 

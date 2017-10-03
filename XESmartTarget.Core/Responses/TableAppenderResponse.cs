@@ -26,7 +26,7 @@ namespace XESmartTarget.Core.Responses
         public string TargetTable { get; set; }
         public bool AutoCreateTargetTable { get; set; }
         public int UploadIntervalSeconds { get; set; } = 10;
-        public string OutputColumns { get; set; } // This is going to be used as the list of columns to output to the database table
+        public List<string> OutputColumns { get; set; } = new List<string>(); 
         protected DataTable EventsTable { get => eventsTable; set => eventsTable = value; }
 
         protected Task Uploader;
@@ -61,17 +61,6 @@ namespace XESmartTarget.Core.Responses
 
         protected void Enqueue(PublishedEvent evt)
         {
-            // TODO: Translate this comment
-            // Fare attenzione a come si caricano gli eventi in questo punto
-            // Se si tratta di un solo tipo di evento, le colonne saranno le stesse
-            // Altrimenti sarà difficile attribuire le stesse colonne ad eventi diversi
-            // Bisognerà anche aggiungere una lista delle colonne da salvare e matcharle
-            // Con le colonne della tabella nel db. Posso anche aggiungere delle colonne fittizie
-            // come il nome dell'evento, l'ora in cui si è registrato e cose così
-            // Meglio usare diverse DataTable per diversi eventi?
-            // Come gestisco la concorrenza dei thread? Meglio accodare in modo seriale
-            // Se voglio mandare eventi diversi su tabelle diverse, farò in modo di aggiungere
-            // Response di tipo diverso per eventi diversi
             ReadEvent(evt);
 
             if(!UploaderStarted)
@@ -178,7 +167,7 @@ namespace XESmartTarget.Core.Responses
             {
                 foreach (PublishedEventField fld in evt.Fields)
                 {
-                    if (!eventsTable.Columns.Contains(fld.Name))
+                    if (!eventsTable.Columns.Contains(fld.Name) && (OutputColumns.Count == 0 || OutputColumns.Contains(fld.Name)))
                     {
                         Type t;
                         DataColumn dc;
@@ -199,7 +188,7 @@ namespace XESmartTarget.Core.Responses
 
                 foreach (PublishedAction act in evt.Actions)
                 {
-                    if (!eventsTable.Columns.Contains(act.Name))
+                    if (!eventsTable.Columns.Contains(act.Name) && (OutputColumns.Count == 0 || OutputColumns.Contains(act.Name)))
                     {
                         Type t;
                         DataColumn dc;
@@ -219,38 +208,69 @@ namespace XESmartTarget.Core.Responses
                 }
             }
 
-            DataRow row = eventsTable.NewRow();
+            DataTable tmpTab = eventsTable.Clone();
+            DataRow row = tmpTab.NewRow();
             row.SetField("Name", evt.Name);
             row.SetField("collection_time", evt.Timestamp.LocalDateTime);
 
             foreach (PublishedEventField fld in evt.Fields)
             {
-                if ((bool)row.Table.Columns[fld.Name].ExtendedProperties["disallowedtype"])
+                if (row.Table.Columns.Contains(fld.Name))
                 {
-                    row.SetField(fld.Name, fld.Value.ToString());
-                }
-                else
-                {
-                    row.SetField(fld.Name, fld.Value);
+                    if ((bool)row.Table.Columns[fld.Name].ExtendedProperties["disallowedtype"])
+                    {
+                        row.SetField(fld.Name, fld.Value.ToString());
+                    }
+                    else
+                    {
+                        row.SetField(fld.Name, fld.Value);
+                    }
                 }
             }
 
             foreach (PublishedAction act in evt.Actions)
             {
-                if ((bool)row.Table.Columns[act.Name].ExtendedProperties["disallowedtype"])
+                if (row.Table.Columns.Contains(act.Name))
                 {
-                    row.SetField(act.Name, act.Value.ToString());
-                }
-                else
-                {
-                    row.SetField(act.Name, act.Value);
+                    if ((bool)row.Table.Columns[act.Name].ExtendedProperties["disallowedtype"])
+                    {
+                        row.SetField(act.Name, act.Value.ToString());
+                    }
+                    else
+                    {
+                        row.SetField(act.Name, act.Value);
+                    }
                 }
             }
 
-            lock (eventsTable)
+            if(!String.IsNullOrEmpty(Filter))
             {
-                eventsTable.Rows.Add(row);
+                
+                DataView dv = new DataView(tmpTab);
+                dv.RowFilter = Filter;
+
+                tmpTab.Rows.Add(row);
+
+                lock (eventsTable)
+                {
+                    foreach (DataRow dr in dv.ToTable().Rows)
+                    {
+                        EventsTable.ImportRow(dr);
+                    }
+                }
             }
+            else
+            {
+                tmpTab.Rows.Add(row);
+                lock (eventsTable)
+                {
+                    foreach (DataRow dr in tmpTab.Rows)
+                    {
+                        EventsTable.ImportRow(dr);
+                    }
+                }
+            } 
+            
         }
 
 
