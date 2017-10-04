@@ -51,6 +51,8 @@ For instance, the following configuration file instructs XESmartTarget to connec
 }
 ```
 
+A complete description of all the setting you can control in the `.JSON` input file can be found in the [Documentation](./Documentation/Documentation.md).
+
 Here is the output it produces: 
 ![Screenshot 1](https://github.com/spaghettidba/XESmartTarget/blob/master/Images/Screenshot1.png?raw=true "Screenshot")
 
