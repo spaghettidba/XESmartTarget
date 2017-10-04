@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DouglasCrockford.JsMin;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -42,7 +43,9 @@ namespace XESmartTarget.Core.Config
             using (StreamReader r = new StreamReader(path))
             {
                 string json = r.ReadToEnd();
-                return ser.Deserialize<TargetConfig>(json);
+                var minifier = new JsMinifier();
+                string jsonMin = minifier.Minify(json);
+                return ser.Deserialize<TargetConfig>(jsonMin);
             }
         }
 

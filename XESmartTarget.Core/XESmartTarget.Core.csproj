@@ -30,6 +30,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DouglasCrockford.JsMin, Version=1.1.3.0, Culture=neutral, PublicKeyToken=99147aa1108448b7, processorArchitecture=MSIL">
+      <HintPath>..\packages\DouglasCrockford.JsMin.1.1.3\lib\net40-client\DouglasCrockford.JsMin.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.SqlServer.XE.Core, Version=14.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files\Microsoft SQL Server\130\Shared\Microsoft.SqlServer.XE.Core.dll</HintPath>

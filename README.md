@@ -16,6 +16,7 @@ For instance, the following configuration file instructs XESmartTarget to connec
         "SessionName": "test_session",
         "Responses": [
             {
+                //  JSON config files can contain comments
                 "__type": "TableAppenderResponse",
                 "ServerName": "(local)",
                 "DatabaseName": "XESmartTargetTest",
