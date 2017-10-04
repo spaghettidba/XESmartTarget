@@ -9,44 +9,46 @@ While you are free to extend XESmartTarget with your own Response types, XESmart
 For instance, the following configuration file instructs XESmartTarget to connect to the server `(local)`, hook to the Extended Events session `test_session` and forward all the events of type `sql_batch_completed` to a Response of type `TableAppenderResponse`, which will insert all events every `10 seconds` into a table named `test_session_data` in the server `(local)`, Database `XESmartTargetTest`, only the columns specified, only the rows with duration > 10000 microseconds.
 <BR>It will also replay the `sql_batch_completed` events to the instance `(local)\SQL2014` using the `ReplayResponse` Response type.
 
-    {
-        "Target": {
-            "ServerName": "(local)",
-            "SessionName": "test_session",
-            "Responses": [
-                {
-                    "__type": "TableAppenderResponse",
-                    "ServerName": "(local)",
-                    "DatabaseName": "XESmartTargetTest",
-                    "TableName": "test_session_data",
-                    "AutoCreateTargetTable": true,
-                    "UploadIntervalSeconds": 10,
-                    "Events": [
-                        "sql_batch_completed"
-                    ],
-                    "OutputColumns": [
-                        "cpu_time", 
-                        "duration", 
-                        "physical_reads", 
-                        "logical_reads", 
-                        "writes", 
-                        "row_count", 
-                        "batch_text"
-                    ],
-                    "Filter": "duration > 10000"
-                },
-                {
-                    "__type": "ReplayResponse",
-                    "ServerName": "(local)\\SQL2014",
-                    "DatabaseName": "XESmartTargetTest",
-                    "Events": [
-                        "sql_batch_completed"
-                    ],
-                    "StopOnError" : false
-                }
-            ]
-        }
+```json
+{
+    "Target": {
+        "ServerName": "(local)",
+        "SessionName": "test_session",
+        "Responses": [
+            {
+                "__type": "TableAppenderResponse",
+                "ServerName": "(local)",
+                "DatabaseName": "XESmartTargetTest",
+                "TableName": "test_session_data",
+                "AutoCreateTargetTable": true,
+                "UploadIntervalSeconds": 10,
+                "Events": [
+                    "sql_batch_completed"
+                ],
+                "OutputColumns": [
+                    "cpu_time", 
+                    "duration", 
+                    "physical_reads", 
+                    "logical_reads", 
+                    "writes", 
+                    "row_count", 
+                    "batch_text"
+                ],
+                "Filter": "duration > 10000"
+            },
+            {
+                "__type": "ReplayResponse",
+                "ServerName": "(local)\\SQL2014",
+                "DatabaseName": "XESmartTargetTest",
+                "Events": [
+                    "sql_batch_completed"
+                ],
+                "StopOnError" : false
+            }
+        ]
     }
+}
+```
 
 Here is the output it produces: 
 ![Screenshot 1](https://github.com/spaghettidba/XESmartTarget/blob/master/Images/Screenshot1.png?raw=true "Screenshot")
