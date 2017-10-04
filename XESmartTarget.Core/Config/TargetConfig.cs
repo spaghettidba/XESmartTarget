@@ -24,7 +24,7 @@ namespace XESmartTarget.Core.Config
             Responses.TableAppenderResponse res = new Responses.TableAppenderResponse()
             {
                 UploadIntervalSeconds = 0,
-                TargetTable = "someTable",
+                TableName = "someTable",
                 Filter = "someField = \"SomeValue\""
             };
             res.Events.Add("SomeEvent");

@@ -60,6 +60,7 @@
     <Compile Include="Config\TargetConfigTypeResolver.cs" />
     <Compile Include="Config\TargetConfig.cs" />
     <Compile Include="Responses\GroupedTableAppenderResponse.cs" />
+    <Compile Include="Responses\ReplayResponse.cs" />
     <Compile Include="Responses\TableAppenderResponse.cs" />
     <Compile Include="Target.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -22,7 +22,7 @@ namespace XESmartTarget.Core
         // Returns whether the event is subscribed to this response or not
         public Boolean IsSubscribed(PublishedEvent evt)
         {
-            return Events.Contains("*") || Events.Contains(evt.Name);
+            return Events.Count == 0 || Events.Contains("*") || Events.Contains(evt.Name);
         }
 
     }

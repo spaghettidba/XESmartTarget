@@ -21,9 +21,11 @@ namespace XESmartTarget.Core.Responses
             logger.Info(String.Format("Initializing Response of Type '{0}'", this.GetType().FullName));
         }
 
-        public string TargetServer { get; set; }
-        public string TargetDatabase { get; set; }
-        public string TargetTable { get; set; }
+        public string ServerName { get; set; }
+        public string DatabaseName { get; set; }
+        public string TableName { get; set; }
+        public string UserName { get; set; }
+        public string Password { get; set; }
         public bool AutoCreateTargetTable { get; set; }
         public int UploadIntervalSeconds { get; set; } = 10;
         public List<string> OutputColumns { get; set; } = new List<string>(); 
@@ -36,7 +38,18 @@ namespace XESmartTarget.Core.Responses
             get
             {
                 int ConnectionTimeout = 15;
-                string s = String.Format("Server={0};Database={1};Integrated Security=True;Connect Timeout={2}", TargetServer, TargetDatabase, ConnectionTimeout);
+                string s = "Server=" + ServerName + ";";
+                s += "Database=" + DatabaseName + ";";
+                if (String.IsNullOrEmpty(UserName))
+                {
+                    s += "Integrated Security = True;";
+                }
+                else
+                {
+                    s += "User Id=" + UserName + ";";
+                    s += "Password=" + Password + ";";
+                }
+                s += "Connection Timeout=" + ConnectionTimeout;
                 logger.Debug(s);
                 return s;
             }
@@ -73,7 +86,7 @@ namespace XESmartTarget.Core.Responses
         {
             if (AutoCreateTargetTable)
             {
-                logger.Info("Creating target table {0}.{1}.{2}",TargetServer,TargetDatabase,TargetTable);
+                logger.Info("Creating target table {0}.{1}.{2}",ServerName,DatabaseName,TableName);
                 CreateTargetTable();
                 TargetTableCreated = true;
             }
@@ -116,7 +129,7 @@ namespace XESmartTarget.Core.Responses
                 {
                     DataTableTSQLAdapter adapter = new DataTableTSQLAdapter(EventsTable, conn)
                     {
-                        DestinationTableName = TargetTable
+                        DestinationTableName = TableName
                     };
                     adapter.WriteToServer();
                     numRows = EventsTable.Rows.Count;
@@ -135,7 +148,7 @@ namespace XESmartTarget.Core.Responses
                 //
                 // Add Collection Time column
                 //
-                if (!eventsTable.Columns.Contains("collection_time"))
+                if (!eventsTable.Columns.Contains("collection_time") && (OutputColumns.Count == 0 || OutputColumns.Contains("collection_time")))
                 {
                     DataColumn cl_dt = new DataColumn("collection_time", typeof(DateTime))
                     {
@@ -149,7 +162,7 @@ namespace XESmartTarget.Core.Responses
                 //
                 // Add Name column
                 //
-                if (!eventsTable.Columns.Contains("Name"))
+                if (!eventsTable.Columns.Contains("Name") && (OutputColumns.Count == 0 || OutputColumns.Contains("Name")))
                 {
                     eventsTable.Columns.Add("Name", typeof(String));
                     eventsTable.Columns["Name"].ExtendedProperties.Add("auto_column", true);
@@ -210,8 +223,14 @@ namespace XESmartTarget.Core.Responses
 
             DataTable tmpTab = eventsTable.Clone();
             DataRow row = tmpTab.NewRow();
-            row.SetField("Name", evt.Name);
-            row.SetField("collection_time", evt.Timestamp.LocalDateTime);
+            if (row.Table.Columns.Contains("Name"))
+            {
+                row.SetField("Name", evt.Name);
+            }
+            if (row.Table.Columns.Contains("collection_time"))
+            {
+                row.SetField("collection_time", evt.Timestamp.LocalDateTime);
+            }
 
             foreach (PublishedEventField fld in evt.Fields)
             {
@@ -283,7 +302,7 @@ namespace XESmartTarget.Core.Responses
 
                 DataTableTSQLAdapter adapter = new DataTableTSQLAdapter(eventsTable, conn)
                 {
-                    DestinationTableName = TargetTable
+                    DestinationTableName = TableName
                 };
                 if (!adapter.CheckTableExists())
                 {
