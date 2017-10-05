@@ -1,6 +1,6 @@
 # XESmartTarget
 
-XESmartTarget is the simplest way to write Extended Events data to a database table.
+*XESmartTarget is the simplest way to write Extended Events data to a database table. But wait: there's more! XESmartTarget is the easiest way to process events without writing a single line of code!*
 
 XESmartTarget is a command line tool to help you working with SQL Server Extended Events. It offers the ability to perform custom actions in response to Events, in a way that is not possible by using the built-in targets.
 
