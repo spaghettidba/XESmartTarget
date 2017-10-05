@@ -61,3 +61,5 @@ And here is the output it produces in the database:
 
 For the moment, only `TableAppenderResponse` and `ReplayRespose` are available, but new Response types are in the works, such as `EmailResponse` (why not getting an email for some type of events?) and `GroupedTableAppenderResponse` (groups data before writing to a table). 
 <BR>Suggestions for Response Types are more than welcome.
+
+Check out the [Documentation](./Documentation/Documentation.md) for more information.
