@@ -111,7 +111,7 @@ namespace XESmartTarget.Core.Responses
 
         protected void Upload()
         {
-            logger.Info("Writing XE data");
+            logger.Trace("Writing XE data");
 
             int numRows;
 
