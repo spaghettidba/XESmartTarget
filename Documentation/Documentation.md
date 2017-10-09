@@ -23,7 +23,7 @@ The syntax is the following:
 XESmartTarget -F <path to the .JSON configuration file>
 ```
 
-## `.JSON` Configuration Files
+## .JSON Configuration Files
 
 The general structure of a `.JSON` configuration file is the following:
 
@@ -84,6 +84,7 @@ Here follows the list of the available `Response` subclasses available at the mo
 
 * [TableAppenderReponse](./TableAppenderResponse.md)
 * [ReplayReponse](./ReplayResponse.md)
+* [EmailReponse](./EmailResponse.md)
 
 ## Logging
 
