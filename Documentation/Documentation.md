@@ -84,7 +84,7 @@ Here follows the list of the available `Response` subclasses available at the mo
 
 * [TableAppenderReponse](./TableAppenderResponse.md)
 * [ReplayReponse](./ReplayResponse.md)
-* [EmailReponse](./EmailResponse.md)
+* [EmailResponse](./EmailResponse.md)
 
 ## Logging
 
