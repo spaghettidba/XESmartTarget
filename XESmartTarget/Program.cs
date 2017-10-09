@@ -50,6 +50,7 @@ namespace XESmartTarget
             logger.Info("Starting Target");
             Task t = processTargetAsync(config.Target);
             t.Wait();
+            logger.Info("Target process ended");
         }
 
         public static async Task processTargetAsync(Target target)

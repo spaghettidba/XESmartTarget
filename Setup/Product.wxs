@@ -37,6 +37,8 @@
         <Component Id="cmp_10" Guid="{8444CD6D-D129-46CB-99A6-0BA39AA4C81F}"><File Id="file_10" KeyPath="yes" Source="..\XESmartTarget\bin\Release\XESmartTarget.exe" /></Component>
         <Component Id="cmp_11" Guid="{638E19A5-EC2E-47D7-A333-C89558B6E9D5}"><File Id="file_11" KeyPath="yes" Source="..\XESmartTarget\bin\Release\XESmartTarget.exe.config" /></Component>
         <Component Id="cmp_12" Guid="{58961F6E-3929-4DB0-9BAA-6D0653E920C7}"><File Id="file_12" KeyPath="yes" Source="..\XESmartTarget\bin\Release\XESmartTarget.pdb" /></Component>
+        <Component Id="cmp_13" Guid="{96B88BA7-A376-45E1-9D4E-D8A655786706}"><File Id="file_13" KeyPath="yes" Source="..\XESmartTarget\bin\Release\SmartFormat.dll" /></Component>
+        <Component Id="cmp_14" Guid="{26D79629-B1AA-4F69-8A99-F96B2485342C}"><File Id="file_14" KeyPath="yes" Source="..\XESmartTarget\bin\Release\DouglasCrockford.JsMin.dll" /></Component>
     </ComponentGroup>
 	</Fragment>
 </Wix>

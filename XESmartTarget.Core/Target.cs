@@ -24,6 +24,7 @@ namespace XESmartTarget.Core
         public string UserName { get; set; }
         public string Password { get; set; }
         public string DatabaseName { get; set; }
+        public bool FailOnProcessingError { get; set; } = false;
 
         private bool stopped = false;
 
@@ -78,7 +79,21 @@ namespace XESmartTarget.Core
                                 continue;
                             }
                         }
-                        r.Process(xevent);
+                        try
+                        {
+                            r.Process(xevent);
+                        }
+                        catch(Exception e)
+                        {
+                            if (FailOnProcessingError)
+                            {
+                                throw;
+                            }
+                            else
+                            {
+                                logger.Error(e);
+                            }
+                        }
                     }
                 }
             }

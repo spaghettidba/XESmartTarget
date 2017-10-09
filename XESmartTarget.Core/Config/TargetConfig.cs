@@ -44,6 +44,9 @@ namespace XESmartTarget.Core.Config
             {
                 string json = r.ReadToEnd();
                 var minifier = new JsMinifier();
+                // minify JSON to strip away comments
+                // Comments in config files are very useful but JSON parsers
+                // do not allow comments. Minification solves the issue.
                 string jsonMin = minifier.Minify(json);
                 return ser.Deserialize<TargetConfig>(jsonMin);
             }

@@ -44,6 +44,9 @@
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.4.4.12\lib\net45\NLog.dll</HintPath>
     </Reference>
+    <Reference Include="SmartFormat, Version=2.1.0.2, Culture=neutral, PublicKeyToken=568866805651201f, processorArchitecture=MSIL">
+      <HintPath>..\packages\SmartFormat.Net.2.1.0.2\lib\net45\SmartFormat.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Web.Extensions" />
@@ -62,6 +65,7 @@
     </Compile>
     <Compile Include="Config\TargetConfigTypeResolver.cs" />
     <Compile Include="Config\TargetConfig.cs" />
+    <Compile Include="Responses\EmailResponse.cs" />
     <Compile Include="Responses\GroupedTableAppenderResponse.cs" />
     <Compile Include="Responses\ReplayResponse.cs" />
     <Compile Include="Responses\TableAppenderResponse.cs" />
@@ -69,6 +73,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Response.cs" />
     <Compile Include="Utils\DataTableTSQLAdapter.cs" />
+    <Compile Include="Utils\XEventDataTableAdapter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Config\Sample.json" />

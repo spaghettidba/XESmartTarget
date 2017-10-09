@@ -9,6 +9,7 @@ using NLog;
 using System.Data;
 using System.Threading;
 using System.Collections.Concurrent;
+using XESmartTarget.Core.Utils;
 
 namespace XESmartTarget.Core.Responses
 {
@@ -26,126 +27,25 @@ namespace XESmartTarget.Core.Responses
 
         private DataTable eventsTable = new DataTable("events");
         private ConcurrentDictionary<int, ReplayWorker> ReplayWorkers = new ConcurrentDictionary<int, ReplayWorker>();
+        private XEventDataTableAdapter xeadapter;
 
         private Task ReplayTask = null;
 
         public ReplayResponse()
         {
-
-        }
-
-
-        private void PrepareDataTable()
-        {
-            lock (eventsTable)
-            {
-                //
-                // Add Collection Time column
-                //
-                if (!eventsTable.Columns.Contains("collection_time"))
-                {
-                    DataColumn cl_dt = new DataColumn("collection_time", typeof(DateTime));
-                    eventsTable.Columns.Add(cl_dt);
-                }
-
-
-                //
-                // Add Name column
-                //
-                if (!eventsTable.Columns.Contains("Name"))
-                {
-                    eventsTable.Columns.Add("Name", typeof(String));
-                }
-            }
-        }
-
-        private void ReadEvent(PublishedEvent evt)
-        {
-            PrepareDataTable();
-            //
-            // Read event data
-            //
-            lock (eventsTable)
-            {
-                foreach (PublishedEventField fld in evt.Fields)
-                {
-                    if (!eventsTable.Columns.Contains(fld.Name))
-                    {
-                        DataColumn dc = eventsTable.Columns.Add(fld.Name, fld.Type);
-                    }
-                }
-
-                foreach (PublishedAction act in evt.Actions)
-                {
-                    if (!eventsTable.Columns.Contains(act.Name))
-                    {
-                        DataColumn dc = eventsTable.Columns.Add(act.Name, act.Type);
-                    }
-                }
-            }
-
-            DataTable tmpTab = eventsTable.Clone();
-            DataRow row = tmpTab.NewRow();
-
-            if (row.Table.Columns.Contains("Name"))
-            {
-                row.SetField("Name", evt.Name);
-            }
-            if (row.Table.Columns.Contains("collection_time"))
-            {
-                row.SetField("collection_time", evt.Timestamp.LocalDateTime);
-            }
-
-            foreach (PublishedEventField fld in evt.Fields)
-            {
-                if (row.Table.Columns.Contains(fld.Name))
-                {
-                    row.SetField(fld.Name, fld.Value);
-                }
-            }
-
-            foreach (PublishedAction act in evt.Actions)
-            {
-                if (row.Table.Columns.Contains(act.Name))
-                {
-                    row.SetField(act.Name, act.Value);
-                }
-            }
-
-            if (!String.IsNullOrEmpty(Filter))
-            {
-                DataView dv = new DataView(tmpTab);
-                dv.RowFilter = Filter;
-
-                tmpTab.Rows.Add(row);
-
-                lock (eventsTable)
-                {
-                    foreach (DataRow dr in dv.ToTable().Rows)
-                    {
-                        eventsTable.ImportRow(dr);
-                    }
-                }
-            }
-            else
-            {
-                tmpTab.Rows.Add(row);
-                lock (eventsTable)
-                {
-                    foreach (DataRow dr in tmpTab.Rows)
-                    {
-                        eventsTable.ImportRow(dr);
-                    }
-                }
-            }
-
+            logger.Info(String.Format("Initializing Response of Type '{0}'", this.GetType().FullName));
         }
 
 
         public override void Process(PublishedEvent evt)
         {
-
-            ReadEvent(evt);
+            if(xeadapter == null)
+            {
+                xeadapter = new XEventDataTableAdapter(eventsTable);
+                xeadapter.Filter = this.Filter;
+                xeadapter.OutputColumns = new List<string>();
+            }
+            xeadapter.ReadEvent(evt);
 
             if (DelaySeconds == 0 && ReplayIntervalSeconds == 0)
             {
@@ -194,7 +94,7 @@ namespace XESmartTarget.Core.Responses
                     {
                         //ignore events not suitable for replay
                         logger.Debug(String.Format("Skipping event {0}", dr["Name"].ToString()));
-                        return;
+                        continue;
                     }
 
                     ReplayCommand command = new ReplayCommand() { CommandText = commandText };
