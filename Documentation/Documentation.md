@@ -23,6 +23,17 @@ The syntax is the following:
 XESmartTarget -F <path to the .JSON configuration file>
 ```
 
+## Architecture
+
+XESmartTarget hooks to an Extended Events session on a source SQL Server instance, then streams all the events to the set of responses defined in the configuration. 
+<BR>Each response treats events in a particular way (save to a database table, send an email...), depending on the nature of the `Response` subclass itself.
+
+The following diagram summarizes the architecture of XESmartTarget:
+
+![Architecture](./Architecture.png "Architecture")
+
+
+
 ## .JSON Configuration Files
 
 The general structure of a `.JSON` configuration file is the following:
