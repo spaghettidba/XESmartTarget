@@ -51,7 +51,7 @@ For instance, the following configuration file instructs XESmartTarget to connec
 }
 ```
 
-A complete description of all the setting you can control in the `.JSON` input file can be found in the [Documentation](./wiki).
+A complete description of all the setting you can control in the `.JSON` input file can be found in the [Documentation](https://github.com/spaghettidba/XESmartTarget/wiki).
 
 Here is the output it produces: 
 ![Screenshot 1](https://github.com/spaghettidba/XESmartTarget/blob/master/Images/Screenshot1.png?raw=true "Screenshot")
@@ -62,4 +62,4 @@ And here is the output it produces in the database:
 For the moment, only `TableAppenderResponse`, `ReplayRespose` and `EmailRespose` are available, but new Response types are in the works, such as `GroupedTableAppenderResponse` (groups data before writing to a table). 
 <BR>Suggestions for Response Types are more than welcome.
 
-Check out the [Documentation](./wiki) for more information.
+Check out the [Documentation](https://github.com/spaghettidba/XESmartTarget/wiki) for more information.
