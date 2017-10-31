@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace XESmartTarget.Core.Utils
@@ -79,6 +80,7 @@ namespace XESmartTarget.Core.Utils
                         dc = eventsTable.Columns.Add(fld.Name, t);
                         dc.ExtendedProperties.Add("subtype", "field");
                         dc.ExtendedProperties.Add("disallowedtype", disallowed);
+                        dc.ExtendedProperties.Add("calculated", false);
                     }
                 }
 
@@ -100,6 +102,35 @@ namespace XESmartTarget.Core.Utils
                         dc = eventsTable.Columns.Add(act.Name, t);
                         dc.ExtendedProperties.Add("subtype", "action");
                         dc.ExtendedProperties.Add("disallowedtype", disallowed);
+                        dc.ExtendedProperties.Add("calculated", false);
+                    }
+                }
+
+
+                // add calculated columns
+                for(int i=0;i<OutputColumns.Count;i++)
+                {
+                    string outCol = OutputColumns[i];
+                    if (!eventsTable.Columns.Contains(outCol))
+                    {
+                        if (outCol.Contains(" AS "))
+                        {
+                            var tokens = Regex.Split(outCol, @"\s+AS\s+", RegexOptions.IgnoreCase); 
+                            string colName = tokens[0];
+                            string colDefinition = tokens[1];
+
+                            DataColumn dc;
+                            dc = eventsTable.Columns.Add();
+                            dc.ColumnName = colName;
+                            dc.Expression = colDefinition;
+                            dc.ExtendedProperties.Add("subtype", "calculated");
+                            dc.ExtendedProperties.Add("disallowedtype", false);
+                            dc.ExtendedProperties.Add("calculated", true);
+
+                            //change OutputColumns
+                            OutputColumns[i] = colName;
+                        }
+
                     }
                 }
             }
