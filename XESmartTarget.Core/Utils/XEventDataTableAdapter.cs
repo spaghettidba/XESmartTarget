@@ -113,7 +113,7 @@ namespace XESmartTarget.Core.Utils
                     string outCol = OutputColumns[i];
                     if (!eventsTable.Columns.Contains(outCol))
                     {
-                        if (outCol.Contains(" AS "))
+                        if (Regex.IsMatch(outCol,@"\s+AS\s+",RegexOptions.IgnoreCase))
                         {
                             var tokens = Regex.Split(outCol, @"\s+AS\s+", RegexOptions.IgnoreCase); 
                             string colName = tokens[0];

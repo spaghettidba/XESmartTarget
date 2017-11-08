@@ -17,7 +17,7 @@ namespace XESmartTarget.Core.Responses
 
         }
 
-        public List<string> GroupBy { get; set; } // Groupby Expression (list of colunns to group on)
+        public List<string> GroupBy { get; set; } // Groupby Columns
         
     }
 }
