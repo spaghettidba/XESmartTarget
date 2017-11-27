@@ -35,11 +35,11 @@
     </Reference>
     <Reference Include="Microsoft.SqlServer.XE.Core, Version=14.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files\Microsoft SQL Server\130\Shared\Microsoft.SqlServer.XE.Core.dll</HintPath>
+      <HintPath>C:\Program Files\Microsoft SQL Server\140\Shared\Microsoft.SqlServer.XE.Core.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.SqlServer.XEvent.Linq, Version=14.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files\Microsoft SQL Server\130\Shared\Microsoft.SqlServer.XEvent.Linq.dll</HintPath>
+      <HintPath>C:\Program Files\Microsoft SQL Server\140\Shared\Microsoft.SqlServer.XEvent.Linq.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.4.4.12\lib\net45\NLog.dll</HintPath>
@@ -66,6 +66,7 @@
     <Compile Include="Config\TargetConfigTypeResolver.cs" />
     <Compile Include="Config\TargetConfig.cs" />
     <Compile Include="Responses\EmailResponse.cs" />
+    <Compile Include="Responses\ExecuteTSQLResponse.cs" />
     <Compile Include="Responses\GroupedTableAppenderResponse.cs" />
     <Compile Include="Responses\ReplayResponse.cs" />
     <Compile Include="Responses\TableAppenderResponse.cs" />
