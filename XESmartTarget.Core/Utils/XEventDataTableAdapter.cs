@@ -46,10 +46,10 @@ namespace XESmartTarget.Core.Utils
                 //
                 // Add Name column
                 //
-                if (!eventsTable.Columns.Contains("Name") && (OutputColumns.Count == 0 || OutputColumns.Contains("Name")))
+                if (!eventsTable.Columns.Contains("name") && (OutputColumns.Count == 0 || OutputColumns.Contains("name")))
                 {
-                    eventsTable.Columns.Add("Name", typeof(String));
-                    eventsTable.Columns["Name"].ExtendedProperties.Add("auto_column", true);
+                    eventsTable.Columns.Add("name", typeof(String));
+                    eventsTable.Columns["name"].ExtendedProperties.Add("auto_column", true);
                 }
             }
         }
@@ -137,9 +137,9 @@ namespace XESmartTarget.Core.Utils
 
             DataTable tmpTab = eventsTable.Clone();
             DataRow row = tmpTab.NewRow();
-            if (row.Table.Columns.Contains("Name"))
+            if (row.Table.Columns.Contains("name"))
             {
-                row.SetField("Name", evt.Name);
+                row.SetField("name", evt.Name);
             }
             if (row.Table.Columns.Contains("collection_time"))
             {

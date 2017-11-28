@@ -83,9 +83,18 @@ namespace XESmartTarget.Core.Responses
             logger.Trace("Executing TSQL command");
             using (SqlConnection conn = new SqlConnection())
             {
+
+                try
+                {
+                    conn.ConnectionString = ConnectionString;
+                    conn.Open();
+                }
+                catch(Exception e)
+                {
+                    logger.Error(String.Format("Error: {0}", e.Message));
+                    throw;
+                }
                 
-                conn.ConnectionString = ConnectionString;
-                conn.Open();
 
                 try
                 {
