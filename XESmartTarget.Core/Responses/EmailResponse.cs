@@ -13,7 +13,7 @@ using System.IO;
 
 namespace XESmartTarget.Core.Responses
 {
-    class EmailResponse : Response
+    public class EmailResponse : Response
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
 

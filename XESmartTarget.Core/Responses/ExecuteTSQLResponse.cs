@@ -12,7 +12,7 @@ using SmartFormat;
 
 namespace XESmartTarget.Core.Responses
 {
-    class ExecuteTSQLResponse : Response
+    public class ExecuteTSQLResponse : Response
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
 

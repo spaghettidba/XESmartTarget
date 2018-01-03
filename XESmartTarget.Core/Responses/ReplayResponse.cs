@@ -13,7 +13,7 @@ using XESmartTarget.Core.Utils;
 
 namespace XESmartTarget.Core.Responses
 {
-    class ReplayResponse : Response
+    public class ReplayResponse : Response
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
 
