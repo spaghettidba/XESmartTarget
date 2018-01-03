@@ -82,18 +82,18 @@ namespace XESmartTarget.Core.Responses
                 foreach (DataRow dr in eventsTable.Rows)
                 {
                     string commandText = null;
-                    if (dr["Name"].ToString() == "rpc_completed")
+                    if (dr["name"].ToString() == "rpc_completed")
                     {
                         commandText = dr["statement"].ToString();
                     }
-                    else if (dr["Name"].ToString() == "sql_batch_completed")
+                    else if (dr["name"].ToString() == "sql_batch_completed")
                     {
                         commandText = dr["batch_text"].ToString();
                     }
                     else
                     {
                         //ignore events not suitable for replay
-                        logger.Debug(String.Format("Skipping event {0}", dr["Name"].ToString()));
+                        logger.Debug(String.Format("Skipping event {0}", dr["name"].ToString()));
                         continue;
                     }
 

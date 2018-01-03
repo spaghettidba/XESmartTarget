@@ -59,7 +59,13 @@ Here is the output it produces:
 And here is the output it produces in the database:
 ![Screenshot 2](https://github.com/spaghettidba/XESmartTarget/blob/master/Images/Screenshot2.png?raw=true "Screenshot")
 
-For the moment, only `TableAppenderResponse`, `ReplayRespose` and `EmailRespose` are available, but new Response types are in the works, such as `GroupedTableAppenderResponse` (groups data before writing to a table). 
-<BR>Suggestions for Response Types are more than welcome.
+For the moment, the following Response types are available: 
+* `EmailResponse`
+* `ExecuteTSQLResponse`
+* `ReplayResponse`
+* `TableAppenderResponse`
+
+New Response types are in the works, such as `GroupedTableAppenderResponse` (groups data before writing to a table). 
+Suggestions for new Response Types are more than welcome.
 
 Check out the [Documentation](https://github.com/spaghettidba/XESmartTarget/wiki) for more information.
