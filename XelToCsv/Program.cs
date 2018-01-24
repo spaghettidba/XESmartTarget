@@ -1,0 +1,88 @@
+﻿using CommandLine;
+using CommandLine.Text;
+using NLog;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using XESmartTarget.Core.Utils;
+
+namespace XelToCsv
+{
+    class Program
+    {
+
+        private static Logger logger = LogManager.GetCurrentClassLogger();
+
+        static void Main(string[] args)
+        {
+            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+            string version = fvi.FileMajorPart.ToString() + "." + fvi.FileMinorPart.ToString() + "." + fvi.FileBuildPart.ToString();
+            string name = assembly.FullName;
+            logger.Info(name + " " + version);
+
+            var options = new Options();
+            if (!CommandLine.Parser.Default.ParseArguments(args, options))
+            {
+                return;
+            }
+
+            logger.Info("Converting {0} to {1}", options.SourceFile, options.DestinationFile);
+
+            Convert(options.SourceFile, options.DestinationFile);
+        }
+
+
+        public static void Convert(String sourceFile, String destinationFile)
+        {
+            if (File.Exists(destinationFile))
+            {
+                File.Delete(destinationFile);
+            }
+
+            XELFileCSVAdapter Adapter = new XELFileCSVAdapter();
+            Adapter.InputFile = sourceFile;
+            Adapter.OutputFile = destinationFile;
+
+            DateTime startTime = DateTime.Now;
+
+            try
+            {
+                Adapter.Convert();
+            }
+            catch(Exception e)
+            {
+                logger.Error("Conversion Error");
+                logger.Error(e);
+            }
+            TimeSpan duration = DateTime.Now - startTime;
+            logger.Info("Conversion finished at {0}", DateTime.Now);
+            logger.Info("{0} seconds taken", duration.TotalSeconds);
+        }
+
+
+        class Options
+        {
+            [Option('s', "SourceFile", Required = true, HelpText = "Source file")]
+            public string SourceFile { get; set; }
+
+            [Option('d', "DestinationFile", Required = true, HelpText = "Destination file")]
+            public string DestinationFile { get; set; }
+
+            [ParserState]
+            public IParserState LastParserState { get; set; }
+
+            [HelpOption]
+            public string GetUsage()
+            {
+                return HelpText.AutoBuild(this,
+                  (HelpText current) => HelpText.DefaultParsingErrorsHandler(this, current));
+            }
+        }
+
+    }
+}

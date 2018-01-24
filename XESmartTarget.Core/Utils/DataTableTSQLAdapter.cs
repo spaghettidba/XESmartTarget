@@ -60,8 +60,12 @@ namespace XESmartTarget.Core.Utils
         public int BatchSize { get; set; } = 50000;
         public int QueryTimeout { get; set; } = 0;
 
-        public DataTableTSQLAdapter(DataTable table) { }
+        public DataTableTSQLAdapter(DataTable table) {
+            Table = table;
+        }
+
         public DataTableTSQLAdapter(DataTable table, SqlConnection connection) : this(table, connection, null) { }
+
         public DataTableTSQLAdapter(DataTable table, SqlConnection connection, SqlTransaction transaction)
         {
             _connection = connection;
