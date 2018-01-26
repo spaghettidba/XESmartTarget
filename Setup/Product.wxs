@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
-	<Product Id="*" Name="XESMartTarget" Language="1033" Version="1.0.4.0" Manufacturer="sqlconsulting.it" UpgradeCode="AA8AB9E2-639E-4E6C-9CB9-BD842F76F0AD">
+	<Product Id="*" Name="XESMartTarget" Language="1033" Version="1.0.5.0" Manufacturer="sqlconsulting.it" UpgradeCode="AA8AB9E2-639E-4E6C-9CB9-BD842F76F0AD">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
     <MajorUpgrade AllowDowngrades="yes" />
@@ -39,6 +39,10 @@
         <Component Id="cmp_12" Guid="{58961F6E-3929-4DB0-9BAA-6D0653E920C7}"><File Id="file_12" KeyPath="yes" Source="..\XESmartTarget\bin\Release\XESmartTarget.pdb" /></Component>
         <Component Id="cmp_13" Guid="{96B88BA7-A376-45E1-9D4E-D8A655786706}"><File Id="file_13" KeyPath="yes" Source="..\XESmartTarget\bin\Release\SmartFormat.dll" /></Component>
         <Component Id="cmp_14" Guid="{26D79629-B1AA-4F69-8A99-F96B2485342C}"><File Id="file_14" KeyPath="yes" Source="..\XESmartTarget\bin\Release\DouglasCrockford.JsMin.dll" /></Component>
+        <Component Id="cmp_15" Guid="{A18759FB-7B9B-46DA-9B55-B457AD3F1205}"><File Id="file_15" KeyPath="yes" Source="..\XelToCsv\bin\Release\XelToCsv.exe" /></Component>
+        <Component Id="cmp_16" Guid="{397A469A-CB3E-4E39-B72E-C1905EDF4260}"><File Id="file_16" KeyPath="yes" Source="..\XelToCsv\bin\Release\XelToCsv.pdb" /></Component>
+        <Component Id="cmp_17" Guid="{BF028A74-5314-4F9E-8622-F5926A035FEC}"><File Id="file_17" KeyPath="yes" Source="..\XESmartTarget\bin\Release\CsvHelper.dll" /></Component>
+        <Component Id="cmp_18" Guid="{E3162683-B12F-47D3-9607-E7148724C9E6}"><File Id="file_18" KeyPath="yes" Source="..\XESmartTarget\bin\Release\CsvHelper.xml" /></Component>
     </ComponentGroup>
 	</Fragment>
 </Wix>
