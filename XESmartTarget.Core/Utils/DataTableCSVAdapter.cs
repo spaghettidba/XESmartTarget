@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -25,49 +26,38 @@ namespace XESmartTarget.Core.Utils
             Table = table;
         }
 
-
-        public void WriteToFile()
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        public void WriteToFile(bool writeHeaders)
         {
-            using (BufferedStream f = new BufferedStream(new FileStream(OutputFile, FileMode.Append, FileAccess.Write), 16384))
+            using (BufferedStream f = new BufferedStream(new FileStream(OutputFile, FileMode.Append, FileAccess.Write)))
             {
-                TextWriter textWriter = new StreamWriter(f);
-                var csv = new CsvWriter(textWriter);
-
-                // Write Data
-                foreach (DataRow dr in Table.Rows)
+                using (TextWriter textWriter = new StreamWriter(f))
                 {
-                    foreach (DataColumn dc in Table.Columns)
+                    var csv = new CsvWriter(textWriter);
+
+                    if (writeHeaders)
                     {
-                        csv.WriteField(dr[dc]);
+                        foreach (DataColumn dc in Table.Columns)
+                        {
+                            csv.WriteField(dc.ColumnName);
+                        }
+                        csv.NextRecord();
                     }
-                    csv.NextRecord();
+
+                    foreach (DataRow dr in Table.Rows)
+                    {
+                        foreach (DataColumn dc in Table.Columns)
+                        {
+                            csv.WriteField(dr[dc.ColumnName]);
+                        }
+                        csv.NextRecord();
+                    }
+
+                    csv.Flush();
                 }
-                csv.Flush();
-                f.Flush();
             }
 
         }
-
-
-
-        public void WriteHeaders()
-        {
-            using (BufferedStream f = new BufferedStream(new FileStream(OutputFile, FileMode.Append, FileAccess.Write), 4096))
-            {
-                TextWriter textWriter = new StreamWriter(f);
-                var csv = new CsvWriter(textWriter);
-
-                // Write Headers
-                foreach (DataColumn dc in Table.Columns)
-                {
-                    csv.WriteField(dc.ColumnName);
-                }
-                csv.NextRecord();
-                csv.Flush();
-                f.Flush();
-            }
-
-
-        }
+       
     }
 }

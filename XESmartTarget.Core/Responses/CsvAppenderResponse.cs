@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -22,13 +23,14 @@ namespace XESmartTarget.Core.Responses
         }
 
         public string OutputFile { get; set; }
+        public bool Overwrite { get; set; } = true;
 
         public List<string> OutputColumns { get; set; } = new List<string>(); 
         protected DataTable EventsTable { get => eventsTable; set => eventsTable = value; }
         private DataTable eventsTable = new DataTable("events");
         private XEventDataTableAdapter xeadapter;
 
-        private bool headersWritten = false;
+        private bool writeHeaders = true;
 
         public override void Process(PublishedEvent evt)
         {
@@ -43,14 +45,21 @@ namespace XESmartTarget.Core.Responses
                 xeadapter = new XEventDataTableAdapter(eventsTable);
                 xeadapter.Filter = this.Filter;
                 xeadapter.OutputColumns = this.OutputColumns;
+
+                if (Overwrite && File.Exists(OutputFile))
+                {
+                    File.Delete(OutputFile);
+                }
             }
             xeadapter.ReadEvent(evt);
 
-            WriteToFile();
+            WriteToFile(writeHeaders);
+
+            writeHeaders = false;
 
         }
 
-        private void WriteToFile()
+        private void WriteToFile(bool writeHeaders)
         {
             lock (EventsTable)
             {
@@ -58,12 +67,7 @@ namespace XESmartTarget.Core.Responses
                 {
                     OutputFile = this.OutputFile
                 };
-                if (!headersWritten)
-                {
-                    adapter.WriteHeaders();
-                    headersWritten = true;
-                }
-                adapter.WriteToFile();
+                adapter.WriteToFile(writeHeaders);
                 EventsTable.Rows.Clear();
             }
         }
