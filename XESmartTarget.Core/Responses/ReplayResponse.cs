@@ -239,8 +239,11 @@ namespace XESmartTarget.Core.Responses
 
                 try
                 {
-                    logger.Trace(String.Format("Changing database to {0}", command.Database));
-                    conn.ChangeDatabase(command.Database);
+                    if (!String.IsNullOrEmpty(command.Database))
+                    {
+                        logger.Trace(String.Format("Changing database to {0}", command.Database));
+                        conn.ChangeDatabase(command.Database);
+                    }
 
                     SqlCommand cmd = new SqlCommand(command.CommandText);
                     cmd.Connection = conn;

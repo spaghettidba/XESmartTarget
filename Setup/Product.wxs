@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
-	<Product Id="*" Name="XESMartTarget" Language="1033" Version="1.0.5.0" Manufacturer="sqlconsulting.it" UpgradeCode="AA8AB9E2-639E-4E6C-9CB9-BD842F76F0AD">
+	<Product Id="*" Name="XESMartTarget" Language="1033" Version="1.0.6.0" Manufacturer="sqlconsulting.it" UpgradeCode="AA8AB9E2-639E-4E6C-9CB9-BD842F76F0AD">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
     <MajorUpgrade AllowDowngrades="yes" />
