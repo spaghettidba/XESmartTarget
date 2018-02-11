@@ -69,3 +69,16 @@ New Response types are in the works, such as `GroupedTableAppenderResponse` (gro
 Suggestions for new Response Types are more than welcome.
 
 Check out the [Documentation](https://github.com/spaghettidba/XESmartTarget/wiki) for more information.
+
+
+# XelToCsv
+XESmartTarget also includes a command line tool to convert .XEL files to .CSV. 
+
+Usage is very simple. Here's an example:
+
+```
+XelToCsv.exe -s c:\temp\events.xel -d c:\temp\events.csv
+```
+
+# It's a Library!
+XESmartTarget is a .dll that you can use in your project. Not sure how to use it? No problem, look at `Program.cs` in the XESmartTarget project. It's super easy.
