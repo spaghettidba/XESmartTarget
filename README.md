@@ -60,6 +60,7 @@ And here is the output it produces in the database:
 ![Screenshot 2](https://github.com/spaghettidba/XESmartTarget/blob/master/Images/Screenshot2.png?raw=true "Screenshot")
 
 For the moment, the following Response types are available: 
+* `CsvAppenderResponse`
 * `EmailResponse`
 * `ExecuteTSQLResponse`
 * `ReplayResponse`
