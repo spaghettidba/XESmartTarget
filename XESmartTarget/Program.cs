@@ -4,6 +4,7 @@ using NLog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -22,21 +23,30 @@ namespace XESmartTarget
         {
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-            string version = fvi.FileMajorPart.ToString() + "." + fvi.FileMinorPart.ToString() + "." + fvi.FileBuildPart.ToString(); 
-            string name = assembly.FullName;
-            logger.Info(name + " " + version);
+            string version = fvi.FileMajorPart.ToString() + "." + fvi.FileMinorPart.ToString() + "." + fvi.FileBuildPart.ToString();
+
+            Console.WriteLine(fvi.FileDescription + " " + version);
+            Console.WriteLine(fvi.LegalCopyright + " - " + fvi.CompanyName);
+            Console.WriteLine();
 
             var options = new Options();
 #if DEBUG
-            options.ConfigurationFile = @"c:\temp\sample.json";
-#else
-            if (!CommandLine.Parser.Default.ParseArguments(args, options)) 
+            if (args.Length == 0)
+                args = new string[] {"--File", @"c:\temp\sample.json" };
+#endif
+            if (!CommandLine.Parser.Default.ParseArguments(args, options))
             {
                 return;
             }
-#endif
 
             logger.Info(String.Format("Reading configuration from '{0}'", options.ConfigurationFile));
+
+            if (!File.Exists(options.ConfigurationFile))
+            {
+                logger.Error(String.Format("File not found: '{0}'", options.ConfigurationFile));
+                Console.WriteLine("Run XESmartTarget -? for help.");
+                return;
+            }
 
             TargetConfig config = TargetConfig.LoadFromFile(options.ConfigurationFile);
 
