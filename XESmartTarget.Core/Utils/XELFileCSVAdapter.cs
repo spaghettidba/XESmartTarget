@@ -90,6 +90,8 @@ namespace XESmartTarget.Core.Utils
                                 PublishedEventField theValue = null;
                                 if (xevent.Fields.TryGetValue(col.Name, out theValue))
                                     csv.WriteField(theValue.Value);
+                                else
+                                    csv.WriteField("");
                             }
                             else
                             {
