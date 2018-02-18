@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace XESmartTarget.Core.Responses
 {
+    [Serializable]
     public class GroupedTableAppenderResponse : TableAppenderResponse
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();

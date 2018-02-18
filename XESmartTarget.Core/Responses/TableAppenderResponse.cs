@@ -12,6 +12,7 @@ using XESmartTarget.Core.Utils;
 
 namespace XESmartTarget.Core.Responses
 {
+    [Serializable]
     public class TableAppenderResponse : Response
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();

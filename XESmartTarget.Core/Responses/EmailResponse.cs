@@ -13,6 +13,7 @@ using System.IO;
 
 namespace XESmartTarget.Core.Responses
 {
+    [Serializable]
     public class EmailResponse : Response
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
@@ -70,7 +71,7 @@ namespace XESmartTarget.Core.Responses
                         {
 
 
-                            if (!String.IsNullOrEmpty(Attachment))
+                            if (!String.IsNullOrEmpty(Attachment) && dr.Table.Columns.Contains(Attachment))
                             {
 
                                 StreamWriter wr = new StreamWriter(attachStream);
