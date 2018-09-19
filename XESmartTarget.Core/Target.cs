@@ -74,7 +74,7 @@ namespace XESmartTarget.Core
                         // if no events are specified, will process all
                         if (r.Events.Count > 0)
                         {
-                            if (!r.Events.Contains(xevent.Name))
+                            if (!r.Events.Contains(xevent.Name, StringComparer.CurrentCultureIgnoreCase))
                             {
                                 continue;
                             }
