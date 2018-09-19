@@ -342,7 +342,7 @@ namespace XESmartTarget.Core.Utils
                                 Transaction))
             {
 
-                bulkCopy.DestinationTableName = DestinationTableName;
+                bulkCopy.DestinationTableName = GetSynonymBase(DestinationTableName);
                 bulkCopy.BatchSize = BatchSize;
                 bulkCopy.BulkCopyTimeout = QueryTimeout;
 
@@ -362,20 +362,11 @@ namespace XESmartTarget.Core.Utils
         private IEnumerable<string> GetColumns(string TableName)
         {
             string qry = @"
-                SELECT name
-                FROM sys.columns
-                WHERE object_id = OBJECT_ID(@ObjName)
-                ORDER BY column_id;
+                SELECT TOP(0) * FROM {0};
             ";
 
-            SqlCommand cmd = new SqlCommand(qry, Connection) { CommandTimeout = 600 };
-            SqlParameter prm = cmd.CreateParameter();
-            prm.Direction = ParameterDirection.Input;
-            prm.DbType = DbType.String;
-            prm.Size = 128;
-            prm.Value = TableName;
-            prm.ParameterName = "@ObjName";
-            cmd.Parameters.Add(prm);
+            SqlCommand cmd = new SqlCommand(String.Format(qry, TableName), Connection) { CommandTimeout = 600 };
+
 
             DataSet ds = new DataSet();
             SqlDataAdapter da = new SqlDataAdapter(cmd);
@@ -383,11 +374,41 @@ namespace XESmartTarget.Core.Utils
             DataTable data = ds.Tables[0];
 
             List<string> results = new List<string>();
-            foreach (DataRow row in data.Rows)
+            foreach (DataColumn col in data.Columns)
             {
-                results.Add(row["name"].ToString());
+                results.Add(col.ColumnName);
             }
             return results;
+        }
+
+
+        private string GetSynonymBase(string ObjectName)
+        {
+            string result = ObjectName;
+
+            string qry = @"
+                SELECT base_object_name
+                FROM sys.synonyms
+                WHERE name = @ObjName
+            ";
+
+            SqlCommand cmd = new SqlCommand(qry, Connection) { CommandTimeout = 600 };
+
+            SqlParameter prm = cmd.CreateParameter();
+            prm.Direction = ParameterDirection.Input;
+            prm.DbType = DbType.String;
+            prm.Size = 128;
+            prm.Value = ObjectName;
+            prm.ParameterName = "@ObjName";
+            cmd.Parameters.Add(prm);
+
+            string sqlResult = (string)cmd.ExecuteScalar();
+            if(sqlResult != null)
+            {
+                result = sqlResult;
+            }
+
+            return result;
         }
 
     }
