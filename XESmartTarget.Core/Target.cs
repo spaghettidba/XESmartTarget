@@ -51,11 +51,21 @@ namespace XESmartTarget.Core
 
             logger.Info(String.Format("Connecting to XE session '{0}' on server '{1}'", SessionName,ServerName));
 
-            QueryableXEventData eventStream = new QueryableXEventData(
-                connectionString, 
-                SessionName, 
-                EventStreamSourceOptions.EventStream, 
-                EventStreamCacheOptions.DoNotCache);
+            QueryableXEventData eventStream = null;
+            try
+            {
+                eventStream = new QueryableXEventData(
+                    connectionString,
+                    SessionName,
+                    EventStreamSourceOptions.EventStream,
+                    EventStreamCacheOptions.DoNotCache);
+            }
+            catch(Exception e)
+            {
+                var ioe = new InvalidOperationException(String.Format("Unable to connect to the Extended Events session {0} on server {1}", SessionName, ServerName), e);
+                logger.Error(ioe);
+                throw ioe;
+            }
 
             logger.Info("Connected.");
 

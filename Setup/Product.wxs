@@ -1,6 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
-	<Product Id="*" Name="XESMartTarget" Language="1033" Version="1.0.6.0" Manufacturer="sqlconsulting.it" UpgradeCode="AA8AB9E2-639E-4E6C-9CB9-BD842F76F0AD">
+
+  <?if $(var.Platform) = x64 ?>
+    <?define Win64 = "yes" ?>
+    <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
+    <?define PlatformReleaseFolder = "ReleaseX64" ?>
+  <?else ?>
+    <?define Win64 = "no" ?>
+    <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
+    <?define PlatformReleaseFolder = "Release" ?>
+  <?endif ?>
+  
+  <?define ProductName="XESmartTarget" ?>
+  <?define CompanyName="sqlconsulting.it" ?>
+  <?define ProductVersion="$(var.BuildVersion)" ?>
+
+
+  <Product Id="*" Name="$(var.ProductName)" Language="1033" Version="$(var.ProductVersion)" Manufacturer="$(var.CompanyName)" UpgradeCode="AA8AB9E2-639E-4E6C-9CB9-BD842F76F0AD">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
     <MajorUpgrade AllowDowngrades="yes" />
@@ -17,12 +33,13 @@
 
 	<Fragment>
 		<Directory Id="TARGETDIR" Name="SourceDir">
-			<Directory Id="ProgramFilesFolder">
+      <Directory Id="$(var.PlatformProgramFilesFolder)">
 				<Directory Id="INSTALLFOLDER" Name="XESmartTarget" />
 			</Directory>
 		</Directory>
 	</Fragment>
 
+  <!--
 	<Fragment>
 		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
         <Component Id="cmp_01" Guid="{7AEE49EC-5CFB-4085-BC34-0F0AC0300725}"><File Id="file_01" KeyPath="yes" Source="..\XESmartTarget\bin\Release\CommandLine.dll" /></Component>
@@ -45,4 +62,5 @@
         <Component Id="cmp_18" Guid="{E3162683-B12F-47D3-9607-E7148724C9E6}"><File Id="file_18" KeyPath="yes" Source="..\XESmartTarget\bin\Release\CsvHelper.xml" /></Component>
     </ComponentGroup>
 	</Fragment>
+  -->
 </Wix>

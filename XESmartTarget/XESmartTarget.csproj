@@ -49,6 +49,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -63,12 +66,19 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\XelToCsv\XelToCsv.csproj">
+      <Project>{676f3a20-e149-49b1-afa9-150de2e06812}</Project>
+      <Name>XelToCsv</Name>
+    </ProjectReference>
     <ProjectReference Include="..\XESmartTarget.Core\XESmartTarget.Core.csproj">
       <Project>{c9c968d1-4aa9-4674-bbe4-c08b9c169147}</Project>
       <Name>XESmartTarget.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy $(SolutionDir)\XelToCsv\bin\$(ConfigurationName)\XelToCsv.* $(TargetDir)</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
