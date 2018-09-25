@@ -72,8 +72,8 @@ namespace XESmartTarget.Core.Responses
             Enqueue(evt);
         }
 
-        private bool UploaderStarted = false;
-        private bool TargetTableCreated = false;
+        protected bool UploaderStarted = false;
+        protected bool TargetTableCreated = false;
 
         protected void Enqueue(PublishedEvent evt)
         {
@@ -126,7 +126,7 @@ namespace XESmartTarget.Core.Responses
         }
 
 
-        protected void Upload()
+        protected virtual void Upload()
         {
             logger.Trace("Writing XE data");
 
