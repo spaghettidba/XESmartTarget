@@ -112,8 +112,16 @@ namespace XESmartTarget.Core.Responses
         {
             while (true)
             {
-                Upload();
-                Thread.Sleep(UploadIntervalSeconds * 1000);
+                try
+                {
+                    Upload();
+                    Thread.Sleep(UploadIntervalSeconds * 1000);
+                }
+                catch(Exception e)
+                {
+                    logger.Error("Error uploading to the target table");
+                    logger.Error(e);
+                }
             }
         }
 
