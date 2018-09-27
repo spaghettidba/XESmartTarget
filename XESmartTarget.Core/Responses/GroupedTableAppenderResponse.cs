@@ -48,11 +48,11 @@ namespace XESmartTarget.Core.Responses
                 {
                     DestinationTableName = TableName
                 };
-                adapter.MergeToServer(_outputColumns);
-                numRows = groupedData.Rows.Count;
+                numRows = adapter.MergeToServer(_outputColumns);
+                originalRows = groupedData.Rows.Count;
 
             }
-            logger.Info(String.Format("{0} rows aggregated, {0} rows written", numRows));
+            logger.Info(String.Format("{0} rows aggregated, {1} rows written", originalRows, numRows));
         }
 
 

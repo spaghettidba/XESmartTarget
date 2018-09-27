@@ -367,8 +367,10 @@ namespace XESmartTarget.Core.Utils
 
 
 
-        public void MergeToServer(List<OutputColumn> OutputColumns)
+        public int MergeToServer(List<OutputColumn> OutputColumns)
         {
+            int result = -1;
+
             using (SqlBulkCopy bulkCopy = new System.Data.SqlClient.SqlBulkCopy(Connection,
                                 SqlBulkCopyOptions.KeepIdentity |
                                 SqlBulkCopyOptions.FireTriggers |
@@ -418,10 +420,12 @@ namespace XESmartTarget.Core.Utils
                     sql = String.Format(sql, _0, _1, _2, _3, _4);
 
                     cmd.CommandText = sql;
-                    cmd.ExecuteNonQuery();
+                    result = cmd.ExecuteNonQuery();
                 }
 
             }
+            return result;
+
         }
 
         private string BuildMergeSetClause(AggregatedOutputColumn col)
