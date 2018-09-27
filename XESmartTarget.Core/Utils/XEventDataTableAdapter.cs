@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using XESmartTarget.Core.Responses;
 
 namespace XESmartTarget.Core.Utils
 {
@@ -15,7 +16,7 @@ namespace XESmartTarget.Core.Utils
         private static Logger logger = LogManager.GetCurrentClassLogger();
 
         public DataTable eventsTable { get; }
-        public List<string> OutputColumns { get; set; }
+        public List<OutputColumn> OutputColumns { get; set; }
         public string Filter { get; set; }
 
 
@@ -32,13 +33,14 @@ namespace XESmartTarget.Core.Utils
                 //
                 // Add Collection Time column
                 //
-                if (!eventsTable.Columns.Contains("collection_time") && (OutputColumns.Count == 0 || OutputColumns.Contains("collection_time")))
+                if (!eventsTable.Columns.Contains("collection_time") && (OutputColumns.Count == 0 || OutputColumns.Exists(x => x.Name == "collection_time")))
                 {
                     DataColumn cl_dt = new DataColumn("collection_time", typeof(DateTime))
                     {
                         DefaultValue = DateTime.Now
                     };
                     cl_dt.ExtendedProperties.Add("auto_column", true);
+                    SetColHiddenProperty(cl_dt);
                     eventsTable.Columns.Add(cl_dt);
                 }
 
@@ -46,11 +48,26 @@ namespace XESmartTarget.Core.Utils
                 //
                 // Add Name column
                 //
-                if (!eventsTable.Columns.Contains("name") && (OutputColumns.Count == 0 || OutputColumns.Contains("name")))
+                if (!eventsTable.Columns.Contains("name") && (OutputColumns.Count == 0 || OutputColumns.Exists(x => x.Name == "name")))
                 {
                     eventsTable.Columns.Add("name", typeof(String));
                     eventsTable.Columns["name"].ExtendedProperties.Add("auto_column", true);
                 }
+            }
+        }
+
+
+        // sets the column as hidden when not present in the list of visible columns
+        private void SetColHiddenProperty(DataColumn cl_dt)
+        {
+            OutputColumn currentCol = OutputColumns.FirstOrDefault(x => x.Name == cl_dt.ColumnName);
+            if (currentCol != null)
+            {
+                cl_dt.ExtendedProperties.Add("hidden", currentCol.Hidden);
+            }
+            else
+            {
+                cl_dt.ExtendedProperties.Add("hidden", false);
             }
         }
 
@@ -64,7 +81,7 @@ namespace XESmartTarget.Core.Utils
             {
                 foreach (PublishedEventField fld in evt.Fields)
                 {
-                    if (!eventsTable.Columns.Contains(fld.Name) && (OutputColumns.Count == 0 || OutputColumns.Contains(fld.Name)))
+                    if (!eventsTable.Columns.Contains(fld.Name) && (OutputColumns.Count == 0 || OutputColumns.Exists(x => x.Name == fld.Name)))
                     {
                         Type t;
                         DataColumn dc;
@@ -81,12 +98,13 @@ namespace XESmartTarget.Core.Utils
                         dc.ExtendedProperties.Add("subtype", "field");
                         dc.ExtendedProperties.Add("disallowedtype", disallowed);
                         dc.ExtendedProperties.Add("calculated", false);
+                        SetColHiddenProperty(dc);
                     }
                 }
 
                 foreach (PublishedAction act in evt.Actions)
                 {
-                    if (!eventsTable.Columns.Contains(act.Name) && (OutputColumns.Count == 0 || OutputColumns.Contains(act.Name)))
+                    if (!eventsTable.Columns.Contains(act.Name) && (OutputColumns.Count == 0 || OutputColumns.Exists(x => x.Name == act.Name)))
                     {
                         Type t;
                         DataColumn dc;
@@ -103,6 +121,7 @@ namespace XESmartTarget.Core.Utils
                         dc.ExtendedProperties.Add("subtype", "action");
                         dc.ExtendedProperties.Add("disallowedtype", disallowed);
                         dc.ExtendedProperties.Add("calculated", false);
+                        SetColHiddenProperty(dc);
                     }
                 }
 
@@ -110,7 +129,7 @@ namespace XESmartTarget.Core.Utils
                 // add calculated columns
                 for(int i=0;i<OutputColumns.Count;i++)
                 {
-                    string outCol = OutputColumns[i];
+                    string outCol = OutputColumns[i].Name;
                     if (!eventsTable.Columns.Contains(outCol))
                     {
                         if (Regex.IsMatch(outCol,@"\s+AS\s+",RegexOptions.IgnoreCase))
@@ -126,7 +145,7 @@ namespace XESmartTarget.Core.Utils
                             dc.ExtendedProperties.Add("subtype", "calculated");
                             dc.ExtendedProperties.Add("disallowedtype", false);
                             dc.ExtendedProperties.Add("calculated", true);
-
+                            SetColHiddenProperty(dc);
                             //change OutputColumns
                             OutputColumns[i] = colName;
                         }

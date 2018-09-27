@@ -57,7 +57,7 @@ namespace XESmartTarget.Core.Responses
             {
                 xeadapter = new XEventDataTableAdapter(EventsTable);
                 xeadapter.Filter = this.Filter;
-                xeadapter.OutputColumns = new List<string>();
+                xeadapter.OutputColumns = new List<OutputColumn>();
             }
             xeadapter.ReadEvent(evt);
 
@@ -107,7 +107,7 @@ namespace XESmartTarget.Core.Responses
                 }
                 catch (SqlException e)
                 {
-                    logger.Error(String.Format("Error: {0}", TSQLString));
+                    logger.Error(e, String.Format("Error: {0}", TSQLString));
                     throw;
                 }
 

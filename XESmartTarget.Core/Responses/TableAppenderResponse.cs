@@ -29,7 +29,49 @@ namespace XESmartTarget.Core.Responses
         public string Password { get; set; }
         public bool AutoCreateTargetTable { get; set; }
         public int UploadIntervalSeconds { get; set; } = 10;
-        public List<string> OutputColumns { get; set; } = new List<string>(); 
+
+        public List<string> OutputColumns
+        {
+            get
+            {
+                return new List<string>(_outputColumns.Select(l => l.Name));
+            }
+            // when setting outputcolumns, internal outputcolumns are updated too
+            // nothing keeps them in sync expect this setter, so adding/removing/updating items
+            // in the collection won't be replicated automatically
+            // this is an acceptable limitation, given how parameters are usually set 
+            // once, by means of a .json configuration file
+            set
+            {
+                _outputColumns = new List<OutputColumn>();
+                foreach (var o in value)
+                {
+                    var aggr = AggregatedOutputColumn.TryParse(o);
+                    if (aggr != null)
+                    {
+                        _outputColumns.Add(aggr);
+                        // look up the base column
+                        if (aggr.BaseColumn != null && aggr.BaseColumn != "*")
+                        {
+                            // add the base column if not found
+                            var item = _outputColumns.FirstOrDefault(col => col.Name == aggr.BaseColumn || col.Alias == aggr.BaseColumn);
+                            if(item == null)
+                            {
+                                _outputColumns.Add(new OutputColumn() { Name = aggr.BaseColumn, Alias = aggr.BaseColumn, Hidden = true });
+                            }
+                        }
+                    }
+                    else
+                    {
+                        _outputColumns.Add(new OutputColumn(o));
+                    }
+                }
+            }
+        }
+
+        // internal representation of output columns. The public facing collection is made of strings
+        // but the internal representation requires additional properties that are stored in this collection
+        protected List<OutputColumn> _outputColumns { get; set; } = new List<OutputColumn>(); 
         protected DataTable EventsTable { get => eventsTable; set => eventsTable = value; }
 
         protected Task Uploader;
@@ -81,7 +123,8 @@ namespace XESmartTarget.Core.Responses
             {
                 xeadapter = new XEventDataTableAdapter(eventsTable);
                 xeadapter.Filter = this.Filter;
-                xeadapter.OutputColumns = this.OutputColumns;
+                // initialize the XE adapter to read only non aggregated columns
+                xeadapter.OutputColumns = new List<OutputColumn>(this._outputColumns.Where(col => !(col is AggregatedOutputColumn)));
             }
             xeadapter.ReadEvent(evt);
 
@@ -91,12 +134,15 @@ namespace XESmartTarget.Core.Responses
             }
         }
 
-        protected void StartUploadTask()
+        protected virtual void StartUploadTask()
         {
-            if (AutoCreateTargetTable)
+            // Let this method create the target table only if the member is 
+            // an instance of this class
+            //
+            if (AutoCreateTargetTable && this.GetType().Name == "TableAppenderResponse")
             {
                 logger.Info("Creating target table {0}.{1}.{2}",ServerName,DatabaseName,TableName);
-                CreateTargetTable();
+                CreateTargetTable(eventsTable);
                 TargetTableCreated = true;
             }
 
@@ -139,7 +185,7 @@ namespace XESmartTarget.Core.Responses
 
                 if (!TargetTableCreated && AutoCreateTargetTable)
                 {
-                    CreateTargetTable();
+                    CreateTargetTable(eventsTable);
                 }
 
                 lock(EventsTable)
@@ -158,14 +204,14 @@ namespace XESmartTarget.Core.Responses
         }
 
 
-        protected void CreateTargetTable()
+        protected virtual void CreateTargetTable(DataTable data)
         {
             using (SqlConnection conn = new SqlConnection())
             {
                 conn.ConnectionString = ConnectionString;
                 conn.Open();
 
-                DataTableTSQLAdapter adapter = new DataTableTSQLAdapter(eventsTable, conn)
+                DataTableTSQLAdapter adapter = new DataTableTSQLAdapter(data, conn)
                 {
                     DestinationTableName = TableName
                 };
@@ -177,3 +223,4 @@ namespace XESmartTarget.Core.Responses
         }
     }
 }
+

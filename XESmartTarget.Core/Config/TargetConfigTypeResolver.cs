@@ -17,7 +17,7 @@ namespace XESmartTarget.Core.Config
         {
             Assembly currentAssembly = Assembly.GetExecutingAssembly();
             string nameSpace = "XESmartTarget.Core.Responses";
-            Type[] types = currentAssembly.GetTypes().Where(t => String.Equals(t.Namespace, nameSpace, StringComparison.Ordinal)).ToArray();
+            Type[] types = currentAssembly.GetTypes().Where(t => !t.Name.Contains("<") && String.Equals(t.Namespace, nameSpace, StringComparison.Ordinal)).ToArray();
             foreach(Type t in types)
             {
                 mappedTypes.Add(t.AssemblyQualifiedName, t);

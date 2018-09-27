@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Data;
 using System.Data.SqlClient;
 using NLog;
+using XESmartTarget.Core.Responses;
 
 namespace XESmartTarget.Core.Utils
 {
@@ -124,8 +125,10 @@ namespace XESmartTarget.Core.Utils
             return result != -1;
         }
 
+
         public void CreateFromDataTable()
         {
+
             string sql = GetCreateFromDataTableSQL();
 
             SqlCommand cmd;
@@ -196,6 +199,7 @@ namespace XESmartTarget.Core.Utils
             return sql;
         }
 
+
         private string GetCreateFromDataTableSQL()
         {
             string tableName = _tableName;
@@ -207,7 +211,10 @@ namespace XESmartTarget.Core.Utils
             // columns
             foreach (DataColumn column in Table.Columns)
             {
-                sql += "[" + column.ColumnName + "] " + SQLGetType(column) + ",\n";
+                if (!(bool)column.ExtendedProperties["hidden"])
+                {
+                    sql += "[" + column.ColumnName + "] " + SQLGetType(column) + ",\n";
+                }
             }
             sql = sql.TrimEnd(new char[] { ',', '\n' }) + "\n";
             // primary keys
@@ -356,6 +363,89 @@ namespace XESmartTarget.Core.Utils
 
                 bulkCopy.WriteToServer(Table);
             }
+        }
+
+
+
+        public void MergeToServer(List<OutputColumn> OutputColumns)
+        {
+            using (SqlBulkCopy bulkCopy = new System.Data.SqlClient.SqlBulkCopy(Connection,
+                                SqlBulkCopyOptions.KeepIdentity |
+                                SqlBulkCopyOptions.FireTriggers |
+                                SqlBulkCopyOptions.CheckConstraints |
+                                SqlBulkCopyOptions.TableLock,
+                                Transaction))
+            {
+                string destination = GetSynonymBase(DestinationTableName);
+                bulkCopy.DestinationTableName = "#tmpBCP";
+                bulkCopy.BatchSize = BatchSize;
+                bulkCopy.BulkCopyTimeout = QueryTimeout;
+
+                foreach (string dbcol in GetColumns(DestinationTableName))
+                {
+                    if (Table.Columns.Contains(dbcol))
+                    {
+                        bulkCopy.ColumnMappings.Add(dbcol, dbcol);
+                    }
+                }
+
+                using (SqlCommand cmd = Connection.CreateCommand())
+                {
+                    cmd.CommandText = String.Format("SELECT TOP(0) * INTO #tmpBCP FROM {0}", destination);
+                    cmd.ExecuteNonQuery();
+                }
+
+                bulkCopy.WriteToServer(Table);
+
+                // Merge data
+                using (SqlCommand cmd = Connection.CreateCommand())
+                {
+                    string sql = @"
+                        MERGE INTO {0} AS dest
+                        USING #tmpBCP AS src
+                        ON {1}
+                        WHEN MATCHED THEN UPDATE
+                            SET {2}
+                        WHEN NOT MATCHED THEN INSERT ({3}) VALUES ({4});
+                    ";
+
+                    string _0 = destination;
+                    string _1 = String.Join(" AND ", OutputColumns.Where(s => !(s is AggregatedOutputColumn) && !(s.Hidden)).Select(s => "src." + s.Name + " = dest." + s.Name));
+                    string _2 = String.Join(", ", OutputColumns.Where(s => s is AggregatedOutputColumn).Select(s => s.Alias + " = " + BuildMergeSetClause((AggregatedOutputColumn)s)));
+                    string _3 = String.Join(", ", OutputColumns.Where(s => !s.Hidden).Select(s => s.Alias));
+                    string _4 = String.Join(", ", OutputColumns.Where(s => !s.Hidden).Select(s => "src." + s.Alias));
+
+                    sql = String.Format(sql, _0, _1, _2, _3, _4);
+
+                    cmd.CommandText = sql;
+                    cmd.ExecuteNonQuery();
+                }
+
+            }
+        }
+
+        private string BuildMergeSetClause(AggregatedOutputColumn col)
+        {
+            string result = "";
+            switch (col.Aggregation)
+            {
+                case AggregatedOutputColumn.AggregationType.Max:
+                    result = "CASE WHEN src." + col.Alias + " > dest." + col.Alias + " THEN src." + col.Alias + " ELSE dest." + col.Alias + " END";
+                    break;
+                case AggregatedOutputColumn.AggregationType.Min:
+                    result = "CASE WHEN src." + col.Alias + " < dest." + col.Alias + " THEN src." + col.Alias + " ELSE dest." + col.Alias + " END";
+                    break;
+                case AggregatedOutputColumn.AggregationType.Avg:
+                    // this is not really an average, but once the previous value
+                    // is already aggregated, there is not much that can be done
+                    result = "(ISNULL(dest." + col.Alias + ",src." + col.Alias + ") + src." + col.Alias + ") / 2";
+                    break;
+                case AggregatedOutputColumn.AggregationType.Sum:
+                case AggregatedOutputColumn.AggregationType.Count:
+                    result = "ISNULL(dest." + col.Alias + ",0) + ISNULL(src." + col.Alias + ",0)";
+                    break;
+            }
+            return result;
         }
 
 

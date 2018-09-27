@@ -44,7 +44,7 @@ namespace XESmartTarget.Core.Responses
             {
                 xeadapter = new XEventDataTableAdapter(eventsTable);
                 xeadapter.Filter = this.Filter;
-                xeadapter.OutputColumns = new List<string>();
+                xeadapter.OutputColumns = new List<OutputColumn>();
             }
             xeadapter.ReadEvent(evt);
 
