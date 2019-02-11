@@ -120,7 +120,7 @@ namespace XESmartTarget.Core.Responses
                         string filterString = " 1 = 1 ";
                         foreach (var grp in GroupByCols)
                         {
-                            filterString += String.Format(" AND {0} = '{1}' ", grp, dr[grp].ToString());
+                            filterString += String.Format(" AND {0} = '{1}' ", EscapeColumnName(grp), EscapeFilterValue(dr[grp].ToString()));
                         }
                         dr[col.Alias] = EventsTable.Compute(col.Expression, filterString);
                     }
@@ -148,5 +148,26 @@ namespace XESmartTarget.Core.Responses
             return dtGroup;
         }
 
+        /*
+         * Escapes values in the filter strings
+         * A bit rudimental, but should work
+         */
+        private string EscapeFilterValue(string v)
+        {
+            return v.Replace("'", "''");
+        }
+
+        /*
+         * Escapes values in the column names
+         * A bit rudimental, but should work
+         */
+        private string EscapeColumnName(string v)
+        {
+            string result = v;
+            result = result.Replace(@"\", @"\\");
+            result = result.Replace("[", @"\[");
+            result = "[" + result + "]";
+            return result;
+        }
     }
 }
