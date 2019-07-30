@@ -211,7 +211,14 @@ namespace XESmartTarget.Core.Utils
             // columns
             foreach (DataColumn column in Table.Columns)
             {
-                if (!(bool)column.ExtendedProperties["hidden"])
+                bool addThisColumn = true;
+                if(column.ExtendedProperties.ContainsKey("hidden")
+                    && column.ExtendedProperties["hidden"] != null
+                    && (bool)column.ExtendedProperties["hidden"])
+                {
+                    addThisColumn = false;
+                }
+                if (addThisColumn)
                 {
                     sql += "[" + column.ColumnName + "] " + SQLGetType(column) + ",\n";
                 }
