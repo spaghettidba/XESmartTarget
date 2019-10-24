@@ -419,7 +419,7 @@ namespace XESmartTarget.Core.Utils
                     ";
 
                     string _0 = destination;
-                    string _1 = String.Join(" AND ", OutputColumns.Where(s => !(s is AggregatedOutputColumn) && !(s.Hidden)).Select(s => "src." + s.Name + " = dest." + s.Name));
+                    string _1 = String.Join(" AND ", OutputColumns.Where(s => !(s is AggregatedOutputColumn) && !(s.Hidden)).Select(s => "(src." + s.Name + " = dest." + s.Name + " OR (src." + s.Name + " IS NULL AND dest." + s.Name + " IS NULL))"));
                     string _2 = String.Join(", ", OutputColumns.Where(s => s is AggregatedOutputColumn).Select(s => s.Alias + " = " + BuildMergeSetClause((AggregatedOutputColumn)s)));
                     string _3 = String.Join(", ", OutputColumns.Where(s => !s.Hidden).Select(s => s.Alias));
                     string _4 = String.Join(", ", OutputColumns.Where(s => !s.Hidden).Select(s => "src." + s.Alias));
