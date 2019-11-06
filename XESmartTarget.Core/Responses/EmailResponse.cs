@@ -57,13 +57,19 @@ namespace XESmartTarget.Core.Responses
                     string formattedBody = Body;
                     string formattedSubject = Subject;
 
-                    Dictionary<string, object> tokens = new Dictionary<string, object>();
+                    Dictionary<string, object> eventTokens = new Dictionary<string, object>();
                     foreach (DataColumn dc in EventsTable.Columns)
                     {
-                        tokens.Add(dc.ColumnName, dr[dc]);
+                        eventTokens.Add(dc.ColumnName, dr[dc]);
                     }
-                    formattedBody = Smart.Format(Body, tokens);
-                    formattedSubject = Smart.Format(Subject, tokens);
+                    // also add the Response tokens
+                    foreach(string t in Tokens.Keys)
+                    {
+                        if(!eventTokens.ContainsKey(t))
+                            eventTokens.Add(t, Tokens[t]);
+                    }
+                    formattedBody = Smart.Format(Body, eventTokens);
+                    formattedSubject = Smart.Format(Subject, eventTokens);
 
                     using (MailMessage msg = new MailMessage(Sender, To, formattedSubject, formattedBody))
                     {
@@ -109,5 +115,6 @@ namespace XESmartTarget.Core.Responses
 
 
         }
+
     }
 }

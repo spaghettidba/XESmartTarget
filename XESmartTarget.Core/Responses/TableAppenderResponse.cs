@@ -1,5 +1,6 @@
 ﻿using Microsoft.SqlServer.XEvent.Linq;
 using NLog;
+using SmartFormat;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -83,8 +84,8 @@ namespace XESmartTarget.Core.Responses
             get
             {
                 int ConnectionTimeout = 15;
-                string s = "Server=" + ServerName + ";";
-                s += "Database=" + DatabaseName + ";";
+                string s = "Server=" + Smart.Format(ServerName,Tokens) + ";";
+                s += "Database=" + Smart.Format(DatabaseName,Tokens) + ";";
                 if (String.IsNullOrEmpty(UserName))
                 {
                     s += "Integrated Security = True;";
@@ -141,7 +142,7 @@ namespace XESmartTarget.Core.Responses
             //
             if (AutoCreateTargetTable && this.GetType().Name == "TableAppenderResponse")
             {
-                logger.Info("Creating target table {0}.{1}.{2}",ServerName,DatabaseName,TableName);
+                logger.Info("Creating target table {0}.{1}.{2}",Smart.Format(ServerName,Tokens), Smart.Format(DatabaseName, Tokens), Smart.Format(TableName, Tokens));
                 CreateTargetTable(eventsTable);
                 TargetTableCreated = true;
             }
@@ -192,7 +193,7 @@ namespace XESmartTarget.Core.Responses
                 {
                     DataTableTSQLAdapter adapter = new DataTableTSQLAdapter(EventsTable, conn)
                     {
-                        DestinationTableName = TableName
+                        DestinationTableName = Smart.Format(TableName, Tokens)
                     };
                     adapter.WriteToServer();
                     numRows = EventsTable.Rows.Count;
@@ -213,7 +214,7 @@ namespace XESmartTarget.Core.Responses
 
                 DataTableTSQLAdapter adapter = new DataTableTSQLAdapter(data, conn)
                 {
-                    DestinationTableName = TableName
+                    DestinationTableName = Smart.Format(TableName, Tokens)
                 };
                 if (!adapter.CheckTableExists())
                 {

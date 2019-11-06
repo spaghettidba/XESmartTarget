@@ -19,7 +19,7 @@ namespace XESmartTarget.Core
         }
 
         public List<Response> Responses { get; set; } = new List<Response>();
-        public string ServerName { get; set; }
+        public string[] ServerName { get; set; }
         public string SessionName { get; set; }
         public string UserName { get; set; }
         public string Password { get; set; }
@@ -30,89 +30,104 @@ namespace XESmartTarget.Core
 
         public void Start()
         {
-            string connectionString = "Data Source=" + ServerName + ";";
-            if (String.IsNullOrEmpty(DatabaseName))
-            {
-                connectionString += "Initial Catalog = master; ";
-            }
-            else
-            {
-                connectionString += "Initial Catalog = " + DatabaseName + "; ";
-            }
-            if (String.IsNullOrEmpty(UserName))
-            {
-                connectionString += "Integrated Security = SSPI; ";
-            }
-            else
-            {
-                connectionString += "User Id = " + UserName + "; ";
-                connectionString += "Password = " + Password + "; ";
-            }
-
-            logger.Info(String.Format("Connecting to XE session '{0}' on server '{1}'", SessionName,ServerName));
-
-            QueryableXEventData eventStream = null;
             try
-            {
-                eventStream = new QueryableXEventData(
-                    connectionString,
-                    SessionName,
-                    EventStreamSourceOptions.EventStream,
-                    EventStreamCacheOptions.DoNotCache);
-            }
-            catch(Exception e)
-            {
-                var ioe = new InvalidOperationException(String.Format("Unable to connect to the Extended Events session {0} on server {1}", SessionName, ServerName), e);
-                logger.Error(ioe);
-                throw ioe;
-            }
-
-            logger.Info("Connected.");
-
-            try
-            {
-                foreach (PublishedEvent xevent in eventStream)
+            { 
+                Parallel.ForEach(ServerName, currentServer =>
                 {
-                    if (stopped)
+                    string connectionString = "Data Source=" + currentServer + ";";
+                    if (String.IsNullOrEmpty(DatabaseName))
                     {
-                        break;
+                        connectionString += "Initial Catalog = master; ";
                     }
-                    // Pass events to the responses
+                    else
+                    {
+                        connectionString += "Initial Catalog = " + DatabaseName + "; ";
+                    }
+                    if (String.IsNullOrEmpty(UserName))
+                    {
+                        connectionString += "Integrated Security = SSPI; ";
+                    }
+                    else
+                    {
+                        connectionString += "User Id = " + UserName + "; ";
+                        connectionString += "Password = " + Password + "; ";
+                    }
+
+                    logger.Info(String.Format("Connecting to XE session '{0}' on server '{1}'", SessionName, currentServer));
+
+                    QueryableXEventData eventStream = null;
+                    try
+                    {
+                        eventStream = new QueryableXEventData(
+                            connectionString,
+                            SessionName,
+                            EventStreamSourceOptions.EventStream,
+                            EventStreamCacheOptions.DoNotCache);
+                    }
+                    catch (Exception e)
+                    {
+                        var ioe = new InvalidOperationException(String.Format("Unable to connect to the Extended Events session {0} on server {1}", SessionName, currentServer), e);
+                        logger.Error(ioe);
+                        throw ioe;
+                    }
+
+                    logger.Info($"Connected to {currentServer}.");
+
                     foreach (Response r in Responses)
                     {
-                        // filter out unwanted events
-                        // if no events are specified, will process all
-                        if (r.Events.Count > 0)
+                        r.Tokens.Add("{ServerName}", currentServer);
+                    }
+
+                    try
+                    {
+                        foreach (PublishedEvent xevent in eventStream)
                         {
-                            if (!r.Events.Contains(xevent.Name, StringComparer.CurrentCultureIgnoreCase))
+                            if (stopped)
                             {
-                                continue;
+                                break;
                             }
-                        }
-                        try
-                        {
-                            r.Process(xevent);
-                        }
-                        catch(Exception e)
-                        {
-                            if (FailOnProcessingError)
+                            // Pass events to the responses
+                            foreach (Response r in Responses)
                             {
-                                throw;
-                            }
-                            else
-                            {
-                                logger.Error(e);
+                                // filter out unwanted events
+                                // if no events are specified, will process all
+                                if (r.Events.Count > 0)
+                                {
+                                    if (!r.Events.Contains(xevent.Name, StringComparer.CurrentCultureIgnoreCase))
+                                    {
+                                        continue;
+                                    }
+                                }
+                                try
+                                {
+                                    r.Process(xevent);
+                                }
+                                catch (Exception e)
+                                {
+                                    if (FailOnProcessingError)
+                                    {
+                                        throw;
+                                    }
+                                    else
+                                    {
+                                        logger.Error(e, currentServer);
+                                    }
+                                }
                             }
                         }
                     }
-                }
+                    catch (Exception e)
+                    {
+                        logger.Error(e,currentServer);
+                        throw;
+                    }
+                }); // Parallel ForEach
             }
             catch (Exception e)
             {
                 logger.Error(e);
                 throw;
             }
-
             logger.Info("Quitting");
         }
 

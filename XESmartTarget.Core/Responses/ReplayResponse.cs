@@ -10,6 +10,7 @@ using System.Data;
 using System.Threading;
 using System.Collections.Concurrent;
 using XESmartTarget.Core.Utils;
+using SmartFormat;
 
 namespace XESmartTarget.Core.Responses
 {
@@ -125,10 +126,10 @@ namespace XESmartTarget.Core.Responses
                     {
                         rw = new ReplayWorker()
                         {
-                            ServerName = ServerName,
+                            ServerName = Smart.Format(ServerName,Tokens),
                             UserName = UserName,
                             Password = Password,
-                            DatabaseName = DatabaseName,
+                            DatabaseName = Smart.Format(DatabaseName,Tokens),
                             ReplayIntervalSeconds = ReplayIntervalSeconds,
                             StopOnError = StopOnError,
                             Name = session_id.ToString()

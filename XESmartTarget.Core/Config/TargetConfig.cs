@@ -17,6 +17,7 @@ namespace XESmartTarget.Core.Config
         public static void Test()
         {
             JavaScriptSerializer ser = new JavaScriptSerializer(new TargetConfigTypeResolver());
+            ser.RegisterConverters(new JavaScriptConverter[] { new ModelConverter() });
             TargetConfig x = new TargetConfig()
             {
                 Target = new Target()

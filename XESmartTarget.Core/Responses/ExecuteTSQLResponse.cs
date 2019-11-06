@@ -33,8 +33,11 @@ namespace XESmartTarget.Core.Responses
         {
             get
             {
+                string formattedServerName = ServerName;
+                Smart.Format(ServerName, Tokens);
+
                 int ConnectionTimeout = 15;
-                string s = "Server=" + ServerName + ";";
+                string s = "Server=" + formattedServerName + ";";
                 s += "Database=" + DatabaseName + ";";
                 if (String.IsNullOrEmpty(UserName))
                 {
@@ -65,13 +68,18 @@ namespace XESmartTarget.Core.Responses
             {
                 foreach (DataRow dr in EventsTable.Rows)
                 {
-                    Dictionary<string, object> tokens = new Dictionary<string, object>();
+                    Dictionary<string, object> eventTokens = new Dictionary<string, object>();
                     foreach (DataColumn dc in EventsTable.Columns)
                     {
-                        tokens.Add(dc.ColumnName, dr[dc]);
+                        eventTokens.Add(dc.ColumnName, dr[dc]);
                     }
-
-                    string formattedTSQL = Smart.Format(TSQL, tokens);
+                    // also add the Response tokens
+                    foreach (string k in Tokens.Keys)
+                    {
+                        if (!eventTokens.ContainsKey(k))
+                            eventTokens.Add(k, Tokens[k]);
+                    }
+                    string formattedTSQL = Smart.Format(TSQL, eventTokens);
 
                     Task t = Task.Factory.StartNew(() => ExecuteTSQL(formattedTSQL));
                 }

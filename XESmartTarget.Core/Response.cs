@@ -17,6 +17,8 @@ namespace XESmartTarget.Core
         public string Filter { get; set; }
         public List<string> Events { get; set; } = new List<string>();
 
+        public Dictionary<string, string> Tokens = new Dictionary<string, string>();
+
         public abstract void Process(PublishedEvent evt);
 
         // Returns whether the event is subscribed to this response or not

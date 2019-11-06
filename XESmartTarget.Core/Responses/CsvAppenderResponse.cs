@@ -1,5 +1,6 @@
 ﻿using Microsoft.SqlServer.XEvent.Linq;
 using NLog;
+using SmartFormat;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -23,7 +24,21 @@ namespace XESmartTarget.Core.Responses
             logger.Info(String.Format("Initializing Response of Type '{0}'", this.GetType().FullName));
         }
 
-        public string OutputFile { get; set; }
+        public string OutputFile {
+            get
+            {
+                return _outputFile;
+            }
+            set
+            {
+                _outputFile = value;
+                _formattedOutputFile = Smart.Format(_outputFile, Tokens);
+            }
+        }
+
+        private string _outputFile;
+        private string _formattedOutputFile;
+
         public bool Overwrite { get; set; } = true;
 
         public List<string> OutputColumns { get; set; } = new List<string>(); 
@@ -47,9 +62,9 @@ namespace XESmartTarget.Core.Responses
                 xeadapter.Filter = this.Filter;
                 xeadapter.OutputColumns = new List<OutputColumn>(OutputColumns.Select(col => new OutputColumn(col)));
 
-                if (Overwrite && File.Exists(OutputFile))
+                if (Overwrite && File.Exists(_formattedOutputFile))
                 {
-                    File.Delete(OutputFile);
+                    File.Delete(_formattedOutputFile);
                 }
             }
             xeadapter.ReadEvent(evt);
@@ -66,11 +81,12 @@ namespace XESmartTarget.Core.Responses
             {
                 DataTableCSVAdapter adapter = new DataTableCSVAdapter(EventsTable)
                 {
-                    OutputFile = this.OutputFile
+                    OutputFile = this._formattedOutputFile
                 };
                 adapter.WriteToFile(writeHeaders);
                 EventsTable.Rows.Clear();
             }
         }
+
     }
 }
