@@ -135,6 +135,7 @@
     <Compile Include="Response.cs" />
     <Compile Include="Utils\DataTableCSVAdapter.cs" />
     <Compile Include="Utils\DataTableTSQLAdapter.cs" />
+    <Compile Include="Utils\ModelConverter.cs" />
     <Compile Include="Utils\XELFileCSVAdapter.cs" />
     <Compile Include="Utils\XEventDataTableAdapter.cs" />
   </ItemGroup>
