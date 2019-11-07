@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
+using XESmartTarget.Core.Utils;
 
 namespace XESmartTarget.Core.Config
 {
@@ -41,6 +42,7 @@ namespace XESmartTarget.Core.Config
         public static TargetConfig LoadFromFile(string path)
         {
             JavaScriptSerializer ser = new JavaScriptSerializer(new TargetConfigTypeResolver());
+            ser.RegisterConverters(new JavaScriptConverter[] { new ModelConverter() });
             using (StreamReader r = new StreamReader(path))
             {
                 string json = r.ReadToEnd();

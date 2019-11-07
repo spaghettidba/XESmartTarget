@@ -19,7 +19,7 @@ namespace XESmartTarget.Core.Utils
             {
                 List<Type> result = new List<Type>();
                 Assembly currentAssembly = Assembly.GetExecutingAssembly();
-                string nameSpace = "XeSmartTarget.Core";
+                string nameSpace = "XESmartTarget.Core.";
                 Type[] types = currentAssembly.GetTypes().Where(t => t != null && t.FullName.StartsWith(nameSpace) & !t.FullName.Contains("+")).ToArray();
                 foreach (Type t in types)
                 {
@@ -62,10 +62,17 @@ namespace XESmartTarget.Core.Utils
                 {
                     if (prop.Name.EndsWith("ServerName"))
                     {
-                        if (dictionary[key] is string)
-                            prop.SetValue(p, new string[] { (string)dictionary[key] }, null);
+                        if (prop.PropertyType.Name == "String")
+                        {
+                            prop.SetValue(p, (string)dictionary[key]);
+                        }
                         else
-                            prop.SetValue(p, (string[])((ArrayList)dictionary[key]).ToArray(typeof(string)), null);
+                        {
+                            if (dictionary[key] is string)
+                                prop.SetValue(p, new string[] { (string)dictionary[key] }, null);
+                            else
+                                prop.SetValue(p, (string[])((ArrayList)dictionary[key]).ToArray(typeof(string)), null);
+                        }
                     }
                     else
                     {

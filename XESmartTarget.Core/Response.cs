@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace XESmartTarget.Core
 {
-    public abstract class Response
+    public abstract class Response : ICloneable
     {
         public Response()
         {
@@ -27,5 +27,15 @@ namespace XESmartTarget.Core
             return Events.Count == 0 || Events.Contains("*") || Events.Contains(evt.Name);
         }
 
+        public object Clone()
+        {
+            Response res = (Response)this.MemberwiseClone();
+            res.Tokens = new Dictionary<string, string>();
+            foreach(string s in Tokens.Keys)
+            {
+                res.Tokens.Add(s, Tokens[s]);
+            }
+            return res;
+        }
     }
 }
