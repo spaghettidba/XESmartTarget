@@ -9,7 +9,7 @@ While you are free to extend XESmartTarget with your own Response types, XESmart
 For instance, the following configuration file instructs XESmartTarget to connect to the server `(local)`, hook to the Extended Events session `test_session` and forward all the events of type `sql_batch_completed` to a Response of type `TableAppenderResponse`, which will insert all events every `10 seconds` into a table named `test_session_data` in the server `(local)`, Database `XESmartTargetTest`, only the columns specified, only the rows with duration > 10000 microseconds.
 <BR>It will also replay the `sql_batch_completed` events to the instance `(local)\SQL2014` using the `ReplayResponse` Response type.
 
-```json
+```javascript
 {
     "Target": {
         "ServerName": "(local)",
