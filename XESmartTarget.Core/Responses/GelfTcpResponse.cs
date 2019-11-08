@@ -100,6 +100,15 @@ namespace XESmartTarget.Core.Responses
                         dr.SetField("short_message", dr["message"] ?? "No message from XE session");
                     }
 
+                    // check lengths since elasticsearch has a 32kb limit
+                    foreach (DataColumn column in dr.Table.Columns)
+                    {
+                        if (dr[column.ColumnName].ToString().Length > 32766)
+                        {
+                            dr.SetField(column.ColumnName, ((string)dr[column.ColumnName]).Substring(0, 32766));
+                        }
+                    }
+
                     var rowJson = JsonConvert.SerializeObject(dr, Formatting.None, jsonSettings);
                     var byteList = new List<Byte>();
                     byteList.AddRange(Encoding.UTF8.GetBytes(rowJson));
