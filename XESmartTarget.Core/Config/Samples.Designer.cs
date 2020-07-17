@@ -19,7 +19,7 @@ namespace XESmartTarget.Core.Config {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Samples {
@@ -62,20 +62,22 @@ namespace XESmartTarget.Core.Config {
         
         /// <summary>
         ///   Looks up a localized string similar to {
-        ///  &quot;ServerName&quot;: &quot;(local)&quot;,
         ///  &quot;Target&quot;: {
+        ///    &quot;ServerName&quot;: &quot;(local)&quot;,
+        ///    &quot;SessionName&quot;: &quot;test_session&quot;,
         ///    &quot;Responses&quot;: [
         ///      {
         ///        &quot;__type&quot;: &quot;TableAppenderResponse&quot;,
-        ///        &quot;TargetTable&quot;: &quot;someTable&quot;,
-        ///        &quot;DelaySeconds&quot;: 0,
-        ///        &quot;Filter&quot;: &quot;someField = SomeValue&quot;,
+        ///        &quot;TargetServer&quot;: &quot;(local)&quot;,
+        ///        &quot;TargetDatabase&quot;: &quot;XESmartTargetTest&quot;,
+        ///        &quot;TargetTable&quot;: &quot;Test_session_data&quot;,
+        ///        &quot;AutoCreateTargetTable&quot;: true,
+        ///        &quot;UploadIntervalSeconds&quot;: 10,
         ///        &quot;Events&quot;: [
-        ///          &quot;SomeEvent&quot;
+        ///          &quot;sql_batch_completed&quot;
         ///        ]
         ///      }
-        ///    ],
-        ///    &quot;SessionName&quot;: &quot;system_health&quot;
+        ///    ]
         ///  }
         ///}.
         /// </summary>

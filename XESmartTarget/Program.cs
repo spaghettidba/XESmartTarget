@@ -1,6 +1,7 @@
 ﻿using CommandLine;
 using CommandLine.Text;
 using NLog;
+using NLog.Targets;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -25,10 +26,6 @@ namespace XESmartTarget
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
             string version = fvi.FileMajorPart.ToString() + "." + fvi.FileMinorPart.ToString() + "." + fvi.FileBuildPart.ToString();
 
-            Console.WriteLine(fvi.FileDescription + " " + version);
-            Console.WriteLine(fvi.LegalCopyright + " - " + fvi.CompanyName);
-            Console.WriteLine();
-
             var options = new Options();
 #if DEBUG
             if (args.Length == 0)
@@ -37,6 +34,26 @@ namespace XESmartTarget
             if (!CommandLine.Parser.Default.ParseArguments(args, options))
             {
                 return;
+            }
+
+            if (!options.NoLogo)
+            {
+                Console.WriteLine(fvi.FileDescription + " " + version);
+                Console.WriteLine(fvi.LegalCopyright + " - " + fvi.CompanyName);
+                Console.WriteLine();
+            }
+            else
+            {
+                // also suppress writing to console
+                if (LogManager.Configuration != null)
+                {
+                    var target = (ConsoleTarget)LogManager.Configuration.FindTargetByName("console");
+                    if (target != null)
+                    {
+                        target.Error = true;
+                    }
+                    LogManager.ReconfigExistingLoggers();
+                }
             }
 
             logger.Info(String.Format("Reading configuration from '{0}'", options.ConfigurationFile));
@@ -63,7 +80,7 @@ namespace XESmartTarget
             logger.Info("Target process ended");
         }
 
-        public static async Task processTargetAsync(Target target)
+        public static async Task processTargetAsync(XESmartTarget.Core.Target target)
         {
             source = new CancellationTokenSource(); 
             source.Token.Register(CancelNotification); 
@@ -83,6 +100,9 @@ namespace XESmartTarget
     {
         [Option('F', "File", DefaultValue = "XESMartTarget.json", HelpText = "Configuration file")]
         public string ConfigurationFile { get; set; }
+
+        [Option('N', "NoLogo", DefaultValue = false , HelpText = "Hides copyright banner at startup")]
+        public bool NoLogo { get; set; }
 
         [ParserState]
         public IParserState LastParserState { get; set; }

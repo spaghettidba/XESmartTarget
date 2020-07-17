@@ -83,6 +83,8 @@ namespace XESmartTarget.Core.Utils
                 {
                     if (!eventsTable.Columns.Contains(fld.Name) && (OutputColumns.Count == 0 || OutputColumns.Exists(x => x.Name == fld.Name)))
                     {
+                        OutputColumn col = OutputColumns.First(x => x.Name == fld.Name);
+
                         Type t;
                         DataColumn dc;
                         bool disallowed = false;
@@ -98,6 +100,7 @@ namespace XESmartTarget.Core.Utils
                         dc.ExtendedProperties.Add("subtype", "field");
                         dc.ExtendedProperties.Add("disallowedtype", disallowed);
                         dc.ExtendedProperties.Add("calculated", false);
+                        dc.ExtendedProperties.Add("coltype", col.ColumnType);
                         SetColHiddenProperty(dc);
                     }
                 }
@@ -106,6 +109,8 @@ namespace XESmartTarget.Core.Utils
                 {
                     if (!eventsTable.Columns.Contains(act.Name) && (OutputColumns.Count == 0 || OutputColumns.Exists(x => x.Name == act.Name)))
                     {
+                        OutputColumn col = OutputColumns.First(x => x.Name == act.Name);
+
                         Type t;
                         DataColumn dc;
                         bool disallowed = false;
@@ -121,6 +126,7 @@ namespace XESmartTarget.Core.Utils
                         dc.ExtendedProperties.Add("subtype", "action");
                         dc.ExtendedProperties.Add("disallowedtype", disallowed);
                         dc.ExtendedProperties.Add("calculated", false);
+                        dc.ExtendedProperties.Add("coltype", col.ColumnType);
                         SetColHiddenProperty(dc);
                     }
                 }

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace XESmartTarget.Core.Utils
@@ -64,7 +65,7 @@ namespace XESmartTarget.Core.Utils
                 using (BufferedStream f = new BufferedStream(new FileStream(OutputFile, FileMode.Append, FileAccess.Write),4096000))
                 {
                     TextWriter textWriter = new StreamWriter(f);
-                    var csv = new CsvWriter(textWriter);
+                    var csv = new CsvWriter(textWriter, Thread.CurrentThread.CurrentCulture);
 
                     // Write Headers
                     csv.WriteField("name");

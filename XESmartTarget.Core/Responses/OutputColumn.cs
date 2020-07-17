@@ -9,6 +9,13 @@ namespace XESmartTarget.Core.Responses
 {
     public class OutputColumn
     {
+        public enum ColType
+        {
+            Column,
+            Tag,
+            Field
+        }
+
         private string _name;
 
         public string Name {
@@ -31,6 +38,7 @@ namespace XESmartTarget.Core.Responses
         public bool Hidden { get; set; } = false;
         public string Expression { get; set; }
         public string Alias { get; set; }
+        public ColType ColumnType { get; set; } = ColType.Column;
 
         public OutputColumn()
         {
