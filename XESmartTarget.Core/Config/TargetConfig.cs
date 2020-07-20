@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using System.Web.Script.Serialization;
 using XESmartTarget.Core.Utils;
 
@@ -14,6 +15,7 @@ namespace XESmartTarget.Core.Config
     {
         public Target Target { get; set; }
 
+        public static Dictionary<string, object> GlobalVariables = new Dictionary<string, object>();
 
         public static void Test()
         {
@@ -46,6 +48,13 @@ namespace XESmartTarget.Core.Config
             using (StreamReader r = new StreamReader(path))
             {
                 string json = r.ReadToEnd();
+
+                // replace Global Variables in the json file
+                foreach (string key in GlobalVariables.Keys)
+                {
+                    json = json.Replace($"${key}", HttpUtility.JavaScriptStringEncode(GlobalVariables[key].ToString()));
+                }
+
                 var minifier = new JsMinifier();
                 // minify JSON to strip away comments
                 // Comments in config files are very useful but JSON parsers

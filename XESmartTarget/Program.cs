@@ -22,19 +22,19 @@ namespace XESmartTarget
 
         static void Main(string[] args)
         {
-            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-            string version = fvi.FileMajorPart.ToString() + "." + fvi.FileMinorPart.ToString() + "." + fvi.FileBuildPart.ToString();
-
-            var options = new Options();
 #if DEBUG
             if (args.Length == 0)
                 args = new string[] {"--File", @"c:\temp\sample.json" };
 #endif
-            if (!CommandLine.Parser.Default.ParseArguments(args, options))
-            {
-                return;
-            }
+            var result = Parser.Default.ParseArguments<Options>(args)
+                .WithParsed(options => ProcessTarget(options));
+        }
+
+        private static void ProcessTarget(Options options)
+        {
+            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+            string version = fvi.FileMajorPart.ToString() + "." + fvi.FileMinorPart.ToString() + "." + fvi.FileBuildPart.ToString();
 
             if (!options.NoLogo)
             {
@@ -42,15 +42,21 @@ namespace XESmartTarget
                 Console.WriteLine(fvi.LegalCopyright + " - " + fvi.CompanyName);
                 Console.WriteLine();
             }
-            else
+
+
+            if (!options.Quiet)
             {
-                // also suppress writing to console
+                // suppress writing to console
                 if (LogManager.Configuration != null)
                 {
-                    var target = (ConsoleTarget)LogManager.Configuration.FindTargetByName("console");
-                    if (target != null)
+                    LogManager.Configuration.RemoveTarget("console");
+                    foreach (var lr in LogManager.Configuration.LoggingRules)
                     {
-                        target.Error = true;
+                        var consoleTarget = lr.Targets.Where(x => x.Name == "console").FirstOrDefault();
+                        if (consoleTarget != null)
+                        {
+                            lr.Targets.Remove(consoleTarget);
+                        }
                     }
                     LogManager.ReconfigExistingLoggers();
                 }
@@ -63,6 +69,13 @@ namespace XESmartTarget
                 logger.Error(String.Format("File not found: '{0}'", options.ConfigurationFile));
                 Console.WriteLine("Run XESmartTarget -? for help.");
                 return;
+            }
+
+            // parse key value pairs
+            foreach(var kvp in options.GlobalVariables)
+            {
+                var pair = kvp.Split('=');
+                TargetConfig.GlobalVariables.Add(pair[0], pair[1]);
             }
 
             TargetConfig config = TargetConfig.LoadFromFile(options.ConfigurationFile);
@@ -79,6 +92,7 @@ namespace XESmartTarget
             t.Wait();
             logger.Info("Target process ended");
         }
+
 
         public static async Task processTargetAsync(XESmartTarget.Core.Target target)
         {
@@ -98,20 +112,17 @@ namespace XESmartTarget
 
     class Options
     {
-        [Option('F', "File", DefaultValue = "XESMartTarget.json", HelpText = "Configuration file")]
+        [Option('F', "File", Default = "XESMartTarget.json", HelpText = "Configuration file")]
         public string ConfigurationFile { get; set; }
 
-        [Option('N', "NoLogo", DefaultValue = false , HelpText = "Hides copyright banner at startup")]
+        [Option('N', "NoLogo", Default = false , HelpText = "Hides copyright banner at startup")]
         public bool NoLogo { get; set; }
 
-        [ParserState]
-        public IParserState LastParserState { get; set; }
+        [Option('Q', "Quiet", Default = false, HelpText = "Prevents output to console")]
+        public bool Quiet { get; set; }
 
-        [HelpOption]
-        public string GetUsage()
-        {
-            return HelpText.AutoBuild(this,
-              (HelpText current) => HelpText.DefaultParsingErrorsHandler(this, current));
-        }
-    }
+        [Option('G', "GlobalVariables",  HelpText = "Global variables in the form key1=value1 key2=value2")]
+        public IEnumerable<string> GlobalVariables { get; set; }
+
+     }
 }
