@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -34,7 +35,7 @@ namespace XESmartTarget.Core.Utils
             {
                 using (TextWriter textWriter = new StreamWriter(f))
                 {
-                    var csv = new CsvWriter(textWriter, Thread.CurrentThread.CurrentCulture);
+                    var csv = new CsvWriter(textWriter, CultureInfo.CurrentCulture);
 
                     if (writeHeaders)
                     {

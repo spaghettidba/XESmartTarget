@@ -3,6 +3,7 @@ using Microsoft.SqlServer.XEvent.Linq;
 using NLog;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -65,7 +66,7 @@ namespace XESmartTarget.Core.Utils
                 using (BufferedStream f = new BufferedStream(new FileStream(OutputFile, FileMode.Append, FileAccess.Write),4096000))
                 {
                     TextWriter textWriter = new StreamWriter(f);
-                    var csv = new CsvWriter(textWriter, Thread.CurrentThread.CurrentCulture);
+                    var csv = new CsvWriter(textWriter, CultureInfo.CurrentCulture);
 
                     // Write Headers
                     csv.WriteField("name");
