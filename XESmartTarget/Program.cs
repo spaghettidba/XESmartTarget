@@ -44,7 +44,7 @@ namespace XESmartTarget
             }
 
 
-            if (!options.Quiet)
+            if (options.Quiet)
             {
                 // suppress writing to console
                 if (LogManager.Configuration != null)
