@@ -53,6 +53,7 @@ namespace XESmartTarget.Core.Utils
                     eventsTable.Columns.Add("name", typeof(String));
                     eventsTable.Columns["name"].ExtendedProperties.Add("auto_column", true);
                 }
+
             }
         }
 
@@ -81,9 +82,25 @@ namespace XESmartTarget.Core.Utils
             {
                 foreach (PublishedEventField fld in evt.Fields)
                 {
-                    if (!eventsTable.Columns.Contains(fld.Name) && (OutputColumns.Count == 0 || OutputColumns.Exists(x => x.Name == fld.Name)))
+                    if (
+                        !eventsTable.Columns.Contains(fld.Name) 
+                        && (
+                            OutputColumns.Count == 0 
+                            || OutputColumns.Exists(x => x.Name == fld.Name) 
+                            || OutputColumns.Exists(x => x.Calculated && Regex.IsMatch(x.Name, @"\s+AS\s+.*" + fld.Name, RegexOptions.IgnoreCase))
+                        )
+                    )
                     {
-                        OutputColumn col = OutputColumns.First(x => x.Name == fld.Name);
+                        OutputColumn col = OutputColumns.FirstOrDefault(x => x.Name == fld.Name);
+
+                        if(col == null)
+                        {
+                            col = new OutputColumn()
+                            {
+                                Name = fld.Name,
+                                ColumnType = OutputColumn.ColType.Column
+                            };
+                        }
 
                         Type t;
                         DataColumn dc;
@@ -107,9 +124,25 @@ namespace XESmartTarget.Core.Utils
 
                 foreach (PublishedAction act in evt.Actions)
                 {
-                    if (!eventsTable.Columns.Contains(act.Name) && (OutputColumns.Count == 0 || OutputColumns.Exists(x => x.Name == act.Name)))
+                    if (
+                        !eventsTable.Columns.Contains(act.Name) 
+                        && (
+                            OutputColumns.Count == 0 
+                            || OutputColumns.Exists(x => x.Name == act.Name)
+                            || OutputColumns.Exists(x => x.Calculated && Regex.IsMatch(x.Name, @"\s+AS\s+.*" + act.Name, RegexOptions.IgnoreCase))
+                        )
+                    )
                     {
-                        OutputColumn col = OutputColumns.First(x => x.Name == act.Name);
+                        OutputColumn col = OutputColumns.FirstOrDefault(x => x.Name == act.Name);
+
+                        if (col == null)
+                        {
+                            col = new OutputColumn()
+                            {
+                                Name = act.Name,
+                                ColumnType = OutputColumn.ColType.Column
+                            };
+                        }
 
                         Type t;
                         DataColumn dc;
@@ -151,9 +184,10 @@ namespace XESmartTarget.Core.Utils
                             dc.ExtendedProperties.Add("subtype", "calculated");
                             dc.ExtendedProperties.Add("disallowedtype", false);
                             dc.ExtendedProperties.Add("calculated", true);
+                            dc.ExtendedProperties.Add("coltype", OutputColumns[i].ColumnType);
                             SetColHiddenProperty(dc);
                             //change OutputColumns
-                            OutputColumns[i] = colName;
+                            OutputColumns[i].Name = colName;
                         }
 
                     }
