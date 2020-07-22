@@ -58,7 +58,7 @@ namespace XESmartTarget.Core.Utils
                                 {
                                     point = point.Field(dc.ColumnName, Convert.ToSingle(colValue));
                                 }
-                                else if (colValue is long)
+                                else if (colValue is long || colValue is int || colValue is short || colValue is sbyte || colValue is Int16 || colValue is Int32 || colValue is Int64) 
                                 {
                                     point = point.Field(dc.ColumnName, Convert.ToInt64(colValue));
                                 }
@@ -66,7 +66,7 @@ namespace XESmartTarget.Core.Utils
                                 {
                                     point = point.Field(dc.ColumnName, Convert.ToString(colValue));
                                 }
-                                else if (colValue is ulong)
+                                else if (colValue is ulong || colValue is uint || colValue is ushort || colValue is byte || colValue is UInt16 || colValue is UInt32 || colValue is UInt64)
                                 {
                                     point = point.Field(dc.ColumnName, Convert.ToUInt64(colValue));
                                 }
