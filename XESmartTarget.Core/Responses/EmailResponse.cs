@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.SqlServer.XEvent.Linq;
 using NLog;
 using System.Data;
 using XESmartTarget.Core.Utils;
 using System.Net.Mail;
-using SmartFormat;
 using System.IO;
 
 namespace XESmartTarget.Core.Responses
@@ -68,8 +64,8 @@ namespace XESmartTarget.Core.Responses
                         if(!eventTokens.ContainsKey(t))
                             eventTokens.Add(t, Tokens[t]);
                     }
-                    formattedBody = Smart.Format(Body, eventTokens);
-                    formattedSubject = Smart.Format(Subject, eventTokens);
+                    formattedBody = SmartFormatHelper.Format(Body, eventTokens);
+                    formattedSubject = SmartFormatHelper.Format(Subject, eventTokens);
 
                     using (MailMessage msg = new MailMessage(Sender, To, formattedSubject, formattedBody))
                     {

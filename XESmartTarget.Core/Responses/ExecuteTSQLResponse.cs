@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using NLog;
 using Microsoft.SqlServer.XEvent.Linq;
 using System.Data.SqlClient;
 using System.Data;
 using XESmartTarget.Core.Utils;
-using SmartFormat;
 
 namespace XESmartTarget.Core.Responses
 {
@@ -34,7 +31,7 @@ namespace XESmartTarget.Core.Responses
             get
             {
                 string formattedServerName = ServerName;
-                Smart.Format(ServerName, Tokens);
+                SmartFormatHelper.Format(ServerName, Tokens);
 
                 int ConnectionTimeout = 15;
                 string s = "Server=" + formattedServerName + ";";
@@ -79,7 +76,7 @@ namespace XESmartTarget.Core.Responses
                         if (!eventTokens.ContainsKey(k))
                             eventTokens.Add(k, Tokens[k]);
                     }
-                    string formattedTSQL = Smart.Format(TSQL, eventTokens);
+                    string formattedTSQL = SmartFormatHelper.Format(TSQL, eventTokens);
 
                     Task t = Task.Factory.StartNew(() => ExecuteTSQL(formattedTSQL));
                 }

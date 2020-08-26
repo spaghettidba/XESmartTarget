@@ -1,13 +1,9 @@
-﻿using Microsoft.SqlServer.XEvent.Linq;
-using NLog;
-using SmartFormat;
+﻿using NLog;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using XESmartTarget.Core.Utils;
 
 namespace XESmartTarget.Core.Responses
@@ -47,7 +43,7 @@ namespace XESmartTarget.Core.Responses
 
                 DataTableTSQLAdapter adapter = new DataTableTSQLAdapter(groupedData, conn)
                 {
-                    DestinationTableName = Smart.Format(TableName, Tokens)
+                    DestinationTableName = SmartFormatHelper.Format(TableName, Tokens)
                 };
                 numRows = adapter.MergeToServer(_outputColumns);
                 originalRows = groupedData.Rows.Count;
@@ -66,7 +62,7 @@ namespace XESmartTarget.Core.Responses
 
                 DataTableTSQLAdapter adapter = new DataTableTSQLAdapter(data, conn)
                 {
-                    DestinationTableName = Smart.Format(TableName, Tokens)
+                    DestinationTableName = SmartFormatHelper.Format(TableName, Tokens)
                 };
                 if (!adapter.CheckTableExists())
                 {

@@ -24,7 +24,7 @@ namespace XESmartTarget
         {
 #if DEBUG
             if (args.Length == 0)
-                args = new string[] {"--File", @"c:\temp\sample.json" };
+                args = new string[] { "--File", @"c:\temp\sample.json" };
 #endif
             var result = Parser.Default.ParseArguments<Options>(args)
                 .WithParsed(options => ProcessTarget(options));
@@ -72,7 +72,7 @@ namespace XESmartTarget
             }
 
             // parse key value pairs
-            foreach(var kvp in options.GlobalVariables)
+            foreach (var kvp in options.GlobalVariables)
             {
                 var pair = kvp.Split('=');
                 TargetConfig.GlobalVariables.Add(pair[0], pair[1]);
@@ -80,7 +80,8 @@ namespace XESmartTarget
 
             TargetConfig config = TargetConfig.LoadFromFile(options.ConfigurationFile);
 
-            Console.CancelKeyPress += delegate (object sender, ConsoleCancelEventArgs e) {
+            Console.CancelKeyPress += delegate (object sender, ConsoleCancelEventArgs e)
+            {
                 e.Cancel = true;
                 logger.Info("Received shutdown signal...");
                 config.Target.Stop();
@@ -96,18 +97,19 @@ namespace XESmartTarget
 
         public static async Task processTargetAsync(XESmartTarget.Core.Target target)
         {
-            source = new CancellationTokenSource(); 
-            source.Token.Register(CancelNotification); 
-            var completionSource = new TaskCompletionSource<object>(); 
-            source.Token.Register(() => completionSource.TrySetCanceled()); 
+            source = new CancellationTokenSource();
+            source.Token.Register(CancelNotification);
+            var completionSource = new TaskCompletionSource<object>();
+            source.Token.Register(() => completionSource.TrySetCanceled());
             var task = Task.Factory.StartNew(() => target.Start(), source.Token);
-            await Task.WhenAny(task, completionSource.Task); 
+            await Task.WhenAny(task, completionSource.Task);
         }
 
         public static void CancelNotification()
         {
             logger.Info("Shutdown complete.");
         }
+
     }
 
     class Options

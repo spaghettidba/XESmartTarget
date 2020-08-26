@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.SqlServer.XEvent.Linq;
 using System.Data.SqlClient;
@@ -10,7 +8,6 @@ using System.Data;
 using System.Threading;
 using System.Collections.Concurrent;
 using XESmartTarget.Core.Utils;
-using SmartFormat;
 
 namespace XESmartTarget.Core.Responses
 {
@@ -126,10 +123,10 @@ namespace XESmartTarget.Core.Responses
                     {
                         rw = new ReplayWorker()
                         {
-                            ServerName = Smart.Format(ServerName,Tokens),
+                            ServerName = SmartFormatHelper.Format(ServerName,Tokens),
                             UserName = UserName,
                             Password = Password,
-                            DatabaseName = Smart.Format(DatabaseName,Tokens),
+                            DatabaseName = SmartFormatHelper.Format(DatabaseName,Tokens),
                             ReplayIntervalSeconds = ReplayIntervalSeconds,
                             StopOnError = StopOnError,
                             Name = session_id.ToString()

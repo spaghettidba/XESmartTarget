@@ -1,12 +1,10 @@
 ﻿using Microsoft.SqlServer.XEvent.Linq;
 using NLog;
-using SmartFormat;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using XESmartTarget.Core.Utils;
@@ -84,8 +82,8 @@ namespace XESmartTarget.Core.Responses
             get
             {
                 int ConnectionTimeout = 15;
-                string s = "Server=" + Smart.Format(ServerName,Tokens) + ";";
-                s += "Database=" + Smart.Format(DatabaseName,Tokens) + ";";
+                string s = "Server=" + SmartFormatHelper.Format(ServerName,Tokens) + ";";
+                s += "Database=" + SmartFormatHelper.Format(DatabaseName,Tokens) + ";";
                 if (String.IsNullOrEmpty(UserName))
                 {
                     s += "Integrated Security = True;";
@@ -142,7 +140,7 @@ namespace XESmartTarget.Core.Responses
             //
             if (AutoCreateTargetTable && this.GetType().Name == "TableAppenderResponse")
             {
-                logger.Info("Creating target table {0}.{1}.{2}",Smart.Format(ServerName,Tokens), Smart.Format(DatabaseName, Tokens), Smart.Format(TableName, Tokens));
+                logger.Info("Creating target table {0}.{1}.{2}", SmartFormatHelper.Format(ServerName,Tokens), SmartFormatHelper.Format(DatabaseName, Tokens), SmartFormatHelper.Format(TableName, Tokens));
                 CreateTargetTable(eventsTable);
                 TargetTableCreated = true;
             }
@@ -193,7 +191,7 @@ namespace XESmartTarget.Core.Responses
                 {
                     DataTableTSQLAdapter adapter = new DataTableTSQLAdapter(EventsTable, conn)
                     {
-                        DestinationTableName = Smart.Format(TableName, Tokens)
+                        DestinationTableName = SmartFormatHelper.Format(TableName, Tokens)
                     };
                     adapter.WriteToServer();
                     numRows = EventsTable.Rows.Count;
@@ -214,7 +212,7 @@ namespace XESmartTarget.Core.Responses
 
                 DataTableTSQLAdapter adapter = new DataTableTSQLAdapter(data, conn)
                 {
-                    DestinationTableName = Smart.Format(TableName, Tokens)
+                    DestinationTableName = SmartFormatHelper.Format(TableName, Tokens)
                 };
                 if (!adapter.CheckTableExists())
                 {

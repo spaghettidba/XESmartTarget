@@ -1,6 +1,5 @@
 ﻿using Microsoft.SqlServer.XEvent.Linq;
 using NLog;
-using SmartFormat;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -32,7 +31,7 @@ namespace XESmartTarget.Core.Responses
             set
             {
                 _outputFile = value;
-                _formattedOutputFile = Smart.Format(_outputFile, Tokens);
+                _formattedOutputFile = SmartFormatHelper.Format(_outputFile, Tokens);
             }
         }
 
