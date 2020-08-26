@@ -15,6 +15,7 @@ namespace XESmartTarget.Core.Utils
     public class DataTableCSVAdapter
     {
         private DataTable Table { get; set; }
+        private string[] OutputColumns { get; set; }
         public String OutputFile { get; set; }
 
         public DataTableCSVAdapter(DataTable table)
@@ -26,6 +27,12 @@ namespace XESmartTarget.Core.Utils
         {
             OutputFile = outFile;
             Table = table;
+        }
+
+        public DataTableCSVAdapter(DataTable table, String outFile, string[] outColumns)
+        {
+            OutputFile = outFile;
+            Table = table.DefaultView.ToTable(false,outColumns);
         }
 
         [MethodImpl(MethodImplOptions.Synchronized)]
