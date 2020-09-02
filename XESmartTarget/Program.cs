@@ -62,6 +62,26 @@ namespace XESmartTarget
                 }
             }
 
+            if (LogManager.Configuration != null)
+            {
+                var target = (FileTarget)LogManager.Configuration.FindTargetByName("logfile");
+                if (target != null)
+                {
+                    var pathToLog = options.LogFile;
+                    if (pathToLog == null)
+                    {
+                        pathToLog = Path.Combine(Environment.CurrentDirectory, "SqlWorkload.log");
+                    }
+                    if (!Path.IsPathRooted(pathToLog))
+                    {
+                        pathToLog = Path.Combine(Environment.CurrentDirectory, pathToLog);
+                    }
+                    target.FileName = pathToLog;
+
+                    LogManager.ReconfigExistingLoggers();
+                }
+            }
+
             logger.Info(String.Format("Reading configuration from '{0}'", options.ConfigurationFile));
 
             if (!File.Exists(options.ConfigurationFile))
@@ -126,5 +146,7 @@ namespace XESmartTarget
         [Option('G', "GlobalVariables",  HelpText = "Global variables in the form key1=value1 key2=value2")]
         public IEnumerable<string> GlobalVariables { get; set; }
 
-     }
+        [Option('L', "LogFile", HelpText = "Log File")]
+        public string LogFile { get; set; }
+    }
 }
