@@ -80,6 +80,8 @@ namespace XESmartTarget.Core.Responses
 
                     Task t = Task.Factory.StartNew(() => ExecuteTSQL(formattedTSQL));
                 }
+
+                EventsTable.Clear();
             }
         }
 
