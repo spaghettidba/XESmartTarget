@@ -70,7 +70,7 @@ namespace XESmartTarget
                     var pathToLog = options.LogFile;
                     if (pathToLog == null)
                     {
-                        pathToLog = Path.Combine(Environment.CurrentDirectory, "SqlWorkload.log");
+                        pathToLog = Path.Combine(Environment.CurrentDirectory, "XESmartTarget.log");
                     }
                     if (!Path.IsPathRooted(pathToLog))
                     {
