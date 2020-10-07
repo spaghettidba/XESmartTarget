@@ -165,6 +165,8 @@ namespace XESmartTarget.Core
                                 }
                                 else
                                 {
+                                    logger.Error(e.Message);
+                                    logger.Error(e.StackTrace);
                                     logger.Error(e, ServerName);
                                 }
                             }
