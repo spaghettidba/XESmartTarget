@@ -33,7 +33,7 @@ namespace XESmartTarget.Core.Utils
                 //
                 // Add Collection Time column
                 //
-                if (!eventsTable.Columns.Contains("collection_time") && (OutputColumns.Count == 0 || OutputColumns.Exists(x => x.Name == "collection_time")))
+                if (!eventsTable.Columns.Contains("collection_time") && (OutputColumns.Count == 0 || OutputColumns.Exists(x => x.Name == "collection_time") || (Filter != null && Filter.Contains("collection_time"))))
                 {
                     DataColumn cl_dt = new DataColumn("collection_time", typeof(DateTime))
                     {
@@ -48,7 +48,7 @@ namespace XESmartTarget.Core.Utils
                 //
                 // Add Name column
                 //
-                if (!eventsTable.Columns.Contains("name") && (OutputColumns.Count == 0 || OutputColumns.Exists(x => x.Name == "name")))
+                if (!eventsTable.Columns.Contains("name") && (OutputColumns.Count == 0 || OutputColumns.Exists(x => x.Name == "name") || (Filter != null && Filter.Contains("name"))))
                 {
                     eventsTable.Columns.Add("name", typeof(String));
                     eventsTable.Columns["name"].ExtendedProperties.Add("auto_column", true);
@@ -88,6 +88,7 @@ namespace XESmartTarget.Core.Utils
                             OutputColumns.Count == 0 
                             || OutputColumns.Exists(x => x.Name == fld.Name) 
                             || OutputColumns.Exists(x => x.Calculated && Regex.IsMatch(x.Name, @"\s+AS\s+.*" + fld.Name, RegexOptions.IgnoreCase))
+                            || (Filter != null && Filter.Contains(fld.Name))
                         )
                     )
                     {

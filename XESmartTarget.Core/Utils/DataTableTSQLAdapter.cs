@@ -421,8 +421,8 @@ namespace XESmartTarget.Core.Utils
                     string _0 = destination;
                     string _1 = String.Join(" AND ", OutputColumns.Where(s => !(s is AggregatedOutputColumn) && !(s.Hidden)).Select(s => "(src." + s.Name + " = dest." + s.Name + " OR (src." + s.Name + " IS NULL AND dest." + s.Name + " IS NULL))"));
                     string _2 = String.Join(", ", OutputColumns.Where(s => s is AggregatedOutputColumn).Select(s => s.Alias + " = " + BuildMergeSetClause((AggregatedOutputColumn)s)));
-                    string _3 = String.Join(", ", OutputColumns.Where(s => !s.Hidden).Select(s => s.Alias));
-                    string _4 = String.Join(", ", OutputColumns.Where(s => !s.Hidden).Select(s => "src." + s.Alias));
+                    string _3 = String.Join(", ", OutputColumns.Where(s => !s.Hidden).Select(s => s is AggregatedOutputColumn ? s.Alias : s.Name));
+                    string _4 = String.Join(", ", OutputColumns.Where(s => !s.Hidden).Select(s => "src." + (s is AggregatedOutputColumn ? s.Alias : s.Name)));
 
                     sql = String.Format(sql, _0, _1, _2, _3, _4);
 
@@ -441,10 +441,10 @@ namespace XESmartTarget.Core.Utils
             switch (col.Aggregation)
             {
                 case AggregatedOutputColumn.AggregationType.Max:
-                    result = "CASE WHEN src." + col.Alias + " > dest." + col.Alias + " THEN src." + col.Alias + " ELSE dest." + col.Alias + " END";
+                    result = "CASE WHEN src." + col.Alias + " > dest." + col.Alias + " OR dest." + col.Alias + " IS NULL THEN src." + col.Alias + " ELSE dest." + col.Alias + " END";
                     break;
                 case AggregatedOutputColumn.AggregationType.Min:
-                    result = "CASE WHEN src." + col.Alias + " < dest." + col.Alias + " THEN src." + col.Alias + " ELSE dest." + col.Alias + " END";
+                    result = "CASE WHEN src." + col.Alias + " < dest." + col.Alias + " OR dest." + col.Alias + " IS NULL THEN src." + col.Alias + " ELSE dest." + col.Alias + " END";
                     break;
                 case AggregatedOutputColumn.AggregationType.Avg:
                     // this is not really an average, but once the previous value
