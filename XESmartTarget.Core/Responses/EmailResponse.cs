@@ -67,8 +67,13 @@ namespace XESmartTarget.Core.Responses
                     formattedBody = SmartFormatHelper.Format(Body, eventTokens);
                     formattedSubject = SmartFormatHelper.Format(Subject, eventTokens);
 
-                    using (MailMessage msg = new MailMessage(Sender, To, formattedSubject, formattedBody))
+                    using (MailMessage msg = new MailMessage() { From = new MailAddress(Sender), Subject = formattedSubject, Body = formattedBody })
                     {
+                        foreach(var addrTo in To.Split(';'))
+                        {
+                            msg.To.Add(new MailAddress(addrTo));
+                        }
+
                         using (MemoryStream attachStream = new MemoryStream())
                         {
 
