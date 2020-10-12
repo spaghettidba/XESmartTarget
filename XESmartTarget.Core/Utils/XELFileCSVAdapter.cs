@@ -65,48 +65,52 @@ namespace XESmartTarget.Core.Utils
             {
                 using (BufferedStream f = new BufferedStream(new FileStream(OutputFile, FileMode.Append, FileAccess.Write),4096000))
                 {
-                    TextWriter textWriter = new StreamWriter(f);
-                    var csv = new CsvWriter(textWriter, CultureInfo.CurrentCulture);
-
-                    // Write Headers
-                    csv.WriteField("name");
-                    csv.WriteField("timestamp");
-                    csv.WriteField("timestamp(UTC)");
-                    foreach (CsvColumn col in orderedColumns)
+                    using (TextWriter textWriter = new StreamWriter(f))
                     {
-                        csv.WriteField(col.Name);
-                    }
-                    csv.NextRecordAsync();
-
-
-                    // Write Data
-                    foreach (PublishedEvent xevent in eventStream)
-                    {
-                        csv.WriteField(xevent.Name);
-                        csv.WriteField(xevent.Timestamp);
-                        csv.WriteField(xevent.Timestamp.ToUniversalTime()); 
-                        foreach (CsvColumn col in orderedColumns)
+                        using (var csv = new CsvWriter(textWriter, CultureInfo.CurrentCulture))
                         {
-                            if (col.Type == 'f')
+                            // Write Headers
+                            csv.WriteField("name");
+                            csv.WriteField("timestamp");
+                            csv.WriteField("timestamp(UTC)");
+                            foreach (CsvColumn col in orderedColumns)
                             {
-                                PublishedEventField theValue = null;
-                                if (xevent.Fields.TryGetValue(col.Name, out theValue))
-                                    csv.WriteField(theValue.Value);
-                                else
-                                    csv.WriteField("");
+                                csv.WriteField(col.Name);
                             }
-                            else
+
+                            csv.NextRecordAsync();
+
+
+                            // Write Data
+                            foreach (PublishedEvent xevent in eventStream)
                             {
-                                PublishedAction theValue = null;
-                                if (xevent.Actions.TryGetValue(col.Name, out theValue))
-                                    csv.WriteField(theValue.Value);
-                                else
-                                    csv.WriteField("");
+                                csv.WriteField(xevent.Name);
+                                csv.WriteField(xevent.Timestamp);
+                                csv.WriteField(xevent.Timestamp.ToUniversalTime());
+                                foreach (CsvColumn col in orderedColumns)
+                                {
+                                    if (col.Type == 'f')
+                                    {
+                                        PublishedEventField theValue = null;
+                                        if (xevent.Fields.TryGetValue(col.Name, out theValue))
+                                            csv.WriteField(theValue.Value);
+                                        else
+                                            csv.WriteField("");
+                                    }
+                                    else
+                                    {
+                                        PublishedAction theValue = null;
+                                        if (xevent.Actions.TryGetValue(col.Name, out theValue))
+                                            csv.WriteField(theValue.Value);
+                                        else
+                                            csv.WriteField("");
+                                    }
+                                }
+
+                                csv.NextRecordAsync();
                             }
                         }
-                        csv.NextRecordAsync();
                     }
-                    csv.Flush();
                 }
             }
             logger.Trace(String.Format("Output finished {0}", DateTime.Now));
