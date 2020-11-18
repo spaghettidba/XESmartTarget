@@ -90,11 +90,11 @@ namespace XESmartTarget.Core.Responses
             {
                 Type t = null;
                 // set the base type on the aggregation: 
-                // - MIN /MAX means use the base column type
-                // - all other aggregations mean Int32
+                // - MIN /MAX --> use the base column type
+                // - all other aggregations --> enlarge the base type
                 if(!(col.Aggregation == AggregatedOutputColumn.AggregationType.Max || col.Aggregation == AggregatedOutputColumn.AggregationType.Min))
                 {
-                    t = typeof(Int32);
+                    EnlargeType(EventsTable.Columns[col.BaseColumn].DataType);
                 }
                 else if(EventsTable.Columns.Contains(col.BaseColumn))
                 {
@@ -165,6 +165,37 @@ namespace XESmartTarget.Core.Responses
             result = result.Replace("[", @"\[");
             result = "[" + result + "]";
             return result;
+        }
+
+
+        private bool IsNumeric(Type type)
+        {
+            var t = Nullable.GetUnderlyingType(type) ?? type;
+            return t.IsPrimitive || t == typeof(decimal);
+        }
+
+        private bool IsDecimal(Type type)
+        {
+            return ((Type.GetTypeCode(type) == TypeCode.Double) || (Type.GetTypeCode(type) == TypeCode.Single) || (Type.GetTypeCode(type) == TypeCode.Decimal));
+        }
+
+        private Type EnlargeType(Type t)
+        {
+            if (!IsNumeric(t))
+            {
+                return t;
+            }
+            else
+            {
+                if (IsDecimal(t))
+                {
+                    return typeof(Double);
+                }
+                else
+                {
+                    return typeof(Int64);
+                }
+            }
         }
     }
 }
