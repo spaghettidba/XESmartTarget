@@ -91,18 +91,23 @@ namespace XESmartTarget.Core.Responses
                 Type t = null;
                 // set the base type on the aggregation: 
                 // - MIN /MAX --> use the base column type
+                // - COUNT --> Int32
                 // - all other aggregations --> enlarge the base type
-                if(!(col.Aggregation == AggregatedOutputColumn.AggregationType.Max || col.Aggregation == AggregatedOutputColumn.AggregationType.Min))
+                if (col.Aggregation == AggregatedOutputColumn.AggregationType.Count)
                 {
-                    EnlargeType(EventsTable.Columns[col.BaseColumn].DataType);
+                    t = typeof(Int32);
                 }
-                else if(EventsTable.Columns.Contains(col.BaseColumn))
+                else if (!(col.Aggregation == AggregatedOutputColumn.AggregationType.Max || col.Aggregation == AggregatedOutputColumn.AggregationType.Min))
+                {
+                    t = EnlargeType(EventsTable.Columns[col.BaseColumn].DataType);
+                }
+                else if (EventsTable.Columns.Contains(col.BaseColumn))
                 {
                     t = EventsTable.Columns[col.BaseColumn].DataType;
                 }
                 else
                 {
-                    throw new InvalidExpressionException(String.Format("The base column '{0}' for the aggregated column '{1}' was not found. Please correct your expression.",col.BaseColumn, col.Alias));
+                    throw new InvalidExpressionException(String.Format("The base column '{0}' for the aggregated column '{1}' was not found. Please correct your expression.", col.BaseColumn, col.Alias));
                 }
                 dtGroup.Columns.Add(col.Alias,t);
             }
