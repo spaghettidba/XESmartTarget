@@ -68,13 +68,22 @@ namespace XESmartTarget.Core.Responses
                     Dictionary<string, object> eventTokens = new Dictionary<string, object>();
                     foreach (DataColumn dc in EventsTable.Columns)
                     {
-                        eventTokens.Add(dc.ColumnName, dr[dc]);
+                        if (dr[dc].GetType().Name == "Byte[]")
+                        {
+                            eventTokens.Add(dc.ColumnName, "0x" + (new System.Runtime.Remoting.Metadata.W3cXsd2001.SoapHexBinary(dr[dc] as byte[])).ToString());
+                        }
+                        else
+                        {
+                            eventTokens.Add(dc.ColumnName, dr[dc]);
+                        }
                     }
                     // also add the Response tokens
                     foreach (string k in Tokens.Keys)
                     {
                         if (!eventTokens.ContainsKey(k))
+                        {
                             eventTokens.Add(k, Tokens[k]);
+                        }
                     }
                     string formattedTSQL = SmartFormatHelper.Format(TSQL, eventTokens);
 
