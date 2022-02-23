@@ -31,6 +31,8 @@ $params = $(
     ,('"' + $certTime + '"')
     ,'/d'
     ,'"XESmartTarget"'
+    ,"/fd"
+    ,"sha1"
 )
 
 & $signTool ($params + $InputFile)
