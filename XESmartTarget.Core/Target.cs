@@ -3,9 +3,11 @@ using NLog;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 namespace XESmartTarget.Core
 {
@@ -93,14 +95,14 @@ namespace XESmartTarget.Core
             internal void Process()
             {
 
-                string connectionString = "Data Source=" + ServerName + ";";
+                string connectionString = $"Data Source={ServerName};";
                 if (String.IsNullOrEmpty(DatabaseName))
                 {
                     connectionString += "Initial Catalog = master; ";
                 }
                 else
                 {
-                    connectionString += "Initial Catalog = " + DatabaseName + "; ";
+                    connectionString += $"Initial Catalog = {DatabaseName}; ";
                 }
                 if (String.IsNullOrEmpty(UserName))
                 {
@@ -108,13 +110,92 @@ namespace XESmartTarget.Core
                 }
                 else
                 {
-                    connectionString += "User Id = " + UserName + "; ";
-                    connectionString += "Password = " + Password + "; ";
+                    connectionString += $"User Id = {UserName}; ";
+                    connectionString += $"Password = {Password}; ";
                 }
 
-                logger.Info(String.Format("Connecting to XE session '{0}' on server '{1}'", SessionName, ServerName));
+                logger.Info($"Connecting to XE session '{SessionName}' on server '{ServerName}'");
 
-                QueryableXEventData eventStream = null;
+                bool connectedOnce = false;
+                bool shouldContinue = true;
+
+                
+                while (shouldContinue)
+                {
+                    try
+                    {
+                        QueryableXEventData eventStream = ConnectSessionStream(connectionString);
+                        connectedOnce = true;
+                        logger.Info($"Connected to {ServerName}.");
+                        ProcessStreamData(eventStream);
+                    }
+                    catch (Exception e)
+                    {
+                        logger.Error(e, ServerName);
+                        if (FailOnProcessingError)
+                        {
+                            throw;
+                        }
+                        else
+                        {
+                            int? errNumber = (e.InnerException as SqlException)?.Number;
+                            if ((errNumber == 25727 || errNumber == 25728)
+                                && connectedOnce)
+                            {
+                                shouldContinue = true;
+                                Thread.Sleep(15000); // sleep 15 seconds and reconnect
+                            }
+
+                            shouldContinue = connectedOnce;
+                        }
+                    }
+                }
+            }
+
+            private void ProcessStreamData(QueryableXEventData eventStream)
+            {
+                foreach (PublishedEvent xevent in eventStream)
+                {
+                    if (stopped)
+                    {
+                        break;
+                    }
+                    // Pass events to the responses
+                    foreach (Response r in Responses)
+                    {
+                        // filter out unwanted events
+                        // if no events are specified, will process all
+                        if (r.Events.Count > 0)
+                        {
+                            if (!r.Events.Contains(xevent.Name, StringComparer.CurrentCultureIgnoreCase))
+                            {
+                                continue;
+                            }
+                        }
+                        try
+                        {
+                            r.Process(xevent);
+                        }
+                        catch (Exception e)
+                        {
+                            if (FailOnProcessingError)
+                            {
+                                throw;
+                            }
+                            else
+                            {
+                                logger.Error(e.Message);
+                                logger.Error(e.StackTrace);
+                                logger.Error(e, ServerName);
+                            }
+                        }
+                    }
+                }
+            }
+
+            private QueryableXEventData ConnectSessionStream(string connectionString)
+            {
+                QueryableXEventData eventStream;
                 try
                 {
                     eventStream = new QueryableXEventData(
@@ -125,61 +206,13 @@ namespace XESmartTarget.Core
                 }
                 catch (Exception e)
                 {
-                    var ioe = new InvalidOperationException(String.Format("Unable to connect to the Extended Events session {0} on server {1}", SessionName, ServerName), e);
+                    var ioe = new InvalidOperationException($"Unable to connect to the Extended Events session {SessionName} on server {ServerName}", e);
                     logger.Error(ioe);
                     throw ioe;
                 }
 
-                logger.Info($"Connected to {ServerName}.");
-
-
-                try
-                {
-                    foreach (PublishedEvent xevent in eventStream)
-                    {
-                        if (stopped)
-                        {
-                            break;
-                        }
-                        // Pass events to the responses
-                        foreach (Response r in Responses)
-                        {
-                            // filter out unwanted events
-                            // if no events are specified, will process all
-                            if (r.Events.Count > 0)
-                            {
-                                if (!r.Events.Contains(xevent.Name, StringComparer.CurrentCultureIgnoreCase))
-                                {
-                                    continue;
-                                }
-                            }
-                            try
-                            {
-                                r.Process(xevent);
-                            }
-                            catch (Exception e)
-                            {
-                                if (FailOnProcessingError)
-                                {
-                                    throw;
-                                }
-                                else
-                                {
-                                    logger.Error(e.Message);
-                                    logger.Error(e.StackTrace);
-                                    logger.Error(e, ServerName);
-                                }
-                            }
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    logger.Error(e, ServerName);
-                    throw;
-                }
+                return eventStream;
             }
-
         }
         
     }
