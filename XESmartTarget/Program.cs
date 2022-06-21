@@ -104,13 +104,24 @@ namespace XESmartTarget
             {
                 e.Cancel = true;
                 logger.Info("Received shutdown signal...");
-                config.Target.Stop();
+
+                foreach (var t in config.Target)
+                { 
+                    t.Stop();
+                }
                 source.CancelAfter(TimeSpan.FromSeconds(10)); // give a 10 seconds cancellation grace period 
             };
 
             logger.Info("Starting Target");
-            Task t = processTargetAsync(config.Target);
-            t.Wait();
+
+            var tasks = new List<Task>();
+
+            foreach(var targ in config.Target)
+            {
+                Task t = processTargetAsync(targ);
+                tasks.Add(t);
+            }
+            Task.WaitAll(tasks.ToArray());
             logger.Info("Target process ended");
         }
 

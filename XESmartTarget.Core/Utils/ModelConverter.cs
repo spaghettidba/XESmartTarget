@@ -74,6 +74,26 @@ namespace XESmartTarget.Core.Utils
                                 prop.SetValue(p, (string[])((ArrayList)dictionary[key]).ToArray(typeof(string)), null);
                         }
                     }
+                    else if (prop.Name.EndsWith("Target"))
+                    {
+                        Debug.Print("aaa");
+                        if(dictionary[key] is ArrayList)
+                        {
+                            //prop.SetValue(p, (Target[])((ArrayList)dictionary[key]).ToArray(typeof(Target)), null);
+                            var targList = (ArrayList)dictionary[key];
+                            var deserializedTargs = new List<Target>();
+                            foreach(var el in targList)
+                            {
+                                deserializedTargs.Add((Target)Deserialize((Dictionary<string, object>)el, typeof(Target), serializer));
+                            }
+                            prop.SetValue(p, deserializedTargs.ToArray(), null);
+                            //prop.SetValue(p, new Target[] { (Target)Deserialize((Dictionary<string, object>)dictionary[key], typeof(List<Target>), serializer) }, null);
+                        }
+                        else
+                        {
+                            prop.SetValue(p, new Target[] { (Target)Deserialize((Dictionary<string, object>)dictionary[key], typeof(Target), serializer) }, null);
+                        }
+                    }
                     else
                     {
                         if ((dictionary[key] is Dictionary<string, object>))

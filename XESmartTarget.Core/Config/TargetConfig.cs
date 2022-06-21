@@ -13,7 +13,7 @@ namespace XESmartTarget.Core.Config
 {
     public class TargetConfig
     {
-        public Target Target { get; set; }
+        public Target[] Target { get; set; }
 
         public static Dictionary<string, object> GlobalVariables = new Dictionary<string, object>();
 
@@ -23,9 +23,9 @@ namespace XESmartTarget.Core.Config
             ser.RegisterConverters(new JavaScriptConverter[] { new ModelConverter() });
             TargetConfig x = new TargetConfig()
             {
-                Target = new Target()
+                Target = new Target[1]
             };
-            x.Target.SessionName = "system_health";
+            x.Target[0].SessionName = "system_health";
             Responses.TableAppenderResponse res = new Responses.TableAppenderResponse()
             {
                 UploadIntervalSeconds = 0,
@@ -33,7 +33,7 @@ namespace XESmartTarget.Core.Config
                 Filter = "someField = \"SomeValue\""
             };
             res.Events.Add("SomeEvent");
-            x.Target.Responses.Add(res);
+            x.Target[0].Responses.Add(res);
             string s = ser.Serialize(x);
 
             TargetConfig tc = ser.Deserialize<TargetConfig>(Samples.Sample.ToString());
