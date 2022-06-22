@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -83,6 +84,29 @@ namespace XESmartTarget
             }
 
             logger.Info(String.Format("Reading configuration from '{0}'", options.ConfigurationFile));
+
+            // ******************************************
+            // check the configuration file: is it a URI?
+            // ******************************************
+            Uri outUri;
+            if (Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri)
+               && (outUri.Scheme == Uri.UriSchemeHttp || outUri.Scheme == Uri.UriSchemeHttps))
+            {
+                // save the URI to a file and point configuration there
+                options.ConfigurationFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
+                using (var client = new WebClient())
+                {
+                    try
+                    {
+                        client.DownloadFile(outUri, options.ConfigurationFile);
+                    }
+                    catch (Exception)
+                    {
+                        logger.Error($"Unable to download configuration from URI: '{options.ConfigurationFile}'");
+                        return;
+                    }
+                }
+            }
 
             if (!File.Exists(options.ConfigurationFile))
             {

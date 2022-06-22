@@ -76,7 +76,6 @@ namespace XESmartTarget.Core.Utils
                     }
                     else if (prop.Name.EndsWith("Target"))
                     {
-                        Debug.Print("aaa");
                         if(dictionary[key] is ArrayList)
                         {
                             //prop.SetValue(p, (Target[])((ArrayList)dictionary[key]).ToArray(typeof(Target)), null);
