@@ -89,6 +89,7 @@ namespace XESmartTarget
             // check the configuration file: is it a URI?
             // ******************************************
             Uri outUri;
+            bool deleteTempFile = false;
             if (Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri)
                && (outUri.Scheme == Uri.UriSchemeHttp || outUri.Scheme == Uri.UriSchemeHttps))
             {
@@ -106,6 +107,7 @@ namespace XESmartTarget
                         return;
                     }
                 }
+                deleteTempFile = true;
             }
 
             if (!File.Exists(options.ConfigurationFile))
@@ -146,6 +148,15 @@ namespace XESmartTarget
                 tasks.Add(t);
             }
             Task.WaitAll(tasks.ToArray());
+
+            // delete the file downloaded from URI
+            if (deleteTempFile) {
+                if (File.Exists(options.ConfigurationFile))
+                {
+                    File.Delete(options.ConfigurationFile);
+                }
+            }
+
             logger.Info("Target process ended");
         }
 
