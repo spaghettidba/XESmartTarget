@@ -93,7 +93,7 @@ namespace XESmartTarget
                && (outUri.Scheme == Uri.UriSchemeHttp || outUri.Scheme == Uri.UriSchemeHttps))
             {
                 // save the URI to a file and point configuration there
-                options.ConfigurationFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
+                options.ConfigurationFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json");
                 using (var client = new WebClient())
                 {
                     try
