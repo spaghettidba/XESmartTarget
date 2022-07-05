@@ -110,7 +110,7 @@ namespace XESmartTarget
                         {
                             using (var fs = new FileStream(options.ConfigurationFile, FileMode.CreateNew))
                             {
-                                response.Content.CopyToAsync(fs);
+                                response.Content.CopyToAsync(fs).GetAwaiter().GetResult();
                             }
                         }
                         else
@@ -159,12 +159,20 @@ namespace XESmartTarget
 
             var tasks = new List<Task>();
 
-            foreach(var targ in config.Target)
+            if (config != null)
             {
-                Task t = processTargetAsync(targ);
-                tasks.Add(t);
+
+                foreach (var targ in config.Target)
+                {
+                    Task t = processTargetAsync(targ);
+                    tasks.Add(t);
+                }
+                Task.WaitAll(tasks.ToArray());
             }
-            Task.WaitAll(tasks.ToArray());
+            else
+            {
+                logger.Error("No Targets found in the source configuration file");
+            }
 
             // delete the file downloaded from URI
             if (deleteTempFile) {
