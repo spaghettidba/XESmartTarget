@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -95,11 +96,27 @@ namespace XESmartTarget
             {
                 // save the URI to a file and point configuration there
                 options.ConfigurationFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json");
-                using (var client = new WebClient())
+                using (var client = new HttpClient())
                 {
                     try
                     {
-                        client.DownloadFile(outUri, options.ConfigurationFile);
+                        if (!String.IsNullOrEmpty(outUri.UserInfo))
+                        {
+                            var byteArray = Encoding.ASCII.GetBytes(outUri.UserInfo);
+                            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+                        }
+                        var response = client.GetAsync(outUri).GetAwaiter().GetResult();
+                        if (response.IsSuccessStatusCode)
+                        {
+                            using (var fs = new FileStream(options.ConfigurationFile, FileMode.CreateNew))
+                            {
+                                response.Content.CopyToAsync(fs);
+                            }
+                        }
+                        else
+                        {
+                            throw new ArgumentException($"URL returned {response.StatusCode} : {response.ReasonPhrase}");
+                        }
                     }
                     catch (Exception)
                     {
