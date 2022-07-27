@@ -167,7 +167,7 @@ namespace XESmartTarget
                     Task t = processTargetAsync(targ);
                     tasks.Add(t);
                 }
-                Task.WaitAll(tasks.ToArray());
+                Task.WaitAll(tasks.ToArray(),options.TimeoutSeconds > 0 ? options.TimeoutSeconds * 1000 : -1);
             }
             else
             {
@@ -219,5 +219,8 @@ namespace XESmartTarget
 
         [Option('L', "LogFile", HelpText = "Log File")]
         public string LogFile { get; set; }
+
+        [Option('T', "Timeout", HelpText = "Timeout in seconds")]
+        public int TimeoutSeconds { get; set; } = -1;
     }
 }
