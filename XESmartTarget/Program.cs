@@ -98,6 +98,7 @@ namespace XESmartTarget
                 options.ConfigurationFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json");
                 using (var client = new HttpClient())
                 {
+                    client.DefaultRequestHeaders.Add("XESmartTarget-Version", version);
                     try
                     {
                         if (!String.IsNullOrEmpty(outUri.UserInfo))
