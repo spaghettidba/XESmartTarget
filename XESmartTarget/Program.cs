@@ -98,7 +98,7 @@ namespace XESmartTarget
                 options.ConfigurationFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json");
                 using (var client = new HttpClient())
                 {
-                    client.DefaultRequestHeaders.Add("XESmartTarget-Version", version);
+                    client.DefaultRequestHeaders.Add("User-Agent", $"XESmartTarget/{version} (XESmartTarget; copyright spaghettidba)");
                     try
                     {
                         if (!String.IsNullOrEmpty(outUri.UserInfo))
