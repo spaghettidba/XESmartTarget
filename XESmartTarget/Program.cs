@@ -144,6 +144,15 @@ namespace XESmartTarget
 
             TargetConfig config = TargetConfig.LoadFromFile(options.ConfigurationFile);
 
+            // delete the file downloaded from URI
+            if (deleteTempFile)
+            {
+                if (File.Exists(options.ConfigurationFile))
+                {
+                    File.Delete(options.ConfigurationFile);
+                }
+            }
+
             Console.CancelKeyPress += delegate (object sender, ConsoleCancelEventArgs e)
             {
                 e.Cancel = true;
