@@ -15,8 +15,9 @@ namespace XESmartTarget.Core.Utils
     public class DataTableCSVAdapter
     {
         private DataTable Table { get; set; }
-        private string[] OutputColumns { get; set; }
+        public string[] OutputColumns { get; set; }
         public String OutputFile { get; set; }
+        public bool HeadersWritten { get; private set; }
 
         public DataTableCSVAdapter(DataTable table)
         {
@@ -32,7 +33,6 @@ namespace XESmartTarget.Core.Utils
         public DataTableCSVAdapter(DataTable table, String outFile, string[] outColumns)
         {
             OutputFile = outFile;
-            Table = table.DefaultView.ToTable(false,outColumns);
         }
 
         [MethodImpl(MethodImplOptions.Synchronized)]
@@ -42,31 +42,41 @@ namespace XESmartTarget.Core.Utils
             {
                 using (TextWriter textWriter = new StreamWriter(f))
                 {
-                    var csv = new CsvWriter(textWriter, CultureInfo.CurrentCulture);
-
-                    if (writeHeaders)
-                    {
-                        foreach (DataColumn dc in Table.Columns)
-                        {
-                            csv.WriteField(dc.ColumnName);
-                        }
-                        csv.NextRecord();
-                    }
-
-                    foreach (DataRow dr in Table.Rows)
-                    {
-                        foreach (DataColumn dc in Table.Columns)
-                        {
-                            csv.WriteField(dr[dc.ColumnName]);
-                        }
-                        csv.NextRecord();
-                    }
-
-                    csv.Flush();
+                    WriteToStream(textWriter);
                 }
             }
 
         }
-       
+
+        public void WriteToStream(TextWriter writer)
+        {
+            var csv = new CsvWriter(writer, CultureInfo.CurrentCulture);
+
+            if (!HeadersWritten)
+            {
+                foreach (DataColumn dc in Table.Columns)
+                {
+                    csv.WriteField(dc.ColumnName);
+                }
+                csv.NextRecord();
+                HeadersWritten = true;
+            }
+
+            if(OutputColumns!= null)
+            {
+                Table = Table.DefaultView.ToTable(false, OutputColumns);
+            }
+            
+            foreach (DataRow dr in Table.Rows)
+            {
+                foreach (DataColumn dc in Table.Columns)
+                {
+                    csv.WriteField(dr[dc.ColumnName]);
+                }
+                csv.NextRecord();
+            }
+
+            csv.Flush();
+        }
     }
 }

@@ -108,8 +108,14 @@ namespace XESmartTarget.Core.Utils
                                 }
                                 prop.SetValue(p, obj, null);
                             }
+                            else if (prop.PropertyType.IsEnum)
+                            {
+                                prop.SetValue(p, Enum.Parse(prop.PropertyType, (string)dictionary[key]), null);
+                            }
                             else
+                            {
                                 prop.SetValue(p, GetValueOfType(dictionary[key], prop.PropertyType), null);
+                            }
                         }
 
                     }

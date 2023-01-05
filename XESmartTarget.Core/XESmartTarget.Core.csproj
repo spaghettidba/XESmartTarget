@@ -112,6 +112,8 @@
     <Compile Include="Config\TargetConfigTypeResolver.cs" />
     <Compile Include="Config\TargetConfig.cs" />
     <Compile Include="Responses\AggregatedOutputColumn.cs" />
+    <Compile Include="Responses\OutputStreamAppenderResponse.cs" />
+    <Compile Include="Utils\DataTableJsonAdapter.cs" />
     <Compile Include="Utils\DataTableLineProtocolAdapter.cs" />
     <Compile Include="Responses\EmailResponse.cs" />
     <Compile Include="Responses\ExecuteTSQLResponse.cs" />
