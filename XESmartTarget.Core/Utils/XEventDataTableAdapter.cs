@@ -44,6 +44,21 @@ namespace XESmartTarget.Core.Utils
                     eventsTable.Columns.Add(cl_dt);
                 }
 
+                
+                //
+                // Add Collection Time ISO
+                //
+                if (!eventsTable.Columns.Contains("collection_time_iso") && (OutputColumns.Count == 0 || OutputColumns.Exists(x => x.Name == "collection_time_iso") || (Filter != null && Filter.Contains("collection_time_iso"))))
+                {
+                    DataColumn cl_dt = new DataColumn("collection_time_iso", typeof(String))
+                    {
+                        DefaultValue = DateTime.Now.ToString("o")
+                    };
+                    cl_dt.ExtendedProperties.Add("auto_column", true);
+                    SetColHiddenProperty(cl_dt);
+                    eventsTable.Columns.Add(cl_dt);
+                }
+
 
                 //
                 // Add Name column
@@ -178,15 +193,18 @@ namespace XESmartTarget.Core.Utils
                             string colName = tokens[0];
                             string colDefinition = tokens[1];
 
-                            DataColumn dc;
-                            dc = eventsTable.Columns.Add();
-                            dc.ColumnName = colName;
-                            dc.Expression = colDefinition;
-                            dc.ExtendedProperties.Add("subtype", "calculated");
-                            dc.ExtendedProperties.Add("disallowedtype", false);
-                            dc.ExtendedProperties.Add("calculated", true);
-                            dc.ExtendedProperties.Add("coltype", OutputColumns[i].ColumnType);
-                            SetColHiddenProperty(dc);
+                            if (!eventsTable.Columns.Contains(colName))
+                            {
+                                DataColumn dc;
+                                dc = eventsTable.Columns.Add();
+                                dc.ColumnName = colName;
+                                dc.Expression = colDefinition;
+                                dc.ExtendedProperties.Add("subtype", "calculated");
+                                dc.ExtendedProperties.Add("disallowedtype", false);
+                                dc.ExtendedProperties.Add("calculated", true);
+                                dc.ExtendedProperties.Add("coltype", OutputColumns[i].ColumnType);
+                                SetColHiddenProperty(dc);
+                            }
                             //change OutputColumns
                             OutputColumns[i].Name = colName;
                         }
