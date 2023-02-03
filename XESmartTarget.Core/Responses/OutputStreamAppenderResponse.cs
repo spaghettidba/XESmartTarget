@@ -159,13 +159,9 @@ namespace XESmartTarget.Core.Responses
                     {
                         DataTableJsonAdapter adapter = new DataTableJsonAdapter(EventsTable)
                         {
-                            OutputFormat = DataTableJsonAdapter.OutputFormatEnum.IndependentObjects,
+                            OutputFormat = JsonOutputFormat,
                             OutputColumns = xeadapter.OutputColumns.Select(x => x.Name).ToArray()
                         };
-                        if(OutputMeasurement != null)
-                        {
-                            adapter.StaticAttributes.Add("OutputMeasurement", OutputMeasurement);
-                        }
                         adapter.WriteToStream(Writer);
                     }
                     else if(_outputFormat == OutputFormatEnum.LineProtocol)
