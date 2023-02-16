@@ -223,6 +223,10 @@ namespace XESmartTarget.Core.Utils
             {
                 row.SetField("collection_time", evt.Timestamp.LocalDateTime);
             }
+            if (row.Table.Columns.Contains("collection_time_iso"))
+            {
+                row.SetField("collection_time_iso", evt.Timestamp.ToString("o"));
+            }
 
             foreach (PublishedEventField fld in evt.Fields)
             {
