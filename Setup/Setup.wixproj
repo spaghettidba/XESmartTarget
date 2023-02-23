@@ -43,6 +43,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="prebuild.bat" />
     <Content Include="postbuild.bat" />
     <Content Include="SignMsi.ps1" />
   </ItemGroup>
@@ -70,5 +71,8 @@
   </Target>
   <PropertyGroup>
     <PostBuildEvent>call $(ProjectDir)postbuild.bat "!(TargetPath)" "$(TargetDir)$(SolutionName)_$(Platform)$(TargetExt)"</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>call $(ProjectDir)prebuild.bat</PreBuildEvent>
   </PropertyGroup>
 </Project>
