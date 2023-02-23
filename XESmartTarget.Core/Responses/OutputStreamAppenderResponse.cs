@@ -153,6 +153,10 @@ namespace XESmartTarget.Core.Responses
         {
             lock (EventsTable)
             {
+                if (EventsTable.Rows.Count == 0)
+                {
+                    return;
+                }
                 lock (Lock)
                 {
                     if (_outputFormat == OutputFormatEnum.Json)

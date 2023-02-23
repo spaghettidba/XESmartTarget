@@ -37,12 +37,17 @@ namespace XESmartTarget.Core.Utils
 
         public void WriteToStream(TextWriter writer)
         {
+            if(Table.Rows.Count == 0)
+            {
+                return;
+            }
+
             var converter = new ExpandoObjectConverter();
             var minifier = new JsMinifier();
 
             if (OutputColumns != null)
             {
-                Table = Table.DefaultView.ToTable(false, OutputColumns);
+                Table = Table.DefaultView.ToTable(false, OutputColumns.Where(c => Table.Columns.Contains(c)).ToArray());
             }
 
             List<Object> outputList = null;
