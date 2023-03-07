@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>spaghettidba</authors>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <!-- <icon>icon.png</icon> -->
+    <projectUrl>http://github.com/spaghettidba/xesmarttarget/</projectUrl>
+    <description>XESmartTarget</description>
+    <copyright>$copyright$</copyright>
+  </metadata>
+</package>
