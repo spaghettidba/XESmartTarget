@@ -153,6 +153,43 @@ namespace XESmartTarget
                 }
             }
 
+            if (!String.IsNullOrEmpty(options.PreExecutionScript))
+            {
+                if (!File.Exists(options.PreExecutionScript))
+                {
+                    logger.Error(String.Format("File not found: '{0}'", options.PreExecutionScript));
+                    Console.WriteLine("Run XESmartTarget -? for help.");
+                    return;
+                }
+                else
+                {
+                    foreach (var t in config.Target)
+                    {
+                        t.PreExecutionScript = options.PreExecutionScript;
+                    }
+                    
+                }
+            }
+
+            if (!String.IsNullOrEmpty(options.PostExecutionScript))
+            {
+                if (!File.Exists(options.PostExecutionScript))
+                {
+                    logger.Error(String.Format("File not found: '{0}'", options.PostExecutionScript));
+                    Console.WriteLine("Run XESmartTarget -? for help.");
+                    return;
+                }
+                else
+                {
+                    foreach (var t in config.Target)
+                    {
+                        t.PreExecutionScript = options.PostExecutionScript;
+                    }
+
+                }
+            }
+
+
             Console.CancelKeyPress += delegate (object sender, ConsoleCancelEventArgs e)
             {
                 e.Cancel = true;
@@ -232,5 +269,11 @@ namespace XESmartTarget
 
         [Option('T', "Timeout", HelpText = "Timeout in seconds")]
         public int TimeoutSeconds { get; set; } = -1;
+
+        [Option('P', "PreExecutionScript", HelpText = "Pre-Execution Script File")]
+        public string PreExecutionScript { get; set; }
+
+        [Option('O', "PostExecutionScript", HelpText = "Post-Execution Script File")]
+        public string PostExecutionScript { get; set; }
     }
 }

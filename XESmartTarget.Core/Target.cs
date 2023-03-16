@@ -24,8 +24,13 @@ namespace XESmartTarget.Core
         public string Password { get; set; }
         public string DatabaseName { get; set; }
         public bool FailOnProcessingError { get; set; } = false;
+        public string PreExecutionScript { get; set; }
+        public string PostExecutionScript { get; set; }
+
         private bool stopped = false;
         private List<Task> allTasks = new List<Task>();
+
+        
 
         public void Start()
         {
@@ -40,7 +45,9 @@ namespace XESmartTarget.Core
                         UserName = UserName,
                         Password = Password,
                         DatabaseName = DatabaseName,
-                        FailOnProcessingError = FailOnProcessingError
+                        FailOnProcessingError = FailOnProcessingError,
+                        PreExecutionScript = PreExecutionScript,
+                        PostExecutionScript = PostExecutionScript
                     };
                     
                     foreach (Response r in Responses)
@@ -88,30 +95,45 @@ namespace XESmartTarget.Core
             internal string UserName { get; set; }
             internal string Password { get; set; }
             internal string DatabaseName { get; set; }
+
+            internal string PreExecutionScript { get; set; }
+            internal string PostExecutionScript { get; set; }
+
+            public string ConnectionString
+            {
+                get
+                {
+                    string connectionString = $"Data Source={ServerName};";
+                    if (String.IsNullOrEmpty(DatabaseName))
+                    {
+                        connectionString += "Initial Catalog = master; ";
+                    }
+                    else
+                    {
+                        connectionString += $"Initial Catalog = {DatabaseName}; ";
+                    }
+                    if (String.IsNullOrEmpty(UserName))
+                    {
+                        connectionString += "Integrated Security = SSPI; ";
+                    }
+                    else
+                    {
+                        connectionString += $"User Id = {UserName}; ";
+                        connectionString += $"Password = {Password}; ";
+                    }
+                    return connectionString;
+                }
+            }
+
             internal bool FailOnProcessingError { get; set; } = false;
             private bool stopped = false;
 
 
             internal void Process()
             {
-
-                string connectionString = $"Data Source={ServerName};";
-                if (String.IsNullOrEmpty(DatabaseName))
+                if (!String.IsNullOrEmpty(PreExecutionScript))
                 {
-                    connectionString += "Initial Catalog = master; ";
-                }
-                else
-                {
-                    connectionString += $"Initial Catalog = {DatabaseName}; ";
-                }
-                if (String.IsNullOrEmpty(UserName))
-                {
-                    connectionString += "Integrated Security = SSPI; ";
-                }
-                else
-                {
-                    connectionString += $"User Id = {UserName}; ";
-                    connectionString += $"Password = {Password}; ";
+                    logger.Info($"Running Pre-Execution script '{SessionName}' on server '{ServerName}'");
                 }
 
                 logger.Info($"Connecting to XE session '{SessionName}' on server '{ServerName}'");
@@ -124,7 +146,7 @@ namespace XESmartTarget.Core
                 {
                     try
                     {
-                        QueryableXEventData eventStream = ConnectSessionStream(connectionString);
+                        QueryableXEventData eventStream = ConnectSessionStream(ConnectionString);
                         connectedOnce = true;
                         logger.Info($"Connected to {ServerName}.");
                         ProcessStreamData(eventStream);
