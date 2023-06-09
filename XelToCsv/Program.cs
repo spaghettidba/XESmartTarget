@@ -19,23 +19,24 @@ namespace XelToCsv
 
         static void Main(string[] args)
         {
+            var result = Parser.Default.ParseArguments<Options>(args)
+                .WithParsed(options => ProcessTarget(options));
+
+            
+        }
+
+        private static void ProcessTarget(Options options)
+        {
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
             string version = fvi.FileMajorPart.ToString() + "." + fvi.FileMinorPart.ToString() + "." + fvi.FileBuildPart.ToString();
             string name = assembly.FullName;
             logger.Info(name + " " + version);
 
-            var options = new Options();
-            if (!CommandLine.Parser.Default.ParseArguments(args, options))
-            {
-                return;
-            }
-
             logger.Info("Converting {0} to {1}", options.SourceFile, options.DestinationFile);
 
             Convert(options.SourceFile, options.DestinationFile);
         }
-
 
         public static void Convert(String sourceFile, String destinationFile)
         {
@@ -73,15 +74,6 @@ namespace XelToCsv
             [Option('d', "DestinationFile", Required = true, HelpText = "Destination file")]
             public string DestinationFile { get; set; }
 
-            [ParserState]
-            public IParserState LastParserState { get; set; }
-
-            [HelpOption]
-            public string GetUsage()
-            {
-                return HelpText.AutoBuild(this,
-                  (HelpText current) => HelpText.DefaultParsingErrorsHandler(this, current));
-            }
         }
 
     }

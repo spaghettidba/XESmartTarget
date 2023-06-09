@@ -155,19 +155,19 @@
       <Version>15.0.5</Version>
     </PackageReference>
     <PackageReference Include="DouglasCrockford.JsMin">
-      <Version>1.1.3</Version>
+      <Version>2.1.0</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.NETCore.Platforms">
-      <Version>1.1.0</Version>
+      <Version>7.0.2</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.SqlServer.SqlManagementObjects">
       <Version>140.17283.0</Version>
     </PackageReference>
     <PackageReference Include="NETStandard.Library">
-      <Version>1.6.1</Version>
+      <Version>2.0.3</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
-      <Version>12.0.2</Version>
+      <Version>13.0.3</Version>
     </PackageReference>
     <PackageReference Include="NLog">
       <Version>4.4.12</Version>
@@ -200,7 +200,7 @@
       <Version>4.3.4</Version>
     </PackageReference>
     <PackageReference Include="System.Net.Primitives">
-      <Version>4.3.0</Version>
+      <Version>4.3.1</Version>
     </PackageReference>
     <PackageReference Include="System.ObjectModel">
       <Version>4.3.0</Version>
@@ -218,10 +218,10 @@
       <Version>4.3.0</Version>
     </PackageReference>
     <PackageReference Include="System.Runtime">
-      <Version>4.3.0</Version>
+      <Version>4.3.1</Version>
     </PackageReference>
     <PackageReference Include="System.Runtime.Extensions">
-      <Version>4.3.0</Version>
+      <Version>4.3.1</Version>
     </PackageReference>
     <PackageReference Include="System.Runtime.InteropServices">
       <Version>4.3.0</Version>

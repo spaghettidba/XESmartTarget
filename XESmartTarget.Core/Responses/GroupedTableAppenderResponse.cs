@@ -91,11 +91,15 @@ namespace XESmartTarget.Core.Responses
                 Type t = null;
                 // set the base type on the aggregation: 
                 // - MIN /MAX --> use the base column type
-                // - COUNT --> Int32
+                // - COUNT --> Int64
                 // - all other aggregations --> enlarge the base type
                 if (col.Aggregation == AggregatedOutputColumn.AggregationType.Count)
                 {
-                    t = typeof(Int32);
+                    t = typeof(Int64);
+                }
+                else if (col.Aggregation == AggregatedOutputColumn.AggregationType.Sum)
+                {
+                    t = EnlargeType(EventsTable.Columns[col.BaseColumn].DataType);
                 }
                 else if (!(col.Aggregation == AggregatedOutputColumn.AggregationType.Max || col.Aggregation == AggregatedOutputColumn.AggregationType.Min))
                 {
