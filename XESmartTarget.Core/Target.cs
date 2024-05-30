@@ -140,34 +140,63 @@ namespace XESmartTarget.Core
 
                 bool connectedOnce = false;
                 bool shouldContinue = true;
+                int attempts = 0;
 
-                
+                QueryableXEventData eventStream = null;
+
                 while (shouldContinue)
                 {
                     try
                     {
-                        QueryableXEventData eventStream = ConnectSessionStream(ConnectionString);
+                        if(attempts < 240) attempts++; // connect attempts will be at least every 1 hour (240 * 15 sec = 3600 sec = 1 hour)
+
+                        eventStream = ConnectSessionStream(ConnectionString);
                         connectedOnce = true;
-                        logger.Info($"Connected to {ServerName}.");
-                        ProcessStreamData(eventStream);
+                        attempts = 0;
+                        logger.Info($"Connected to '{ServerName}'.");
                     }
                     catch (Exception e)
                     {
-                        logger.Error(e, ServerName);
+                        if(attempts == 1)
+                        {
+                            logger.Error($"Error connecting to '{ServerName}'");
+                            logger.Error(e.InnerException ?? e);
+                        }
+                        else
+                        {
+                            string msg = e.Message;
+                            if (e.InnerException != null)
+                            {
+                                msg = e.InnerException.Message;
+                            }
+                            logger.Error($"Error connecting to '{ServerName}', attempt {attempts}");
+                            logger.Error(msg);
+                        }
+
                         if (FailOnProcessingError)
                         {
                             throw;
                         }
                         else
                         {
-                            int? errNumber = (e.InnerException as SqlException)?.Number;
-                            if ((errNumber == 25727 || errNumber == 25728)
-                                && connectedOnce)
-                            {
-                                shouldContinue = true;
-                                Thread.Sleep(15000); // sleep 15 seconds and reconnect
-                            }
-
+                            Thread.Sleep(attempts * 15000); // linear reconnect backoff
+                            continue;
+                        }
+                    }
+                    try
+                    {
+                        ProcessStreamData(eventStream);
+                    }
+                    catch(Exception e)
+                    {
+                        logger.Error($"Error processing event data from '{ServerName}'");
+                        logger.Error(e);
+                        if (FailOnProcessingError)
+                        {
+                            eventStream.Dispose();
+                            throw;
+                        }
+                        else {
                             shouldContinue = connectedOnce;
                         }
                     }
@@ -229,7 +258,6 @@ namespace XESmartTarget.Core
                 catch (Exception e)
                 {
                     var ioe = new InvalidOperationException($"Unable to connect to the Extended Events session {SessionName} on server {ServerName}", e);
-                    logger.Error(ioe);
                     throw ioe;
                 }
 

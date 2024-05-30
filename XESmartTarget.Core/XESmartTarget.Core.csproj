@@ -170,7 +170,10 @@
       <Version>13.0.3</Version>
     </PackageReference>
     <PackageReference Include="NLog">
-      <Version>4.4.12</Version>
+      <Version>4.7.15</Version>
+    </PackageReference>
+    <PackageReference Include="NLog.Config">
+      <Version>4.7.15</Version>
     </PackageReference>
     <PackageReference Include="SmartFormat.NET">
       <Version>2.1.0.2</Version>
