@@ -14,6 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using XESmartTarget.Core;
 using XESmartTarget.Core.Config;
+using XESmartTarget.Core.Utils;
 
 namespace XESmartTarget
 {
@@ -26,7 +27,8 @@ namespace XESmartTarget
         {
 #if DEBUG
             if (args.Length == 0)
-                args = new string[] { "--File", @"c:\temp\sample.json" };
+                //args = new string[] { "--File", @"c:\temp\sample.json" };
+                args = new string[] { "--File", @"https://geox@localhost:44318/api/v1/configuration/xesmarttarget/Default" };
 #endif
             var result = Parser.Default.ParseArguments<Options>(args)
                 .WithParsed(options => ProcessTarget(options));
@@ -94,6 +96,23 @@ namespace XESmartTarget
             if (Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri)
                && (outUri.Scheme == Uri.UriSchemeHttp || outUri.Scheme == Uri.UriSchemeHttps))
             {
+                //we don't want to have username:password present in the uri anymore (it is visible to anyone in task manager)
+                //we read it from Windows Credentials, we assume QMonitor's agent saved them
+                try
+                {
+                    string cred = WindowsCredentialHelper.ReadCredential(outUri.OriginalString);
+                    if (!string.IsNullOrEmpty(cred))
+                    {
+                        string org = outUri.UserInfo;
+                        options.ConfigurationFile = options.ConfigurationFile.Replace(org, $"{org}:{cred}");
+                        Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.Error($"Couldn't retrieve Windows Credentials: {ex.Message}");
+                }
+
                 // save the URI to a file and point configuration there
                 options.ConfigurationFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json");
                 using (var client = new HttpClient())
