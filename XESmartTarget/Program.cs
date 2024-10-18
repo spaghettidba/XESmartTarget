@@ -96,16 +96,20 @@ namespace XESmartTarget
             if (Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri)
                && (outUri.Scheme == Uri.UriSchemeHttp || outUri.Scheme == Uri.UriSchemeHttps))
             {
-                //we don't want to have username:password present in the uri anymore (it is visible to anyone in task manager)
-                //we read it from Windows Credentials, we assume QMonitor's agent saved them
+                //password can be read from Windows Credentials
+                //if it exists, otherwise execution proceeds with user passed uri
                 try
                 {
                     string cred = WindowsCredentialHelper.ReadCredential(outUri.OriginalString);
                     if (!string.IsNullOrEmpty(cred))
                     {
-                        string org = outUri.UserInfo;
-                        options.ConfigurationFile = options.ConfigurationFile.Replace(org, $"{org}:{cred}");
-                        Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri);
+                        var uriBuilder = new UriBuilder(outUri)
+                        {
+                            UserName = outUri.UserInfo, 
+                            Password = cred 
+                        };
+
+                        options.ConfigurationFile = uriBuilder.Uri.ToString();
                     }
                 }
                 catch (Exception ex)
