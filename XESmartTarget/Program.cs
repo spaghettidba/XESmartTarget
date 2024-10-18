@@ -100,16 +100,17 @@ namespace XESmartTarget
                 //if it exists, otherwise execution proceeds with user passed uri
                 try
                 {
-                    string cred = WindowsCredentialHelper.ReadCredential(outUri.OriginalString);
-                    if (!string.IsNullOrEmpty(cred))
+                    var (username, password) = WindowsCredentialHelper.ReadCredential(outUri.OriginalString);
+                    if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
                     {
                         var uriBuilder = new UriBuilder(outUri)
                         {
-                            UserName = outUri.UserInfo, 
-                            Password = cred 
+                            UserName = username, 
+                            Password = password 
                         };
 
                         options.ConfigurationFile = uriBuilder.Uri.ToString();
+                        Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri);
                     }
                 }
                 catch (Exception ex)

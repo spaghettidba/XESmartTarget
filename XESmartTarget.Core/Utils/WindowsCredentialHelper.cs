@@ -60,24 +60,21 @@ namespace XESmartTarget.Core.Utils
             public uint dwHighDateTime;
         }
 
-        public static string ReadCredential(string target)
+        public static (string username, string password) ReadCredential(string target)
         {
             if (CredRead(target, CredentialType.GENERIC, 0, out IntPtr credPointer))
             {
                 CREDENTIAL cred = Marshal.PtrToStructure<CREDENTIAL>(credPointer);
+
+                string username = Marshal.PtrToStringUni(cred.UserName);
                 string password = Marshal.PtrToStringUni(cred.CredentialBlob, (int)cred.CredentialBlobSize / 2);
+
                 CredFree(credPointer);
-                return password;
+
+                return (username, password);
             }
             else
-                return "";
+                return ("", "");
         }
-
-        /* not needed in this project
-         * 
-        public async void WriteCredential(string target, string username, string password)
-        public bool DeleteCredential(string target)
-        *
-        */
     }
 }
