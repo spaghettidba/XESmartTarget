@@ -14,6 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using XESmartTarget.Core;
 using XESmartTarget.Core.Config;
+using XESmartTarget.Core.Utils;
 
 namespace XESmartTarget
 {
@@ -94,6 +95,28 @@ namespace XESmartTarget
             if (Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri)
                && (outUri.Scheme == Uri.UriSchemeHttp || outUri.Scheme == Uri.UriSchemeHttps))
             {
+                //password can be read from Windows Credentials
+                //if it exists, otherwise execution proceeds with user passed uri
+                try
+                {
+                    var (username, password) = WindowsCredentialHelper.ReadCredential(outUri.OriginalString);
+                    if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+                    {
+                        var uriBuilder = new UriBuilder(outUri)
+                        {
+                            UserName = username, 
+                            Password = password 
+                        };
+
+                        options.ConfigurationFile = uriBuilder.Uri.ToString();
+                        Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.Error($"Couldn't retrieve Windows Credentials: {ex.Message}");
+                }
+
                 // save the URI to a file and point configuration there
                 options.ConfigurationFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json");
                 using (var client = new HttpClient())
