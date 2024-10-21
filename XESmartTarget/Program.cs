@@ -27,8 +27,7 @@ namespace XESmartTarget
         {
 #if DEBUG
             if (args.Length == 0)
-                //args = new string[] { "--File", @"c:\temp\sample.json" };
-                args = new string[] { "--File", @"https://geox@localhost:44318/api/v1/configuration/xesmarttarget/Default" };
+                args = new string[] { "--File", @"c:\temp\sample.json" };
 #endif
             var result = Parser.Default.ParseArguments<Options>(args)
                 .WithParsed(options => ProcessTarget(options));
