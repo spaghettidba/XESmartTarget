@@ -19,20 +19,20 @@ namespace XESmartTarget.Core.Utils
         public String OutputFile { get; set; }
         public bool HeadersWritten { get; private set; }
 
-        public DataTableCSVAdapter(DataTable table)
+        public DataTableCSVAdapter(DataTable table) : this(table, null, null)
         {
-            Table = table;
         }
 
-        public DataTableCSVAdapter(DataTable table, String outFile)
+        public DataTableCSVAdapter(DataTable table, String outFile) : this(table, outFile, null)
         {
-            OutputFile = outFile;
-            Table = table;
         }
+
 
         public DataTableCSVAdapter(DataTable table, String outFile, string[] outColumns)
         {
             OutputFile = outFile;
+            Table = table;
+            OutputColumns = outColumns;
         }
 
         [MethodImpl(MethodImplOptions.Synchronized)]
@@ -52,9 +52,16 @@ namespace XESmartTarget.Core.Utils
         {
             var csv = new CsvWriter(writer, CultureInfo.CurrentCulture);
 
+            var slicedTable = Table;
+
+            if (OutputColumns != null)
+            {
+                slicedTable = Table.DefaultView.ToTable(false, OutputColumns);
+            }
+
             if (!HeadersWritten)
             {
-                foreach (DataColumn dc in Table.Columns)
+                foreach (DataColumn dc in slicedTable.Columns)
                 {
                     csv.WriteField(dc.ColumnName);
                 }
@@ -62,14 +69,10 @@ namespace XESmartTarget.Core.Utils
                 HeadersWritten = true;
             }
 
-            if(OutputColumns!= null)
-            {
-                Table = Table.DefaultView.ToTable(false, OutputColumns);
-            }
             
-            foreach (DataRow dr in Table.Rows)
+            foreach (DataRow dr in slicedTable.Rows)
             {
-                foreach (DataColumn dc in Table.Columns)
+                foreach (DataColumn dc in slicedTable.Columns)
                 {
                     csv.WriteField(dr[dc.ColumnName]);
                 }
