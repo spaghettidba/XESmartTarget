@@ -17,7 +17,8 @@ namespace XESmartTarget.Core.Utils
         private DataTable Table { get; set; }
         public string[] OutputColumns { get; set; }
         public String OutputFile { get; set; }
-        public bool HeadersWritten { get; private set; }
+
+        private bool headersWritten = false;
 
         public DataTableCSVAdapter(DataTable table) : this(table, null, null)
         {
@@ -42,13 +43,13 @@ namespace XESmartTarget.Core.Utils
             {
                 using (TextWriter textWriter = new StreamWriter(f))
                 {
-                    WriteToStream(textWriter);
+                    WriteToStream(textWriter, writeHeaders);
                 }
             }
 
         }
 
-        public void WriteToStream(TextWriter writer)
+        public void WriteToStream(TextWriter writer, bool writeHeaders = false)
         {
             var csv = new CsvWriter(writer, CultureInfo.CurrentCulture);
 
@@ -59,14 +60,14 @@ namespace XESmartTarget.Core.Utils
                 slicedTable = Table.DefaultView.ToTable(false, OutputColumns);
             }
 
-            if (!HeadersWritten)
+            if (writeHeaders && !headersWritten)
             {
                 foreach (DataColumn dc in slicedTable.Columns)
                 {
                     csv.WriteField(dc.ColumnName);
                 }
+                headersWritten = true;
                 csv.NextRecord();
-                HeadersWritten = true;
             }
 
             
