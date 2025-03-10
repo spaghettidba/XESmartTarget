@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Collections;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -17,14 +18,7 @@ namespace XESmartTarget.Core.Utils
                 Type[] types = currentAssembly.GetTypes().Where(t => t != null && t.FullName.StartsWith(nameSpace) & !t.FullName.Contains("+")).ToArray();
                 foreach (Type t in types)
                 {
-                    try
-                    {
-                        result.Add(t);
-                    }
-                    catch (Exception)
-                    {
-                        throw;
-                    }
+                    result.Add(t);
                 }
                 return result;
             }
@@ -40,7 +34,8 @@ namespace XESmartTarget.Core.Utils
             if (string.IsNullOrWhiteSpace(json))
                 return null;
 
-            var dictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+            JToken token = JsonConvert.DeserializeObject<JToken>(json);
+            var dictionary = token.ToObject<Dictionary<string, object>>();
             return Deserialize(dictionary, type);
         }
 
@@ -49,24 +44,81 @@ namespace XESmartTarget.Core.Utils
             object p;
             try
             {
-                p = Activator.CreateInstance(type);
+                if (type.IsAbstract && dictionary.ContainsKey("__type"))
+                {
+                    var subTypeName = dictionary["__type"]?.ToString();
+                    if (!string.IsNullOrEmpty(subTypeName))
+                    {
+                        string fullTypeName = subTypeName.Contains(".")
+                            ? subTypeName
+                            : "XESmartTarget.Core.Responses." + subTypeName;
+                        var assembly = Assembly.GetExecutingAssembly();
+                        var realType = assembly.GetType(fullTypeName) ?? Type.GetType(fullTypeName);
+                        if (realType != null && !realType.IsAbstract)
+                        {
+                            p = Activator.CreateInstance(realType);
+                        }
+                        else
+                        {
+                            p = FormatterServices.GetUninitializedObject(type);
+                        }
+                    }
+                    else
+                    {
+                        p = FormatterServices.GetUninitializedObject(type);
+                    }
+                }
+                else
+                {
+                    p = Activator.CreateInstance(type);
+                }
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine("Exception during instance creation: " + ex.Message);
                 p = FormatterServices.GetUninitializedObject(type);
             }
 
-            var props = type.GetProperties();
+            var props = p.GetType().GetProperties();
 
-            foreach (string key in dictionary.Keys)
+            foreach (string key in dictionary.Keys.ToList())
             {
-                var prop = props.FirstOrDefault(t => t.Name == key);
+                string dictKey = dictionary.Keys.FirstOrDefault(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
+                var prop = props.FirstOrDefault(t => string.Equals(t.Name, key, StringComparison.OrdinalIgnoreCase));
                 if (prop == null)
-                    continue;  
+                    continue;
 
-                var value = dictionary[key];
+                object rawValue = dictionary[key];
+                object value = ConvertJTokenIfNeeded(rawValue);
+                dictionary[key] = value;
 
-                if (prop.Name.EndsWith("ServerName"))
+                if (prop.Name.Equals("OutputColumns", StringComparison.OrdinalIgnoreCase) &&
+                    prop.PropertyType == typeof(List<string>))
+                {
+                    List<string> listOutput = null;
+                    if (rawValue is JArray jArr)
+                    {
+                        listOutput = jArr.ToObject<List<string>>();
+                    }
+                    else if (value is IList listVal)
+                    {
+                        listOutput = listVal.Cast<object>().Select(x => x?.ToString()).ToList();
+                    }
+                    else
+                    {
+                        listOutput = new List<string> { value.ToString() };
+                    }
+                    prop.SetValue(p, listOutput, null);
+                    continue;
+                }
+
+                if (prop.Name.Equals("OutputMeasurement", StringComparison.OrdinalIgnoreCase) && prop.PropertyType == typeof(string))
+                {
+                    prop.SetValue(p, value?.ToString(), null);
+                    continue;
+                }
+
+                if (prop.Name.EndsWith("ServerName", StringComparison.OrdinalIgnoreCase))
                 {
                     if (prop.PropertyType == typeof(string))
                     {
@@ -84,16 +136,16 @@ namespace XESmartTarget.Core.Utils
                         }
                     }
                 }
-                else if (prop.Name.EndsWith("Target"))
+                else if (prop.Name.EndsWith("Target", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (value is IList)
+                    value = ConvertJTokenIfNeeded(value);
+                    if (value is IList listVal)
                     {
-                        var listVal = (IList)value;
                         var deserializedList = new List<Target>();
-
                         foreach (var el in listVal)
                         {
-                            if (el is IDictionary<string, object> dic)
+                            var realEl = ConvertJTokenIfNeeded(el);
+                            if (realEl is IDictionary<string, object> dic)
                             {
                                 var tObj = Deserialize(dic, typeof(Target));
                                 deserializedList.Add((Target)tObj);
@@ -107,44 +159,71 @@ namespace XESmartTarget.Core.Utils
                         prop.SetValue(p, new Target[] { (Target)tObj }, null);
                     }
                 }
-                else
+                else if (value is IDictionary<string, object> subDict)
                 {
-                    if (value is IDictionary<string, object> subDict)
+                    prop.SetValue(p, Deserialize(subDict, prop.PropertyType), null);
+                }
+                else if (value is IList && prop.PropertyType.IsGenericType)
+                {
+                    var listInstance = Activator.CreateInstance(prop.PropertyType) as IList;
+                    if (listInstance != null)
                     {
-                        prop.SetValue(p, Deserialize(subDict, prop.PropertyType), null);
-                    }
-                    else if (value is IList && prop.PropertyType.IsGenericType)
-                    {
-                        var listInstance = Activator.CreateInstance(prop.PropertyType);
-                        var list = listInstance as IList;
-                        if (list != null)
+                        Type elementType = prop.PropertyType.GetGenericArguments()[0];
+                        foreach (var item in (IList)value)
                         {
-                            foreach (var item in (IList)value)
+                            object convertedItem = ConvertJTokenIfNeeded(item);
+                            if (convertedItem is IDictionary<string, object> dictItem)
                             {
-                                list.Add(item);
+                                convertedItem = Deserialize(dictItem, elementType);
                             }
-                            prop.SetValue(p, list, null);
+                            listInstance.Add(convertedItem);
                         }
-                    }
-                    else if (prop.PropertyType.IsEnum)
-                    {
-                        prop.SetValue(p, Enum.Parse(prop.PropertyType, value.ToString()), null);
-                    }
-                    else
-                    {
-                        prop.SetValue(p, GetValueOfType(value, prop.PropertyType), null);
+                        prop.SetValue(p, listInstance, null);
                     }
                 }
+                else if (prop.PropertyType.IsEnum)
+                {
+                    prop.SetValue(p, Enum.Parse(prop.PropertyType, value.ToString()), null);
+                }
+                else
+                {
+                    prop.SetValue(p, GetValueOfType(value, prop.PropertyType), null);
+                }
             }
-
             return p;
+        }
+
+        private object ConvertJTokenIfNeeded(object value)
+        {
+            if (value is JObject jObj)
+            {
+                var dict = new Dictionary<string, object>();
+                foreach (var prop in jObj.Properties())
+                {
+                    dict[prop.Name] = ConvertJTokenIfNeeded(prop.Value);
+                }
+                return dict;
+            }
+            else if (value is JArray jArr)
+            {
+                var list = new List<object>();
+                foreach (var item in jArr)
+                {
+                    list.Add(ConvertJTokenIfNeeded(item));
+                }
+                return list;
+            }
+            else if (value is JValue jVal)
+            {
+                return jVal.Value;
+            }
+            return value;
         }
 
         private string[] ConvertToStringArray(object val)
         {
             if (val == null)
                 return null;
-
             if (val is IEnumerable enumerable && !(val is string))
             {
                 var strList = new List<string>();
@@ -154,7 +233,6 @@ namespace XESmartTarget.Core.Utils
                 }
                 return strList.ToArray();
             }
-
             return new string[] { val.ToString() };
         }
 
@@ -162,17 +240,17 @@ namespace XESmartTarget.Core.Utils
         {
             if (propertyType == typeof(string))
             {
-                return (string)v;
+                return v?.ToString();
             }
-            else if (propertyType == typeof(Boolean))
+            else if (propertyType == typeof(bool))
             {
                 return Convert.ToBoolean(v);
             }
-            else if (propertyType == typeof(Int32))
+            else if (propertyType == typeof(int))
             {
                 return Convert.ToInt32(v);
             }
-            else if (propertyType == typeof(Int64))
+            else if (propertyType == typeof(long))
             {
                 return Convert.ToInt64(v);
             }
