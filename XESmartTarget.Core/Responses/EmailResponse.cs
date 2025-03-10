@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.SqlServer.XEvent.Linq;
-using NLog;
+﻿using NLog;
 using System.Data;
 using XESmartTarget.Core.Utils;
 using System.Net.Mail;
-using System.IO;
+using Microsoft.SqlServer.XEvent.XELite;
 
 namespace XESmartTarget.Core.Responses
 {
@@ -35,7 +32,7 @@ namespace XESmartTarget.Core.Responses
             logger.Info(String.Format("Initializing Response of Type '{0}'", this.GetType().FullName));
         }
 
-        public override void Process(PublishedEvent evt)
+        public override void Process(IXEvent evt)
         {
             if (xeadapter == null)
             {

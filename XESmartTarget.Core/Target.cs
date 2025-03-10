@@ -1,14 +1,7 @@
-﻿using Microsoft.SqlServer.XEvent.Linq;
+﻿using Microsoft.SqlServer.XEvent.XELite;
 using NLog;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+
 namespace XESmartTarget.Core
 {
     public class Target
@@ -30,8 +23,6 @@ namespace XESmartTarget.Core
         private bool stopped = false;
         private List<Task> allTasks = new List<Task>();
 
-        
-
         public void Start()
         {
             try
@@ -49,7 +40,7 @@ namespace XESmartTarget.Core
                         PreExecutionScript = PreExecutionScript,
                         PostExecutionScript = PostExecutionScript
                     };
-                    
+
                     foreach (Response r in Responses)
                     {
                         Response pr = (Response)r.Clone();
@@ -85,10 +76,8 @@ namespace XESmartTarget.Core
             stopped = true;
         }
 
-
-        private class TargetWorker 
+        private class TargetWorker
         {
-
             internal List<Response> Responses { get; set; } = new List<Response>();
             internal string ServerName { get; set; }
             internal string SessionName { get; set; }
@@ -128,8 +117,7 @@ namespace XESmartTarget.Core
             internal bool FailOnProcessingError { get; set; } = false;
             private bool stopped = false;
 
-
-            internal void Process()
+            internal async void Process()
             {
                 if (!String.IsNullOrEmpty(PreExecutionScript))
                 {
@@ -142,13 +130,13 @@ namespace XESmartTarget.Core
                 bool shouldContinue = true;
                 int attempts = 0;
 
-                QueryableXEventData eventStream = null;
+                XELiveEventStreamer eventStream = null;
 
                 while (shouldContinue)
                 {
                     try
                     {
-                        if(attempts < 240) attempts++; // connect attempts will be at least every 1 hour (240 * 15 sec = 3600 sec = 1 hour)
+                        if (attempts < 240) attempts++; // connect attempts will be at least every 1 hour (240 * 15 sec = 3600 sec = 1 hour)
 
                         eventStream = ConnectSessionStream(ConnectionString);
                         connectedOnce = true;
@@ -157,7 +145,7 @@ namespace XESmartTarget.Core
                     }
                     catch (Exception e)
                     {
-                        if(attempts == 1)
+                        if (attempts == 1)
                         {
                             logger.Error($"Error connecting to '{ServerName}'");
                             logger.Error(e.InnerException ?? e);
@@ -185,32 +173,36 @@ namespace XESmartTarget.Core
                     }
                     try
                     {
-                        ProcessStreamData(eventStream);
+                        await ProcessStreamData(eventStream);
                     }
-                    catch(Exception e)
+                    catch (Exception e)
                     {
                         logger.Error($"Error processing event data from '{ServerName}'");
                         logger.Error(e);
                         if (FailOnProcessingError)
                         {
-                            eventStream.Dispose();
                             throw;
                         }
-                        else {
+                        else
+                        {
                             shouldContinue = connectedOnce;
                         }
                     }
                 }
             }
 
-            private void ProcessStreamData(QueryableXEventData eventStream)
+            private async Task ProcessStreamData(XELiveEventStreamer eventStream)
             {
-                foreach (PublishedEvent xevent in eventStream)
+                var cancellationTokenSource = new CancellationTokenSource();
+
+                await eventStream.ReadEventStream(async xevent =>
                 {
                     if (stopped)
                     {
-                        break;
+                        cancellationTokenSource.Cancel();
+                        return;
                     }
+
                     // Pass events to the responses
                     foreach (Response r in Responses)
                     {
@@ -241,19 +233,15 @@ namespace XESmartTarget.Core
                             }
                         }
                     }
-                }
+                }, cancellationTokenSource.Token);
             }
 
-            private QueryableXEventData ConnectSessionStream(string connectionString)
+            private XELiveEventStreamer ConnectSessionStream(string connectionString)
             {
-                QueryableXEventData eventStream;
+                XELiveEventStreamer eventStream;
                 try
                 {
-                    eventStream = new QueryableXEventData(
-                        connectionString,
-                        SessionName,
-                        EventStreamSourceOptions.EventStream,
-                        EventStreamCacheOptions.DoNotCache);
+                    eventStream = new XELiveEventStreamer(connectionString, SessionName);
                 }
                 catch (Exception e)
                 {
@@ -264,6 +252,5 @@ namespace XESmartTarget.Core
                 return eventStream;
             }
         }
-        
     }
 }

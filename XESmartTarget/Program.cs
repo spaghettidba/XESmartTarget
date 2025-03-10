@@ -1,18 +1,8 @@
 ﻿using CommandLine;
-using CommandLine.Text;
 using NLog;
 using NLog.Targets;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using XESmartTarget.Core;
 using XESmartTarget.Core.Config;
 using XESmartTarget.Core.Utils;
 

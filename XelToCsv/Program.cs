@@ -1,13 +1,6 @@
 ﻿using CommandLine;
-using CommandLine.Text;
 using NLog;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using XESmartTarget.Core.Utils;
 
 namespace XelToCsv

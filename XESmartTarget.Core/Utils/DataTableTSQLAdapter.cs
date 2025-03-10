@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Data;
-using System.Data.SqlClient;
+﻿using System.Data;
+using Microsoft.Data.SqlClient;
 using NLog;
 using XESmartTarget.Core.Responses;
 
@@ -348,7 +343,7 @@ namespace XESmartTarget.Core.Utils
 
         public void WriteToServer()
         {
-            using (SqlBulkCopy bulkCopy = new System.Data.SqlClient.SqlBulkCopy(Connection,
+            using (SqlBulkCopy bulkCopy = new SqlBulkCopy(Connection,
                                 SqlBulkCopyOptions.KeepIdentity |
                                 SqlBulkCopyOptions.FireTriggers |
                                 SqlBulkCopyOptions.CheckConstraints |
@@ -378,7 +373,7 @@ namespace XESmartTarget.Core.Utils
         {
             int result = -1;
 
-            using (SqlBulkCopy bulkCopy = new System.Data.SqlClient.SqlBulkCopy(Connection,
+            using (SqlBulkCopy bulkCopy = new SqlBulkCopy(Connection,
                                 SqlBulkCopyOptions.KeepIdentity |
                                 SqlBulkCopyOptions.FireTriggers |
                                 SqlBulkCopyOptions.CheckConstraints |

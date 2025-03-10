@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.SqlServer.XEvent.Linq;
-using System.Data.SqlClient;
+﻿using Microsoft.SqlServer.XEvent.XELite;
+using Microsoft.Data.SqlClient;
 using NLog;
 using System.Data;
-using System.Threading;
 using System.Collections.Concurrent;
 using XESmartTarget.Core.Utils;
 
@@ -35,16 +31,15 @@ namespace XESmartTarget.Core.Responses
             logger.Info(String.Format("Initializing Response of Type '{0}'", this.GetType().FullName));
         }
 
-
-        public override void Process(PublishedEvent evt)
+        public override void Process(IXEvent xevent)
         {
-            if(xeadapter == null)
+            if (xeadapter == null)
             {
                 xeadapter = new XEventDataTableAdapter(eventsTable);
                 xeadapter.Filter = this.Filter;
                 xeadapter.OutputColumns = new List<OutputColumn>();
             }
-            xeadapter.ReadEvent(evt);
+            xeadapter.ReadEvent(xevent);
 
             if (DelaySeconds == 0 && ReplayIntervalSeconds == 0)
             {
@@ -59,10 +54,7 @@ namespace XESmartTarget.Core.Responses
                     ReplayTask = Task.Factory.StartNew(() => ReplayTaskMain());
                 }
             }
-
         }
-
-
 
         private void ReplayTaskMain()
         {
@@ -115,7 +107,7 @@ namespace XESmartTarget.Core.Responses
                     }
 
                     ReplayWorker rw = null;
-                    if(ReplayWorkers.TryGetValue(session_id, out rw))
+                    if (ReplayWorkers.TryGetValue(session_id, out rw))
                     {
                         rw.AppendCommand(command);
                     }
@@ -123,10 +115,10 @@ namespace XESmartTarget.Core.Responses
                     {
                         rw = new ReplayWorker()
                         {
-                            ServerName = SmartFormatHelper.Format(ServerName,Tokens),
+                            ServerName = SmartFormatHelper.Format(ServerName, Tokens),
                             UserName = UserName,
                             Password = Password,
-                            DatabaseName = SmartFormatHelper.Format(DatabaseName,Tokens),
+                            DatabaseName = SmartFormatHelper.Format(DatabaseName, Tokens),
                             ReplayIntervalSeconds = ReplayIntervalSeconds,
                             StopOnError = StopOnError,
                             Name = session_id.ToString()
@@ -137,8 +129,6 @@ namespace XESmartTarget.Core.Responses
 
                         logger.Info(String.Format("Started new Replay Worker for session_id {0}", session_id));
                     }
-
-
                 }
 
                 eventsTable.Rows.Clear();
@@ -150,8 +140,6 @@ namespace XESmartTarget.Core.Responses
             public string CommandText { get; set; }
             public string Database { get; set; }
         }
-
-
 
         class ReplayWorker
         {
@@ -167,7 +155,6 @@ namespace XESmartTarget.Core.Responses
             private bool stopped = false;
             private ConcurrentQueue<ReplayCommand> Commands = new ConcurrentQueue<ReplayCommand>();
             private Task runner;
-
 
             private void InitializeConnection()
             {
@@ -214,19 +201,18 @@ namespace XESmartTarget.Core.Responses
                 }
                 while (!stopped)
                 {
-                    if(Commands.Count == 0)
+                    if (Commands.Count == 0)
                     {
                         Thread.Sleep(10);
                         continue;
                     }
                     ReplayCommand cmd = null;
-                    if(Commands.TryDequeue(out cmd))
+                    if (Commands.TryDequeue(out cmd))
                     {
                         ExecuteCommand(cmd);
                     }
                     Thread.Sleep(ReplayIntervalSeconds * 1000);
                 }
-
             }
 
             private void ExecuteCommand(ReplayCommand command)
@@ -279,8 +265,6 @@ namespace XESmartTarget.Core.Responses
             {
                 Commands.Enqueue(new ReplayCommand() { CommandText = commandText, Database = databaseName });
             }
-
         }
-
     }
 }

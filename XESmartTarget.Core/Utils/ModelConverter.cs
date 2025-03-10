@@ -1,19 +1,13 @@
-﻿using System;
+﻿using Newtonsoft.Json;
 using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web.Script.Serialization;
+using System.Runtime.Serialization;
 
 namespace XESmartTarget.Core.Utils
 {
-    public class ModelConverter : JavaScriptConverter
+    public class ModelConverter
     {
-        public override IEnumerable<Type> SupportedTypes
+        public IEnumerable<Type> SupportedTypes
         {
             get
             {
@@ -36,93 +30,132 @@ namespace XESmartTarget.Core.Utils
             }
         }
 
+        public T Deserialize<T>(string json)
+        {
+            return (T)Deserialize(json, typeof(T));
+        }
 
+        public object Deserialize(string json, Type type)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+                return null;
 
-        public override object Deserialize(IDictionary<string, object> dictionary, Type type, JavaScriptSerializer serializer)
+            var dictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+            return Deserialize(dictionary, type);
+        }
+
+        public object Deserialize(IDictionary<string, object> dictionary, Type type)
         {
             object p;
             try
             {
-                // try to create the object using its parameterless constructor
                 p = Activator.CreateInstance(type);
             }
             catch
             {
-                // try to create the object using this scary initializer that 
-                // doesn't need the parameterless constructor
-                p = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(type);
+                p = FormatterServices.GetUninitializedObject(type);
             }
 
             var props = type.GetProperties();
 
             foreach (string key in dictionary.Keys)
             {
-                var prop = props.Where(t => t.Name == key).FirstOrDefault();
-                if (prop != null)
+                var prop = props.FirstOrDefault(t => t.Name == key);
+                if (prop == null)
+                    continue;  
+
+                var value = dictionary[key];
+
+                if (prop.Name.EndsWith("ServerName"))
                 {
-                    if (prop.Name.EndsWith("ServerName"))
+                    if (prop.PropertyType == typeof(string))
                     {
-                        if (prop.PropertyType.Name == "String")
-                        {
-                            prop.SetValue(p, (string)dictionary[key]);
-                        }
-                        else
-                        {
-                            if (dictionary[key] is string)
-                                prop.SetValue(p, new string[] { (string)dictionary[key] }, null);
-                            else
-                                prop.SetValue(p, (string[])((ArrayList)dictionary[key]).ToArray(typeof(string)), null);
-                        }
-                    }
-                    else if (prop.Name.EndsWith("Target"))
-                    {
-                        if(dictionary[key] is ArrayList)
-                        {
-                            //prop.SetValue(p, (Target[])((ArrayList)dictionary[key]).ToArray(typeof(Target)), null);
-                            var targList = (ArrayList)dictionary[key];
-                            var deserializedTargs = new List<Target>();
-                            foreach(var el in targList)
-                            {
-                                deserializedTargs.Add((Target)Deserialize((Dictionary<string, object>)el, typeof(Target), serializer));
-                            }
-                            prop.SetValue(p, deserializedTargs.ToArray(), null);
-                            //prop.SetValue(p, new Target[] { (Target)Deserialize((Dictionary<string, object>)dictionary[key], typeof(List<Target>), serializer) }, null);
-                        }
-                        else
-                        {
-                            prop.SetValue(p, new Target[] { (Target)Deserialize((Dictionary<string, object>)dictionary[key], typeof(Target), serializer) }, null);
-                        }
+                        prop.SetValue(p, value?.ToString());
                     }
                     else
                     {
-                        if ((dictionary[key] is Dictionary<string, object>))
-                            prop.SetValue(p, Deserialize((Dictionary<string, object>)dictionary[key], prop.PropertyType, serializer), null);
+                        if (value is string singleStr)
+                        {
+                            prop.SetValue(p, new string[] { singleStr }, null);
+                        }
                         else
                         {
-                            if (dictionary[key] is IList && prop.PropertyType.IsGenericType)
+                            prop.SetValue(p, ConvertToStringArray(value), null);
+                        }
+                    }
+                }
+                else if (prop.Name.EndsWith("Target"))
+                {
+                    if (value is IList)
+                    {
+                        var listVal = (IList)value;
+                        var deserializedList = new List<Target>();
+
+                        foreach (var el in listVal)
+                        {
+                            if (el is IDictionary<string, object> dic)
                             {
-                                object obj = Activator.CreateInstance(prop.PropertyType);
-                                foreach (var itm in (IEnumerable)dictionary[key])
-                                {
-                                    ((IList)obj).Add(itm);
-                                }
-                                prop.SetValue(p, obj, null);
-                            }
-                            else if (prop.PropertyType.IsEnum)
-                            {
-                                prop.SetValue(p, Enum.Parse(prop.PropertyType, (string)dictionary[key]), null);
-                            }
-                            else
-                            {
-                                prop.SetValue(p, GetValueOfType(dictionary[key], prop.PropertyType), null);
+                                var tObj = Deserialize(dic, typeof(Target));
+                                deserializedList.Add((Target)tObj);
                             }
                         }
-
+                        prop.SetValue(p, deserializedList.ToArray(), null);
+                    }
+                    else if (value is IDictionary<string, object> singleDict)
+                    {
+                        var tObj = Deserialize(singleDict, typeof(Target));
+                        prop.SetValue(p, new Target[] { (Target)tObj }, null);
+                    }
+                }
+                else
+                {
+                    if (value is IDictionary<string, object> subDict)
+                    {
+                        prop.SetValue(p, Deserialize(subDict, prop.PropertyType), null);
+                    }
+                    else if (value is IList && prop.PropertyType.IsGenericType)
+                    {
+                        var listInstance = Activator.CreateInstance(prop.PropertyType);
+                        var list = listInstance as IList;
+                        if (list != null)
+                        {
+                            foreach (var item in (IList)value)
+                            {
+                                list.Add(item);
+                            }
+                            prop.SetValue(p, list, null);
+                        }
+                    }
+                    else if (prop.PropertyType.IsEnum)
+                    {
+                        prop.SetValue(p, Enum.Parse(prop.PropertyType, value.ToString()), null);
+                    }
+                    else
+                    {
+                        prop.SetValue(p, GetValueOfType(value, prop.PropertyType), null);
                     }
                 }
             }
 
             return p;
+        }
+
+        private string[] ConvertToStringArray(object val)
+        {
+            if (val == null)
+                return null;
+
+            if (val is IEnumerable enumerable && !(val is string))
+            {
+                var strList = new List<string>();
+                foreach (var item in enumerable)
+                {
+                    strList.Add(item?.ToString());
+                }
+                return strList.ToArray();
+            }
+
+            return new string[] { val.ToString() };
         }
 
         private object GetValueOfType(object v, Type propertyType)
@@ -147,10 +180,9 @@ namespace XESmartTarget.Core.Utils
                 return v;
         }
 
-        public override IDictionary<string, object> Serialize(object obj, JavaScriptSerializer serializer)
+        public IDictionary<string, object> Serialize(object obj)
         {
             throw new NotImplementedException();
         }
-
     }
 }

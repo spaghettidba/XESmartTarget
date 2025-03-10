@@ -1,0 +1,19 @@
+{
+  "Target": {
+    "ServerName": "(local)",
+    "SessionName": "test_session",
+    "Responses": [
+      {
+        "__type": "TableAppenderResponse",
+        "TargetServer": "(local)",
+        "TargetDatabase": "XESmartTargetTest",
+        "TargetTable": "Test_session_data",
+        "AutoCreateTargetTable": true,
+        "UploadIntervalSeconds": 10,
+        "Events": [
+          "sql_batch_completed"
+        ]
+      }
+    ]
+  }
+}

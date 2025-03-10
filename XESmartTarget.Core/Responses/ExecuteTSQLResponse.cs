@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using NLog;
-using Microsoft.SqlServer.XEvent.Linq;
-using System.Data.SqlClient;
+﻿using NLog;
+using Microsoft.SqlServer.XEvent.XELite;
+using Microsoft.Data.SqlClient;
 using System.Data;
 using XESmartTarget.Core.Utils;
 
@@ -14,17 +11,14 @@ namespace XESmartTarget.Core.Responses
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
 
-
         public string TSQL { get; set; }
         public string ServerName { get; set; }
         public string DatabaseName { get; set; }
         public string UserName { get; set; }
         public string Password { get; set; }
 
-
         protected DataTable EventsTable = new DataTable("events");
         private XEventDataTableAdapter xeadapter;
-
 
         protected string ConnectionString
         {
@@ -51,7 +45,7 @@ namespace XESmartTarget.Core.Responses
             }
         }
 
-        public override void Process(PublishedEvent evt)
+        public override void Process(IXEvent evt)
         {
             if (xeadapter == null)
             {
@@ -68,9 +62,10 @@ namespace XESmartTarget.Core.Responses
                     Dictionary<string, object> eventTokens = new Dictionary<string, object>();
                     foreach (DataColumn dc in EventsTable.Columns)
                     {
-                        if (dr[dc].GetType().Name == "Byte[]")
+                        if (dr[dc] is byte[] bytes)
                         {
-                            eventTokens.Add(dc.ColumnName, "0x" + (new System.Runtime.Remoting.Metadata.W3cXsd2001.SoapHexBinary(dr[dc] as byte[])).ToString());
+                            string hex = Convert.ToHexString(bytes);
+                            eventTokens.Add(dc.ColumnName, "0x" + hex);
                         }
                         else
                         {
@@ -94,28 +89,24 @@ namespace XESmartTarget.Core.Responses
             }
         }
 
-
         private void ExecuteTSQL(string TSQLString)
         {
             logger.Trace("Executing TSQL command");
             using (SqlConnection conn = new SqlConnection())
             {
-
                 try
                 {
                     conn.ConnectionString = ConnectionString;
                     conn.Open();
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     logger.Error(String.Format("Error: {0}", e.Message));
                     throw;
                 }
-                
 
                 try
                 {
-
                     SqlCommand cmd = new SqlCommand(TSQLString);
                     cmd.Connection = conn;
                     cmd.ExecuteNonQuery();
@@ -126,10 +117,8 @@ namespace XESmartTarget.Core.Responses
                     logger.Error(e, String.Format("Error: {0}", TSQLString));
                     throw;
                 }
-
-
             }
         }
-
     }
 }
+

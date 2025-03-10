@@ -1,0 +1,7 @@
+﻿using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
+// The following GUID is for the ID of the typelib if this project is exposed to COM
+[assembly: Guid("08a489ce-617e-402b-bee5-c8eb3fb43e60")]
+

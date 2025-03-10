@@ -1,13 +1,8 @@
-﻿using Microsoft.SqlServer.XEvent.Linq;
-using NLog;
-using System;
-using System.Collections.Generic;
+﻿using NLog;
 using System.Data;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+using Microsoft.Data.SqlClient;
 using XESmartTarget.Core.Utils;
+using Microsoft.SqlServer.XEvent.XELite;
 
 namespace XESmartTarget.Core.Responses
 {
@@ -108,7 +103,7 @@ namespace XESmartTarget.Core.Responses
         public bool IsSingleEvent = true;
         public bool FailOnSingleEventViolation = false;
 
-        public override void Process(PublishedEvent evt)
+        public override void Process(IXEvent evt)
         {
             Enqueue(evt);
         }
@@ -116,7 +111,7 @@ namespace XESmartTarget.Core.Responses
         protected bool UploaderStarted = false;
         protected bool TargetTableCreated = false;
 
-        protected void Enqueue(PublishedEvent evt)
+        protected void Enqueue(IXEvent evt)
         {
             if(xeadapter == null)
             {
