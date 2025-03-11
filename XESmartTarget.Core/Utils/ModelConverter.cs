@@ -19,9 +19,8 @@ namespace XESmartTarget.Core.Utils
                 foreach (Type t in types)
                 {
                     result.Add(t);
-                }
-                return result;
             }
+        }
         }
 
         public T Deserialize<T>(string json)
@@ -41,156 +40,115 @@ namespace XESmartTarget.Core.Utils
 
         public object Deserialize(IDictionary<string, object> dictionary, Type type)
         {
-            object p;
-            try
-            {
-                if (type.IsAbstract && dictionary.ContainsKey("__type"))
-                {
-                    var subTypeName = dictionary["__type"]?.ToString();
-                    if (!string.IsNullOrEmpty(subTypeName))
-                    {
-                        string fullTypeName = subTypeName.Contains(".")
-                            ? subTypeName
-                            : "XESmartTarget.Core.Responses." + subTypeName;
-                        var assembly = Assembly.GetExecutingAssembly();
-                        var realType = assembly.GetType(fullTypeName) ?? Type.GetType(fullTypeName);
-                        if (realType != null && !realType.IsAbstract)
-                        {
-                            p = Activator.CreateInstance(realType);
-                        }
-                        else
-                        {
-                            p = FormatterServices.GetUninitializedObject(type);
-                        }
-                    }
-                    else
-                    {
-                        p = FormatterServices.GetUninitializedObject(type);
-                    }
-                }
-                else
-                {
-                    p = Activator.CreateInstance(type);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Exception during instance creation: " + ex.Message);
-                p = FormatterServices.GetUninitializedObject(type);
-            }
+            object instance = CreateInstance(dictionary, type);
 
-            var props = p.GetType().GetProperties();
+            var props = instance.GetType().GetProperties();
 
-            foreach (string key in dictionary.Keys.ToList())
+            foreach (var kvp in dictionary)
             {
-                string dictKey = dictionary.Keys.FirstOrDefault(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
-                var prop = props.FirstOrDefault(t => string.Equals(t.Name, key, StringComparison.OrdinalIgnoreCase));
+                string key = kvp.Key;
+                var prop = props.FirstOrDefault(p => string.Equals(p.Name, key, StringComparison.OrdinalIgnoreCase));
                 if (prop == null)
                     continue;
 
-                object rawValue = dictionary[key];
-                object value = ConvertJTokenIfNeeded(rawValue);
-                dictionary[key] = value;
+                object rawValue = ConvertJTokenIfNeeded(kvp.Value);
+                object value = rawValue; 
 
-                if (prop.Name.Equals("OutputColumns", StringComparison.OrdinalIgnoreCase) &&
-                    prop.PropertyType == typeof(List<string>))
+                if (prop.Name.Equals("OutputColumns", StringComparison.OrdinalIgnoreCase) && prop.PropertyType == typeof(List<string>))
                 {
-                    List<string> listOutput = null;
-                    if (rawValue is JArray jArr)
-                    {
-                        listOutput = jArr.ToObject<List<string>>();
-                    }
-                    else if (value is IList listVal)
-                    {
-                        listOutput = listVal.Cast<object>().Select(x => x?.ToString()).ToList();
-                    }
-                    else
-                    {
-                        listOutput = new List<string> { value.ToString() };
-                    }
-                    prop.SetValue(p, listOutput, null);
-                    continue;
+                    List<string> listOutput = rawValue is JArray jArr
+                        ? jArr.ToObject<List<string>>()
+                        : rawValue is IList listVal
+                            ? listVal.Cast<object>().Select(x => x?.ToString()).ToList()
+                            : new List<string> { rawValue.ToString() };
+                    prop.SetValue(instance, listOutput);
                 }
-
-                if (prop.Name.Equals("OutputMeasurement", StringComparison.OrdinalIgnoreCase) && prop.PropertyType == typeof(string))
+                else if (prop.Name.Equals("OutputMeasurement", StringComparison.OrdinalIgnoreCase) && prop.PropertyType == typeof(string))
                 {
-                    prop.SetValue(p, value?.ToString(), null);
-                    continue;
+                    prop.SetValue(instance, rawValue?.ToString());
                 }
-
-                if (prop.Name.EndsWith("ServerName", StringComparison.OrdinalIgnoreCase))
+                else if (prop.Name.EndsWith("ServerName", StringComparison.OrdinalIgnoreCase))
                 {
                     if (prop.PropertyType == typeof(string))
-                    {
-                        prop.SetValue(p, value?.ToString());
-                    }
+                        prop.SetValue(instance, rawValue?.ToString());
                     else
-                    {
-                        if (value is string singleStr)
-                        {
-                            prop.SetValue(p, new string[] { singleStr }, null);
-                        }
-                        else
-                        {
-                            prop.SetValue(p, ConvertToStringArray(value), null);
-                        }
-                    }
+                        prop.SetValue(instance, rawValue is string singleStr
+                            ? new string[] { singleStr }
+                            : ConvertToStringArray(rawValue));
                 }
                 else if (prop.Name.EndsWith("Target", StringComparison.OrdinalIgnoreCase))
                 {
-                    value = ConvertJTokenIfNeeded(value);
-                    if (value is IList listVal)
+                    if (rawValue is IList listVal)
                     {
                         var deserializedList = new List<Target>();
                         foreach (var el in listVal)
                         {
-                            var realEl = ConvertJTokenIfNeeded(el);
-                            if (realEl is IDictionary<string, object> dic)
+                            if (ConvertJTokenIfNeeded(el) is IDictionary<string, object> dic)
                             {
-                                var tObj = Deserialize(dic, typeof(Target));
-                                deserializedList.Add((Target)tObj);
+                                var targetObj = Deserialize(dic, typeof(Target));
+                                deserializedList.Add((Target)targetObj);
                             }
                         }
-                        prop.SetValue(p, deserializedList.ToArray(), null);
+                        prop.SetValue(instance, deserializedList.ToArray());
                     }
-                    else if (value is IDictionary<string, object> singleDict)
+                    else if (rawValue is IDictionary<string, object> singleDict)
                     {
-                        var tObj = Deserialize(singleDict, typeof(Target));
-                        prop.SetValue(p, new Target[] { (Target)tObj }, null);
+                        var targetObj = Deserialize(singleDict, typeof(Target));
+                        prop.SetValue(instance, new Target[] { (Target)targetObj });
                     }
                 }
-                else if (value is IDictionary<string, object> subDict)
+                else if (rawValue is IDictionary<string, object> subDict)
                 {
-                    prop.SetValue(p, Deserialize(subDict, prop.PropertyType), null);
+                    prop.SetValue(instance, Deserialize(subDict, prop.PropertyType));
                 }
-                else if (value is IList && prop.PropertyType.IsGenericType)
+                else if (rawValue is IList list && prop.PropertyType.IsGenericType)
                 {
-                    var listInstance = Activator.CreateInstance(prop.PropertyType) as IList;
-                    if (listInstance != null)
+                    var listInstance = (IList)Activator.CreateInstance(prop.PropertyType);
+                    Type elementType = prop.PropertyType.GetGenericArguments()[0];
+                    foreach (var item in list)
                     {
-                        Type elementType = prop.PropertyType.GetGenericArguments()[0];
-                        foreach (var item in (IList)value)
+                        object convertedItem = ConvertJTokenIfNeeded(item);
+                        if (convertedItem is IDictionary<string, object> dictItem)
                         {
-                            object convertedItem = ConvertJTokenIfNeeded(item);
-                            if (convertedItem is IDictionary<string, object> dictItem)
-                            {
-                                convertedItem = Deserialize(dictItem, elementType);
-                            }
-                            listInstance.Add(convertedItem);
+                            convertedItem = Deserialize(dictItem, elementType);
                         }
-                        prop.SetValue(p, listInstance, null);
+                        listInstance.Add(convertedItem);
                     }
+                    prop.SetValue(instance, listInstance);
                 }
                 else if (prop.PropertyType.IsEnum)
                 {
-                    prop.SetValue(p, Enum.Parse(prop.PropertyType, value.ToString()), null);
+                    prop.SetValue(instance, Enum.Parse(prop.PropertyType, rawValue.ToString()));
                 }
                 else
                 {
-                    prop.SetValue(p, GetValueOfType(value, prop.PropertyType), null);
+                    prop.SetValue(instance, GetValueOfType(rawValue, prop.PropertyType));
                 }
             }
-            return p;
+            return instance;
+        }
+
+        private object CreateInstance(IDictionary<string, object> dictionary, Type type)
+        {
+            try
+            {
+                if (type.IsAbstract && dictionary.TryGetValue("__type", out var subTypeObj) && subTypeObj != null)
+                {
+                    var subTypeName = subTypeObj.ToString();
+                    string fullTypeName = subTypeName.Contains(".")
+                        ? subTypeName
+                        : $"XESmartTarget.Core.Responses.{subTypeName}";
+                    var realType = Assembly.GetExecutingAssembly().GetType(fullTypeName) ?? Type.GetType(fullTypeName);
+                    if (realType != null && !realType.IsAbstract)
+                        return Activator.CreateInstance(realType);
+                }
+                return Activator.CreateInstance(type);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception during instance creation: " + ex.Message);
+                return FormatterServices.GetUninitializedObject(type);
+            }
         }
 
         private object ConvertJTokenIfNeeded(object value)
@@ -239,21 +197,13 @@ namespace XESmartTarget.Core.Utils
         private object GetValueOfType(object v, Type propertyType)
         {
             if (propertyType == typeof(string))
-            {
                 return v?.ToString();
-            }
             else if (propertyType == typeof(bool))
-            {
                 return Convert.ToBoolean(v);
-            }
             else if (propertyType == typeof(int))
-            {
                 return Convert.ToInt32(v);
-            }
             else if (propertyType == typeof(long))
-            {
                 return Convert.ToInt64(v);
-            }
             else
                 return v;
         }
