@@ -18,9 +18,17 @@ namespace XESmartTarget.Core.Utils
                 Type[] types = currentAssembly.GetTypes().Where(t => t != null && t.FullName.StartsWith(nameSpace) & !t.FullName.Contains("+")).ToArray();
                 foreach (Type t in types)
                 {
-                    result.Add(t);
+                    try
+                    {
+                        result.Add(t);
+                    }
+                    catch (Exception)
+                    {
+                        throw;
+                    }
+                }
+                return result;
             }
-        }
         }
 
         public T Deserialize<T>(string json)
