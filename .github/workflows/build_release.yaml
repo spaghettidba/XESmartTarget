@@ -39,7 +39,7 @@ jobs:
       - name: Generate MSI
         shell: pwsh
         run: |
-          powershell Setup\buildmsi_githubaction.ps1 `
+          powershell -File .\Setup\buildmsi_githubaction.ps1 `
             -BuildVersion ${{ steps.extract_version.outputs.version }} `
             -WixBinPath "C:\Program Files (x86)\WiX Toolset v3.11\bin"
 
