@@ -31,11 +31,11 @@ jobs:
         with:
           dotnet-version: '9.0.x' 
 
-      - name: MSBuild Restore
-        run: msbuild XESmartTarget.sln -t:Restore
+      - name: Restore
+        run: dotnet restore XESmartTarget.sln
 
-      - name: Build solution
-        run: msbuild XESmartTarget.sln -t:Build -p:Configuration=Release
+      - name: Build
+        run: dotnet build XESmartTarget.sln --configuration Release
 
       #- name: Sign executables
       #  shell: pwsh
