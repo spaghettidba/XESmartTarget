@@ -26,8 +26,8 @@ jobs:
           echo "version=$assemblyVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "::set-output name=version::$assemblyVersion"
 
-      - name: NuGet Restore
-        run: nuget restore XESmartTarget.sln
+      - name: MSBuild Restore
+        run: msbuild XESmartTarget.sln -t:Restore
 
       - name: Build solution
         run: msbuild XESmartTarget.sln -t:Build -p:Configuration=Release
