@@ -27,8 +27,8 @@ Set-Location $PSScriptRoot
     -arch x64
 #----------------------------------------------------------------
 & "$WixBinPath\light.exe" `
-    -out ".\bin\Release\XESmartTarget-$BuildVersion.msi" `
+    -out "C:\temp\XESmartTarget-$BuildVersion.msi" `
     "$PSScriptRoot\candleout\*.wixobj" `
     -ext WixUIExtension
 
-Write-Host "MSI Generated: .\bin\Release\XESmartTarget-$BuildVersion.msi"
+Write-Host "MSI Generated: C:\temp\XESmartTarget-$BuildVersion.msi"
