@@ -51,12 +51,17 @@ jobs:
           draft: false
           prerelease: false
 
+      - name: Check MSI folder
+        shell: pwsh
+        run: dir "${{ github.workspace }}/Setup/bin/Release"
+
+
       - name: Upload MSI to GitHub Release
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/Setup/bin/Release/XESmartTarget-${{ steps.extract_version.outputs.version }}.msi
-          asset_name: XESmartTarget-${{ steps.extract_version.outputs.version }}.msi
+          asset_path: "${{ github.workspace }}/Setup/bin/Release/XESmartTarget-${{ steps.extract_version.outputs.version }}.msi"
+          asset_name: "XESmartTarget-${{ steps.extract_version.outputs.version }}.msi"
           asset_content_type: application/octet-stream
