@@ -51,11 +51,6 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Check MSI folder
-        shell: pwsh
-        run: dir "C:\temp"
-
-
       - name: Upload MSI to GitHub Release
         uses: actions/upload-release-asset@v1
         env:

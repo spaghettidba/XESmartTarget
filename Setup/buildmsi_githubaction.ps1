@@ -20,7 +20,7 @@ Set-Location $PSScriptRoot
     -nologo `
     -out "$PSScriptRoot\candleout\" `
     -dXESmartTargetDir="..\XESmartTarget\bin\Release" `
-    -dBuildVersion=$BuildVersion `
+    -dBuildVersion="$BuildVersion" `
     -dPlatform="x64" `
     "$PSScriptRoot\Product.wxs" `
     "$PSScriptRoot\ProductComponents.wxs" `
