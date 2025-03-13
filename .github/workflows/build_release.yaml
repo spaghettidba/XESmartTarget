@@ -26,6 +26,11 @@ jobs:
           echo "version=$assemblyVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "::set-output name=version::$assemblyVersion"
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.0.x' 
+
       - name: MSBuild Restore
         run: msbuild XESmartTarget.sln -t:Restore
 
