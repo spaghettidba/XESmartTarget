@@ -26,9 +26,6 @@ jobs:
           echo "version=$assemblyVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "::set-output name=version::$assemblyVersion"
 
-      - name: Restore
-        run: dotnet restore XESmartTarget.sln
-
       - name: Build
         run: dotnet build XESmartTarget.sln --configuration Release
 
@@ -39,9 +36,10 @@ jobs:
       - name: Generate MSI
         shell: pwsh
         run: |
-          powershell -File .\Setup\buildmsi_githubaction.ps1 `
+          .\Setup\buildmsi_githubaction.ps1 `
             -BuildVersion ${{ steps.extract_version.outputs.version }} `
             -WixBinPath "C:\Program Files (x86)\WiX Toolset v3.11\bin"
+
 
       #- name: Sign MSI
       #  shell: pwsh
