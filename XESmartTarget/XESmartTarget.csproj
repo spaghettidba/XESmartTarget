@@ -17,4 +17,10 @@
     <ProjectReference Include="..\XESmartTarget.Core\XESmartTarget.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="NLog.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

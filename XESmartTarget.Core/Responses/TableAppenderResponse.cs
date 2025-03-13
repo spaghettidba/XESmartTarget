@@ -88,7 +88,8 @@ namespace XESmartTarget.Core.Responses
                     s += "User Id=" + UserName + ";";
                     s += "Password=" + Password + ";";
                 }
-                s += "Connection Timeout=" + ConnectionTimeout;
+                s += "Connection Timeout=" + ConnectionTimeout + ";";
+                s += "TrustServerCertificate=True;";
                 logger.Debug(s);
                 return s;
             }

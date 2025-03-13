@@ -110,6 +110,7 @@ namespace XESmartTarget.Core
                         connectionString += $"User Id = {UserName}; ";
                         connectionString += $"Password = {Password}; ";
                     }
+                    connectionString += "TrustServerCertificate = True; ";
                     return connectionString;
                 }
             }
@@ -173,7 +174,7 @@ namespace XESmartTarget.Core
                     }
                     try
                     {
-                        await ProcessStreamData(eventStream);
+                        ProcessStreamData(eventStream);
                     }
                     catch (Exception e)
                     {
@@ -191,18 +192,21 @@ namespace XESmartTarget.Core
                 }
             }
 
-            private async Task ProcessStreamData(XELiveEventStreamer eventStream)
+            private void ProcessStreamData(XELiveEventStreamer eventStream)
             {
                 var cancellationTokenSource = new CancellationTokenSource();
 
-                await eventStream.ReadEventStream(async xevent =>
+                Task waitTask = Task.Run(() =>
                 {
-                    if (stopped)
+                    while (!stopped)
                     {
-                        cancellationTokenSource.Cancel();
-                        return;
+                        Thread.Sleep(1000);
                     }
+                    cancellationTokenSource.Cancel();                    
+                });
 
+                Task eventTask = eventStream.ReadEventStream(xevent =>
+                {
                     // Pass events to the responses
                     foreach (Response r in Responses)
                     {
@@ -233,7 +237,23 @@ namespace XESmartTarget.Core
                             }
                         }
                     }
-                }, cancellationTokenSource.Token);
+                    return Task.CompletedTask;
+                },
+                cancellationTokenSource.Token);
+
+                try
+                {
+                    Task.WaitAny(waitTask, eventTask);
+                }
+                catch (Exception e)
+                {
+                    logger.Error(e);
+                    throw;
+                }
+                if (eventTask.IsFaulted)
+                {
+                    logger.Error("Failed with: {0}", eventTask.Exception);
+                }
             }
 
             private XELiveEventStreamer ConnectSessionStream(string connectionString)
