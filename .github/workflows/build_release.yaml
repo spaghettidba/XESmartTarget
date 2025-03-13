@@ -1,0 +1,69 @@
+name: XESmartTarget Build & MSI
+
+on:
+  push:
+    paths:
+      - 'AssemblyInfo.cs'
+
+jobs:
+  build-msi:
+    runs-on: self-hosted
+    
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Extract Version
+        id: extract_version
+        shell: pwsh
+        run: |
+          $assemblyInfoPath = "${{ github.workspace }}\Solution Items\AssemblyInfo.cs"
+          $assemblyVersion = Get-Content $assemblyInfoPath |
+            Select-String -Pattern 'AssemblyFileVersion\("([0-9.]+)"\)' |
+            ForEach-Object { $_.Matches.Groups[1].Value }
+          
+          Write-Host "Version: $assemblyVersion"
+          echo "version=$assemblyVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "::set-output name=version::$assemblyVersion"
+
+      - name: NuGet Restore
+        run: nuget restore XESmartTarget.sln
+
+      - name: Build solution
+        run: msbuild XESmartTarget.sln -t:Build -p:Configuration=Release
+
+      #- name: Sign executables
+      #  shell: pwsh
+      #  run: TODO
+      
+      - name: Generate MSI
+        shell: pwsh
+        run: |
+          powershell Setup\buildmsi_githubaction.ps1 `
+            -BuildVersion ${{ steps.extract_version.outputs.version }} `
+            -WixBinPath "C:\Program Files (x86)\WiX Toolset v3.11\bin"
+
+      #- name: Sign MSI
+      #  shell: pwsh
+      #  run: TODO
+          
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.extract_version.outputs.version }}
+          release_name: "Release ${{ steps.extract_version.outputs.version }}"
+          draft: false
+          prerelease: false
+
+      - name: Upload MSI to GitHub Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/Setup/bin/Release/XESmartTarget-${{ steps.extract_version.outputs.version }}.msi
+          asset_name: XESmartTarget-${{ steps.extract_version.outputs.version }}.msi
+          asset_content_type: application/octet-stream
