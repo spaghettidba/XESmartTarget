@@ -26,8 +26,7 @@ namespace XESmartTarget.Core.Utils
 
             var eventStreamer = new XEFileEventStreamer(InputFile);
 
-            await eventStreamer.ReadEventStream(
-                async (xevent) =>
+            Task eventTask = eventStreamer.ReadEventStream(xevent =>
                 {
                     foreach (var action in xevent.Actions)
                     {
@@ -55,10 +54,11 @@ namespace XESmartTarget.Core.Utils
                         }
                     }
 
-                    await Task.CompletedTask;
+                    return Task.CompletedTask;
                 },
                 CancellationToken.None  
             );
+            Task.WaitAll(eventTask);
 
             logger.Trace(String.Format("Parsing finished {0}", DateTime.Now));
 
@@ -87,8 +87,7 @@ namespace XESmartTarget.Core.Utils
                         }
                         await csv.NextRecordAsync();
 
-                        await eventStreamer.ReadEventStream(
-                            async (xevent) =>
+                        Task eventTask2 = eventStreamer.ReadEventStream(xevent =>
                             {
                                 csv.WriteField(xevent.Name);
                                 csv.WriteField(xevent.Timestamp);
@@ -111,10 +110,11 @@ namespace XESmartTarget.Core.Utils
                                             csv.WriteField("");
                                     }
                                 }
-                                await csv.NextRecordAsync();
+                                return csv.NextRecordAsync();
                             },
                             CancellationToken.None 
                         );
+                        Task.WaitAll(eventTask2);
                     }
                 }
             }

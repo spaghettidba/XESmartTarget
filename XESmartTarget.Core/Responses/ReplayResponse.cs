@@ -185,6 +185,7 @@ namespace XESmartTarget.Core.Responses
                     connectionString += "User Id = " + UserName + "; ";
                     connectionString += "Password = " + Password + "; ";
                 }
+                connectionString += "TrustServerCertificate=True;";
                 return connectionString;
             }
 
