@@ -49,7 +49,6 @@ namespace XESmartTarget.Core.Utils
         public object Deserialize(IDictionary<string, object> dictionary, Type type)
         {
             object instance = CreateInstance(dictionary, type);
-
             var props = instance.GetType().GetProperties();
 
             foreach (var kvp in dictionary)
@@ -60,31 +59,39 @@ namespace XESmartTarget.Core.Utils
                     continue;
 
                 object rawValue = ConvertJTokenIfNeeded(kvp.Value);
-                object value = rawValue; 
+                if (rawValue == null)
+                    continue;
 
-                if (prop.Name.Equals("OutputColumns", StringComparison.OrdinalIgnoreCase) && prop.PropertyType == typeof(List<string>))
+                if (prop.Name == "OutputColumns" && prop.PropertyType == typeof(List<string>))
                 {
-                    List<string> listOutput = rawValue is JArray jArr
-                        ? jArr.ToObject<List<string>>()
-                        : rawValue is IList listVal
-                            ? listVal.Cast<object>().Select(x => x?.ToString()).ToList()
-                            : new List<string> { rawValue.ToString() };
-                    prop.SetValue(instance, listOutput);
+                    var propValue = new List<string>();
+
+                    if (rawValue is IList listVal)
+                        propValue = listVal.Cast<object>().Select(x => x?.ToString()).ToList();
+                    else
+                        propValue = new List<string> { rawValue.ToString() };
+
+                    prop.SetValue(instance, propValue);
+                    continue;
                 }
-                else if (prop.Name.Equals("OutputMeasurement", StringComparison.OrdinalIgnoreCase) && prop.PropertyType == typeof(string))
+                else if (prop.Name == "OutputMeasurement" && prop.PropertyType == typeof(string))
                 {
-                    prop.SetValue(instance, rawValue?.ToString());
+                    prop.SetValue(instance, rawValue.ToString());
+                    continue;
                 }
-                else if (prop.Name.EndsWith("ServerName", StringComparison.OrdinalIgnoreCase))
+                else if (prop.Name == "ServerName")
                 {
                     if (prop.PropertyType == typeof(string))
-                        prop.SetValue(instance, rawValue?.ToString());
+                    {
+                        prop.SetValue(instance, rawValue.ToString());
+                    }
                     else
-                        prop.SetValue(instance, rawValue is string singleStr
-                            ? new string[] { singleStr }
-                            : ConvertToStringArray(rawValue));
+                    {
+                        prop.SetValue(instance, ConvertToStringArray(rawValue));
+                    }
+                    continue;
                 }
-                else if (prop.Name.EndsWith("Target", StringComparison.OrdinalIgnoreCase))
+                else if (prop.Name == "Target")
                 {
                     if (rawValue is IList listVal)
                     {
@@ -104,8 +111,10 @@ namespace XESmartTarget.Core.Utils
                         var targetObj = Deserialize(singleDict, typeof(Target));
                         prop.SetValue(instance, new Target[] { (Target)targetObj });
                     }
+                    continue;
                 }
-                else if (rawValue is IDictionary<string, object> subDict)
+
+                if (rawValue is IDictionary<string, object> subDict)
                 {
                     prop.SetValue(instance, Deserialize(subDict, prop.PropertyType));
                 }
