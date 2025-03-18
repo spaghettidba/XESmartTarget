@@ -39,7 +39,9 @@ namespace XESmartTarget.Core
                         DatabaseName = DatabaseName,
                         FailOnProcessingError = FailOnProcessingError,
                         PreExecutionScript = PreExecutionScript,
-                        PostExecutionScript = PostExecutionScript
+                        PostExecutionScript = PostExecutionScript,
+                        ConnectTimeout = 15,
+                        TrustServerCertificate = true
                     };
 
                     foreach (Response r in Responses)
@@ -80,32 +82,41 @@ namespace XESmartTarget.Core
         private class TargetWorker
         {
             internal List<Response> Responses { get; set; } = new List<Response>();
-            internal string ServerName { get; set; }
             internal string SessionName { get; set; }
-            internal string UserName { get; set; }
-            internal string Password { get; set; }
-            internal string DatabaseName { get; set; }
-
-            internal string PreExecutionScript { get; set; }
-            internal string PostExecutionScript { get; set; }
-
-            public string ConnectionString
+            internal string ServerName
             {
-                get
-                {
-                    var csBuilder = new ConnectionStringBuilder
-                    {
-                        ServerName = ServerName,
-                        DatabaseName = DatabaseName,
-                        UserName = UserName,
-                        Password = Password,
-                        ConnectionTimeout = 15,
-                        TrustServerCertificate = true
-                    };
-
-                    return csBuilder.Build();
-                }
+                get => ConnectionInfo.ServerName;
+                set => ConnectionInfo.ServerName = value;
             }
+            internal string DatabaseName
+            {
+                get => ConnectionInfo.DatabaseName;
+                set => ConnectionInfo.DatabaseName = value;
+            }
+            internal string UserName
+            {
+                get => ConnectionInfo.UserName;
+                set => ConnectionInfo.UserName = value;
+            }
+            internal string Password
+            {
+                get => ConnectionInfo.Password;
+                set => ConnectionInfo.Password = value;
+            }
+            internal int? ConnectTimeout
+            {
+                get => ConnectionInfo.ConnectTimeout;
+                set => ConnectionInfo.ConnectTimeout = value;
+            }
+            internal bool TrustServerCertificate
+            {
+                get => ConnectionInfo.TrustServerCertificate;
+                set => ConnectionInfo.TrustServerCertificate = value;
+            }
+            private string ConnectionString => ConnectionInfo.ConnectionString;
+            private SqlConnectionInfo ConnectionInfo { get; set; } = new();
+            internal string PreExecutionScript { get; set; }
+            internal string PostExecutionScript { get; set; }           
 
             internal bool FailOnProcessingError { get; set; } = false;
             private bool stopped = false;

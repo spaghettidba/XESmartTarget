@@ -14,13 +14,47 @@ namespace XESmartTarget.Core.Responses
         public TableAppenderResponse()
         {
             logger.Info(String.Format("Initializing Response of Type '{0}'", this.GetType().FullName));
+            ConnectTimeout = 15;
+            TrustServerCertificate = true;
         }
 
-        public string ServerName { get; set; }
-        public string DatabaseName { get; set; }
         public string TableName { get; set; }
-        public string UserName { get; set; }
-        public string Password { get; set; }
+        public string ServerName
+        {
+            get => ConnectionInfo.ServerName;
+            set => ConnectionInfo.ServerName = value;
+        }
+
+        public string DatabaseName
+        {
+            get => ConnectionInfo.DatabaseName;
+            set => ConnectionInfo.DatabaseName = value;
+        }
+
+        public string UserName
+        {
+            get => ConnectionInfo.UserName;
+            set => ConnectionInfo.UserName = value;
+        }
+
+        public string Password
+        {
+            get => ConnectionInfo.Password;
+            set => ConnectionInfo.Password = value;
+        }
+
+        public int? ConnectTimeout
+        {
+            get => ConnectionInfo.ConnectTimeout;
+            set => ConnectionInfo.ConnectTimeout = value;
+        }
+
+        public bool TrustServerCertificate
+        {
+            get => ConnectionInfo.TrustServerCertificate;
+            set => ConnectionInfo.TrustServerCertificate = value;
+        }
+
         public bool AutoCreateTargetTable { get; set; }
         public int UploadIntervalSeconds { get; set; } = 10;
 
@@ -71,26 +105,8 @@ namespace XESmartTarget.Core.Responses
         protected Task Uploader;
 
         private XEventDataTableAdapter xeadapter;
-
-        protected string ConnectionString
-        {
-            get
-            {
-                var csBuilder = new ConnectionStringBuilder
-                {
-                    ServerName = SmartFormatHelper.Format(ServerName, Tokens),
-                    DatabaseName = SmartFormatHelper.Format(DatabaseName, Tokens),
-                    UserName = UserName,
-                    Password = Password,
-                    ConnectionTimeout = 15,
-                    TrustServerCertificate = true
-                };
-
-                string connectionString = csBuilder.Build();
-                logger.Debug(connectionString);
-                return connectionString;
-            }
-        }
+        protected string ConnectionString => ConnectionInfo.ConnectionString;
+        private SqlConnectionInfo ConnectionInfo { get; set; } = new();
 
         private DataTable eventsTable = new DataTable("events");
 

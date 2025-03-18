@@ -12,33 +12,47 @@ namespace XESmartTarget.Core.Responses
         private static Logger logger = LogManager.GetCurrentClassLogger();
 
         public string TSQL { get; set; }
-        public string ServerName { get; set; }
-        public string DatabaseName { get; set; }
-        public string UserName { get; set; }
-        public string Password { get; set; }
+        public string ServerName
+        {
+            get => ConnectionInfo.ServerName;
+            set => ConnectionInfo.ServerName = value;
+        }
+
+        public string DatabaseName
+        {
+            get => ConnectionInfo.DatabaseName;
+            set => ConnectionInfo.DatabaseName = value;
+        }
+
+        public string UserName
+        {
+            get => ConnectionInfo.UserName;
+            set => ConnectionInfo.UserName = value;
+        }
+
+        public string Password
+        {
+            get => ConnectionInfo.Password;
+            set => ConnectionInfo.Password = value;
+        }
+
+        public int? ConnectTimeout
+        {
+            get => ConnectionInfo.ConnectTimeout;
+            set => ConnectionInfo.ConnectTimeout = value;
+        }
+
+        public bool TrustServerCertificate
+        {
+            get => ConnectionInfo.TrustServerCertificate;
+            set => ConnectionInfo.TrustServerCertificate = value;
+        }
+
+        private string ConnectionString => ConnectionInfo.ConnectionString;
+        private SqlConnectionInfo ConnectionInfo { get; set; } = new();   
 
         protected DataTable EventsTable = new DataTable("events");
         private XEventDataTableAdapter xeadapter;
-
-        protected string ConnectionString
-        {
-            get
-            {
-                var csBuilder = new ConnectionStringBuilder
-                {
-                    ServerName = SmartFormatHelper.Format(ServerName, Tokens),
-                    DatabaseName = DatabaseName,
-                    UserName = UserName,
-                    Password = Password,
-                    ConnectionTimeout = 15,
-                    TrustServerCertificate = true
-                };
-
-                string connectionString = csBuilder.Build();
-                logger.Debug(connectionString);
-                return connectionString;
-            }
-        }
 
         public override void Process(IXEvent evt)
         {
