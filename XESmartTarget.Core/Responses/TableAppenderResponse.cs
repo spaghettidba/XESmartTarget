@@ -76,22 +76,19 @@ namespace XESmartTarget.Core.Responses
         {
             get
             {
-                int ConnectionTimeout = 15;
-                string s = "Server=" + SmartFormatHelper.Format(ServerName,Tokens) + ";";
-                s += "Database=" + SmartFormatHelper.Format(DatabaseName,Tokens) + ";";
-                if (String.IsNullOrEmpty(UserName))
+                var csBuilder = new ConnectionStringBuilder
                 {
-                    s += "Integrated Security = True;";
-                }
-                else
-                {
-                    s += "User Id=" + UserName + ";";
-                    s += "Password=" + Password + ";";
-                }
-                s += "Connection Timeout=" + ConnectionTimeout + ";";
-                s += "TrustServerCertificate=True;";
-                logger.Debug(s);
-                return s;
+                    ServerName = SmartFormatHelper.Format(ServerName, Tokens),
+                    DatabaseName = SmartFormatHelper.Format(DatabaseName, Tokens),
+                    UserName = UserName,
+                    Password = Password,
+                    ConnectionTimeout = 15,
+                    TrustServerCertificate = true
+                };
+
+                string connectionString = csBuilder.Build();
+                logger.Debug(connectionString);
+                return connectionString;
             }
         }
 

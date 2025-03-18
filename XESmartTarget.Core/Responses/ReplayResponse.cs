@@ -167,26 +167,17 @@ namespace XESmartTarget.Core.Responses
 
             private string BuildConnectionString()
             {
-                string connectionString = "Data Source=" + ServerName + ";";
-                if (String.IsNullOrEmpty(DatabaseName))
+                var csBuilder = new ConnectionStringBuilder
                 {
-                    connectionString += "Initial Catalog = master; ";
-                }
-                else
-                {
-                    connectionString += "Initial Catalog = " + DatabaseName + "; ";
-                }
-                if (String.IsNullOrEmpty(UserName))
-                {
-                    connectionString += "Integrated Security = SSPI; ";
-                }
-                else
-                {
-                    connectionString += "User Id = " + UserName + "; ";
-                    connectionString += "Password = " + Password + "; ";
-                }
-                connectionString += "TrustServerCertificate=True;";
-                return connectionString;
+                    ServerName = ServerName,
+                    DatabaseName = DatabaseName,
+                    UserName = UserName,
+                    Password = Password,
+                    ConnectionTimeout = 15,
+                    TrustServerCertificate = true
+                };
+
+                return csBuilder.Build();
             }
 
             public void Start()

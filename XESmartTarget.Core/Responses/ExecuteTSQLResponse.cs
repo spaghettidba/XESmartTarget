@@ -24,25 +24,19 @@ namespace XESmartTarget.Core.Responses
         {
             get
             {
-                string formattedServerName = ServerName;
-                SmartFormatHelper.Format(ServerName, Tokens);
+                var csBuilder = new ConnectionStringBuilder
+                {
+                    ServerName = SmartFormatHelper.Format(ServerName, Tokens),
+                    DatabaseName = DatabaseName,
+                    UserName = UserName,
+                    Password = Password,
+                    ConnectionTimeout = 15,
+                    TrustServerCertificate = true
+                };
 
-                int ConnectionTimeout = 15;
-                string s = "Server=" + formattedServerName + ";";
-                s += "Database=" + DatabaseName + ";";
-                if (String.IsNullOrEmpty(UserName))
-                {
-                    s += "Integrated Security = True;";
-                }
-                else
-                {
-                    s += "User Id=" + UserName + ";";
-                    s += "Password=" + Password + ";";
-                }
-                s += "Connection Timeout=" + ConnectionTimeout + ";";
-                s += "TrustServerCertificate=True;";
-                logger.Debug(s);
-                return s;
+                string connectionString = csBuilder.Build();
+                logger.Debug(connectionString);
+                return connectionString;
             }
         }
 
