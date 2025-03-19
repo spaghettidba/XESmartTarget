@@ -221,6 +221,10 @@ namespace XESmartTarget.Core.Utils
                 return Convert.ToInt32(v);
             else if (propertyType == typeof(long))
                 return Convert.ToInt64(v);
+            else if (propertyType == typeof(int?))
+                return v == null ? (int?)null : Convert.ToInt32(v);
+            else if (propertyType == typeof(long?))
+                return v == null ? (long?)null : Convert.ToInt64(v);
             else
                 return v;
         }

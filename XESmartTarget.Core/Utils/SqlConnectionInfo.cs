@@ -13,7 +13,7 @@ namespace XESmartTarget.Core.Utils
         public int? Port { get; set; }
         public bool UseIntegratedSecurity { get; set; }
         public bool Encrypt { get; set; }
-        public bool TrustServerCertificate { get; set; }
+        public bool TrustServerCertificate { get; set; } = true;
         public string ApplicationName { get; set; }
         public bool UserInstance { get; set; }
         public int LoadBalanceTimeout { get; set; }
@@ -209,7 +209,7 @@ namespace XESmartTarget.Core.Utils
                 if (!string.IsNullOrEmpty(CurrentLanguage)) builder.CurrentLanguage = CurrentLanguage;
                 if (!Enlist) builder.Enlist = Enlist;
                 if (!string.IsNullOrEmpty(FailoverPartner)) builder.FailoverPartner = FailoverPartner;
-                if (ConnectTimeout != 15) builder.ConnectTimeout = (ConnectTimeout ?? 0);
+                builder.ConnectTimeout = (ConnectTimeout ?? 0);
                 Enum.TryParse(PoolBlockingPeriod, true, out PoolBlockingPeriod period);
                 if (PoolBlockingPeriod != "Auto") builder.PoolBlockingPeriod = period;
 

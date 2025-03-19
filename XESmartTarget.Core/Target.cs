@@ -12,11 +12,62 @@ namespace XESmartTarget.Core
         {
         }
         public List<Response> Responses { get; set; } = new List<Response>();
-        public string[] ServerName { get; set; }
+        public string[] ServerName
+        {
+            get => ConnectionInfo.Select(s => s.ServerName).ToArray();
+            set
+            {
+                ConnectionInfo.Clear();
+                for(int i=0; i<value.Length; i++)
+                    ConnectionInfo.Add(new SqlConnectionInfo { ServerName = value[i] });
+            }
+        }
         public string SessionName { get; set; }
-        public string UserName { get; set; }
-        public string Password { get; set; }
-        public string DatabaseName { get; set; }
+        public string UserName
+        {
+            get => ConnectionInfo.FirstOrDefault()?.UserName;
+            set { 
+                    foreach (var conn in ConnectionInfo)
+                        conn.UserName = value; 
+                }
+        }
+        public string Password
+        {
+            get => ConnectionInfo.FirstOrDefault()?.Password;
+            set
+            {
+                foreach (var conn in ConnectionInfo)
+                    conn.Password = value;
+            }
+        }
+        public string DatabaseName
+        {
+            get => ConnectionInfo.FirstOrDefault()?.DatabaseName;
+            set
+            {
+                foreach (var conn in ConnectionInfo)
+                    conn.DatabaseName = value;
+            }
+        }
+        public int? ConnectTimeout
+        {
+            get => ConnectionInfo.FirstOrDefault()?.ConnectTimeout ?? 15;
+            set
+            {
+                foreach (var conn in ConnectionInfo)
+                    conn.ConnectTimeout = value;
+            }
+        }
+        public bool TrustServerCertificate
+        {
+            get => ConnectionInfo.FirstOrDefault()?.TrustServerCertificate ?? true;
+            set
+            {
+                foreach (var conn in ConnectionInfo)
+                    conn.TrustServerCertificate = value;
+            }
+        }
+        public List<SqlConnectionInfo> ConnectionInfo { get; set; } = new();
         public bool FailOnProcessingError { get; set; } = false;
         public string PreExecutionScript { get; set; }
         public string PostExecutionScript { get; set; }
@@ -28,20 +79,15 @@ namespace XESmartTarget.Core
         {
             try
             {
-                foreach (var currentServer in ServerName)
+                foreach (var conn in ConnectionInfo)
                 {
                     TargetWorker worker = new TargetWorker()
                     {
-                        ServerName = currentServer,
+                        ConnectionInfo = conn,
                         SessionName = SessionName,
-                        UserName = UserName,
-                        Password = Password,
-                        DatabaseName = DatabaseName,
                         FailOnProcessingError = FailOnProcessingError,
                         PreExecutionScript = PreExecutionScript,
                         PostExecutionScript = PostExecutionScript,
-                        ConnectTimeout = 15,
-                        TrustServerCertificate = true
                     };
 
                     foreach (Response r in Responses)
@@ -53,7 +99,7 @@ namespace XESmartTarget.Core
                     foreach (Response r in worker.Responses)
                     {
                         Debug.Print(ServerName + " " + r.GetType().Name + " " + r.Tokens.Count);
-                        r.Tokens.Add("ServerName", worker.ServerName);
+                        r.Tokens.Add("ServerName", conn.ServerName);
                     }
 
                     allTasks.Add(new Task(() => worker.Process()));
@@ -82,39 +128,9 @@ namespace XESmartTarget.Core
         private class TargetWorker
         {
             internal List<Response> Responses { get; set; } = new List<Response>();
-            internal string SessionName { get; set; }
-            internal string ServerName
-            {
-                get => ConnectionInfo.ServerName;
-                set => ConnectionInfo.ServerName = value;
-            }
-            internal string DatabaseName
-            {
-                get => ConnectionInfo.DatabaseName;
-                set => ConnectionInfo.DatabaseName = value;
-            }
-            internal string UserName
-            {
-                get => ConnectionInfo.UserName;
-                set => ConnectionInfo.UserName = value;
-            }
-            internal string Password
-            {
-                get => ConnectionInfo.Password;
-                set => ConnectionInfo.Password = value;
-            }
-            internal int? ConnectTimeout
-            {
-                get => ConnectionInfo.ConnectTimeout;
-                set => ConnectionInfo.ConnectTimeout = value;
-            }
-            internal bool TrustServerCertificate
-            {
-                get => ConnectionInfo.TrustServerCertificate;
-                set => ConnectionInfo.TrustServerCertificate = value;
-            }
-            private string ConnectionString => ConnectionInfo.ConnectionString;
-            private SqlConnectionInfo ConnectionInfo { get; set; } = new();
+            internal string SessionName { get; set; }            
+            internal string ConnectionString => ConnectionInfo.ConnectionString;
+            internal SqlConnectionInfo ConnectionInfo { get; set; } = new();
             internal string PreExecutionScript { get; set; }
             internal string PostExecutionScript { get; set; }           
 
@@ -125,10 +141,10 @@ namespace XESmartTarget.Core
             {
                 if (!String.IsNullOrEmpty(PreExecutionScript))
                 {
-                    logger.Info($"Running Pre-Execution script '{SessionName}' on server '{ServerName}'");
+                    logger.Info($"Running Pre-Execution script '{SessionName}' on server '{ConnectionInfo.ServerName}'");
                 }
 
-                logger.Info($"Connecting to XE session '{SessionName}' on server '{ServerName}'");
+                logger.Info($"Connecting to XE session '{SessionName}' on server '{ConnectionInfo.ServerName}'");
 
                 bool connectedOnce = false;
                 bool shouldContinue = true;
@@ -145,13 +161,13 @@ namespace XESmartTarget.Core
                         eventStream = ConnectSessionStream(ConnectionString);
                         connectedOnce = true;
                         attempts = 0;
-                        logger.Info($"Connected to '{ServerName}'.");
+                        logger.Info($"Connected to '{ConnectionInfo.ServerName}'.");
                     }
                     catch (Exception e)
                     {
                         if (attempts == 1)
                         {
-                            logger.Error($"Error connecting to '{ServerName}'");
+                            logger.Error($"Error connecting to '{ConnectionInfo.ServerName}'");
                             logger.Error(e.InnerException ?? e);
                         }
                         else
@@ -161,7 +177,7 @@ namespace XESmartTarget.Core
                             {
                                 msg = e.InnerException.Message;
                             }
-                            logger.Error($"Error connecting to '{ServerName}', attempt {attempts}");
+                            logger.Error($"Error connecting to '{ConnectionInfo.ServerName}', attempt {attempts}");
                             logger.Error(msg);
                         }
 
@@ -181,7 +197,7 @@ namespace XESmartTarget.Core
                     }
                     catch (Exception e)
                     {
-                        logger.Error($"Error processing event data from '{ServerName}'");
+                        logger.Error($"Error processing event data from '{ConnectionInfo.ServerName}'");
                         logger.Error(e);
                         if (FailOnProcessingError)
                         {
@@ -236,7 +252,7 @@ namespace XESmartTarget.Core
                             {
                                 logger.Error(e.Message);
                                 logger.Error(e.StackTrace);
-                                logger.Error(e, ServerName);
+                                logger.Error(e, ConnectionInfo.ServerName);
                             }
                         }
                     }
@@ -268,7 +284,7 @@ namespace XESmartTarget.Core
                 }
                 catch (Exception e)
                 {
-                    var ioe = new InvalidOperationException($"Unable to connect to the Extended Events session {SessionName} on server {ServerName}", e);
+                    var ioe = new InvalidOperationException($"Unable to connect to the Extended Events session {SessionName} on server {ConnectionInfo.ServerName}", e);
                     throw ioe;
                 }
 

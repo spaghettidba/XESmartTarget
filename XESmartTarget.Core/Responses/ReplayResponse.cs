@@ -12,10 +12,39 @@ namespace XESmartTarget.Core.Responses
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
 
-        public string ServerName { get; set; }
-        public string UserName { get; set; }
-        public string Password { get; set; }
-        public string DatabaseName { get; set; }
+        private SqlConnectionInfo ConnectionInfo { get; set; } = new();
+
+        public string ServerName
+        {
+            get => ConnectionInfo.ServerName;
+            set => ConnectionInfo.ServerName = value;
+        }
+        public string DatabaseName
+        {
+            get => ConnectionInfo.DatabaseName;
+            set => ConnectionInfo.DatabaseName = value;
+        }
+        public string UserName
+        {
+            get => ConnectionInfo.UserName;
+            set => ConnectionInfo.UserName = value;
+        }
+        public string Password
+        {
+            get => ConnectionInfo.Password;
+            set => ConnectionInfo.Password = value;
+        }
+        public int? ConnectTimeout
+        {
+            get => ConnectionInfo.ConnectTimeout ?? 15;   
+            set => ConnectionInfo.ConnectTimeout = value;
+        }
+        public bool TrustServerCertificate
+        {
+            get => ConnectionInfo.TrustServerCertificate;  
+            set => ConnectionInfo.TrustServerCertificate = value;
+        }
+
         public bool StopOnError { get; set; }
         public int DelaySeconds { get; set; } = 0;
         public int ReplayIntervalSeconds { get; set; } = 0;
@@ -115,12 +144,7 @@ namespace XESmartTarget.Core.Responses
                     {
                         rw = new ReplayWorker()
                         {
-                            ServerName = SmartFormatHelper.Format(ServerName, Tokens),
-                            UserName = UserName,
-                            Password = Password,
-                            DatabaseName = SmartFormatHelper.Format(DatabaseName, Tokens),
-                            ConnectTimeout = 15,
-                            TrustServerCertificate = true,
+                            ConnectionInfo = ConnectionInfo,
                             ReplayIntervalSeconds = ReplayIntervalSeconds,
                             StopOnError = StopOnError,
                             Name = session_id.ToString()
@@ -146,41 +170,6 @@ namespace XESmartTarget.Core.Responses
         class ReplayWorker
         {
             private SqlConnection conn { get; set; }
-            public string ServerName
-            {
-                get => ConnectionInfo.ServerName;
-                set => ConnectionInfo.ServerName = value;
-            }
-
-            public string DatabaseName
-            {
-                get => ConnectionInfo.DatabaseName;
-                set => ConnectionInfo.DatabaseName = value;
-            }
-
-            public string UserName
-            {
-                get => ConnectionInfo.UserName;
-                set => ConnectionInfo.UserName = value;
-            }
-
-            public string Password
-            {
-                get => ConnectionInfo.Password;
-                set => ConnectionInfo.Password = value;
-            }
-
-            public int? ConnectTimeout
-            {
-                get => ConnectionInfo.ConnectTimeout;
-                set => ConnectionInfo.ConnectTimeout = value;
-            }
-
-            public bool TrustServerCertificate
-            {
-                get => ConnectionInfo.TrustServerCertificate;
-                set => ConnectionInfo.TrustServerCertificate = value;
-            }
 
             public int ReplayIntervalSeconds { get; set; } = 0;
             public bool StopOnError { get; set; } = false;
@@ -189,17 +178,15 @@ namespace XESmartTarget.Core.Responses
             private bool stopped = false;
             private ConcurrentQueue<ReplayCommand> Commands = new ConcurrentQueue<ReplayCommand>();
             private Task runner;
-
             private void InitializeConnection()
             {
-                logger.Info(String.Format("Connecting to server {0} for replay...", ServerName));
+                logger.Info(String.Format("Connecting to server {0} for replay...", ConnectionInfo.ServerName));
                 string connString = ConnectionInfo.ConnectionString;
                 conn = new SqlConnection(connString);
                 conn.Open();
                 logger.Info("Connected");
             }
-
-            private SqlConnectionInfo ConnectionInfo { get; set; } = new();
+            public SqlConnectionInfo ConnectionInfo { get; set; }
 
             public void Start()
             {
