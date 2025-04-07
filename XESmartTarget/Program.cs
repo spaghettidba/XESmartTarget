@@ -2,6 +2,7 @@
 using NLog;
 using NLog.Targets;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using XESmartTarget.Core.Config;
 using XESmartTarget.Core.Utils;
@@ -15,16 +16,18 @@ namespace XESmartTarget
 
         static void Main(string[] args)
         {
-#if DEBUG
-            if (args.Length == 0)
-                args = new string[] { "--File", @"c:\temp\sample.json" };
-#endif
+            Console.WriteLine("Args count: " + args.Length);
+            foreach (var a in args)
+                Console.WriteLine("Arg: " + a);
+
             var result = Parser.Default.ParseArguments<Options>(args)
                 .WithParsed(options => ProcessTarget(options));
         }
 
         private static void ProcessTarget(Options options)
         {
+            Console.WriteLine($"ProcessTarget invoked with: ConfigurationFile='{options.ConfigurationFile}', NoLogo={options.NoLogo}, Quiet={options.Quiet}, LogFile='{options.LogFile}', TimeoutSeconds={options.TimeoutSeconds}, PreExecutionScript='{options.PreExecutionScript}', PostExecutionScript='{options.PostExecutionScript}'");
+
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
             string version = fvi.FileMajorPart.ToString() + "." + fvi.FileMinorPart.ToString() + "." + fvi.FileBuildPart.ToString();
@@ -61,13 +64,16 @@ namespace XESmartTarget
                 if (target != null)
                 {
                     var pathToLog = options.LogFile;
+                    Console.WriteLine($"Current LogFile option: '{pathToLog}'");
                     if (pathToLog == null)
                     {
                         pathToLog = Path.Combine(Environment.CurrentDirectory, "XESmartTarget.log");
+                        Console.WriteLine($"LogFile is null, using default: '{pathToLog}'");
                     }
                     if (!Path.IsPathRooted(pathToLog))
                     {
                         pathToLog = Path.Combine(Environment.CurrentDirectory, pathToLog);
+                        Console.WriteLine($"LogFile was relative, new full path: '{pathToLog}'");
                     }
                     target.FileName = pathToLog;
 
@@ -82,23 +88,36 @@ namespace XESmartTarget
             // ******************************************
             Uri outUri;
             bool deleteTempFile = false;
-            if (Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri)
-               && (outUri.Scheme == Uri.UriSchemeHttp || outUri.Scheme == Uri.UriSchemeHttps))
+            Console.WriteLine($"Attempting to create a URI from ConfigurationFile='{options.ConfigurationFile}'");
+            bool isUri = Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri)
+               && (outUri.Scheme == Uri.UriSchemeHttp || outUri.Scheme == Uri.UriSchemeHttps);
+            Console.WriteLine($"Uri.TryCreate => {isUri}. outUri='{outUri}'");
+
+            if (isUri)
             {
+                Console.WriteLine($"Detected HTTP/HTTPS scheme: {outUri.Scheme}. UserInfo: {outUri.UserInfo}");
                 //password can be read from Windows Credentials
                 //if it exists, otherwise execution proceeds with user passed uri
                 try
                 {
-                    var (username, password) = WindowsCredentialHelper.ReadCredential(outUri.OriginalString);
+                    (string username, string password) = (null, null);
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                        (username, password) = WindowsCredentialHelper.ReadCredential(outUri.OriginalString);
+                    else
+                        (username, password) = LinuxCredentialHelper.ReadCredential(outUri.OriginalString);
+
+                    Console.WriteLine($"Credentials retrieved? username: '{username}', password length: '{(password == null ? 0 : password.Length)}'");
+
                     if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
                     {
                         var uriBuilder = new UriBuilder(outUri)
                         {
-                            UserName = username, 
-                            Password = password 
+                            UserName = username,
+                            Password = password
                         };
 
                         options.ConfigurationFile = uriBuilder.Uri.ToString();
+                        Console.WriteLine($"Rebuilt URI with credentials: {options.ConfigurationFile}");
                         Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri);
                     }
                 }
@@ -108,7 +127,16 @@ namespace XESmartTarget
                 }
 
                 // save the URI to a file and point configuration there
-                options.ConfigurationFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json");
+                string tempPath = Path.GetTempPath();
+                if (string.IsNullOrEmpty(tempPath) && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                    tempPath = "/tmp/QMonitor";
+
+                if (!Directory.Exists(tempPath))
+                    Directory.CreateDirectory(tempPath);
+
+                options.ConfigurationFile = Path.Combine(tempPath, $"{Guid.NewGuid()}.json");
+                Console.WriteLine($"Downloading configuration to temp file: {options.ConfigurationFile}");
+
                 using (var client = new HttpClient())
                 {
                     client.DefaultRequestHeaders.Add("User-Agent", $"XESmartTarget/{version} (XESmartTarget; copyright spaghettidba)");
@@ -118,29 +146,33 @@ namespace XESmartTarget
                         {
                             var byteArray = Encoding.ASCII.GetBytes(outUri.UserInfo);
                             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+                            Console.WriteLine("Using Basic Auth from outUri.UserInfo");
                         }
                         var response = client.GetAsync(outUri).GetAwaiter().GetResult();
+                        Console.WriteLine($"HTTP response: {response.StatusCode} - {response.ReasonPhrase}");
                         if (response.IsSuccessStatusCode)
                         {
                             using (var fs = new FileStream(options.ConfigurationFile, FileMode.CreateNew))
                             {
                                 response.Content.CopyToAsync(fs).GetAwaiter().GetResult();
                             }
+                            Console.WriteLine($"File successfully downloaded to '{options.ConfigurationFile}'");
                         }
                         else
                         {
                             throw new ArgumentException($"URL returned {response.StatusCode} : {response.ReasonPhrase}");
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        logger.Error($"Unable to download configuration from URI: '{options.ConfigurationFile}'");
+                        logger.Error($"Unable to download configuration from URI: '{options.ConfigurationFile}'. Error: {ex.Message}");
                         return;
                     }
                 }
                 deleteTempFile = true;
             }
 
+            Console.WriteLine($"Checking if file exists: '{options.ConfigurationFile}'");
             if (!File.Exists(options.ConfigurationFile))
             {
                 logger.Error(String.Format("File not found: '{0}'", options.ConfigurationFile));
@@ -149,25 +181,31 @@ namespace XESmartTarget
             }
 
             // parse key value pairs
+            Console.WriteLine($"Parsing GlobalVariables (count: {options.GlobalVariables.Count()} )");
             foreach (var kvp in options.GlobalVariables)
             {
+                Console.WriteLine($"GlobalVariable: '{kvp}'");
                 var pair = kvp.Split('=');
                 TargetConfig.GlobalVariables.Add(pair[0], pair[1]);
             }
 
+            Console.WriteLine($"Loading TargetConfig from '{options.ConfigurationFile}'");
             TargetConfig config = TargetConfig.LoadFromFile(options.ConfigurationFile);
 
             // delete the file downloaded from URI
             if (deleteTempFile)
             {
+                Console.WriteLine($"deleteTempFile=true, checking if '{options.ConfigurationFile}' still exists before deleting");
                 if (File.Exists(options.ConfigurationFile))
                 {
                     File.Delete(options.ConfigurationFile);
+                    Console.WriteLine($"Temp file '{options.ConfigurationFile}' deleted.");
                 }
             }
 
             if (!String.IsNullOrEmpty(options.PreExecutionScript))
             {
+                Console.WriteLine($"PreExecutionScript is set: '{options.PreExecutionScript}'");
                 if (!File.Exists(options.PreExecutionScript))
                 {
                     logger.Error(String.Format("File not found: '{0}'", options.PreExecutionScript));
@@ -180,12 +218,13 @@ namespace XESmartTarget
                     {
                         t.PreExecutionScript = options.PreExecutionScript;
                     }
-                    
+
                 }
             }
 
             if (!String.IsNullOrEmpty(options.PostExecutionScript))
             {
+                Console.WriteLine($"PostExecutionScript is set: '{options.PostExecutionScript}'");
                 if (!File.Exists(options.PostExecutionScript))
                 {
                     logger.Error(String.Format("File not found: '{0}'", options.PostExecutionScript));
@@ -209,7 +248,7 @@ namespace XESmartTarget
                 logger.Info("Received shutdown signal...");
 
                 foreach (var t in config.Target)
-                { 
+                {
                     t.Stop();
                 }
                 source.CancelAfter(TimeSpan.FromSeconds(10)); // give a 10 seconds cancellation grace period 
@@ -221,13 +260,12 @@ namespace XESmartTarget
 
             if (config != null)
             {
-
                 foreach (var targ in config.Target)
                 {
                     Task t = processTargetAsync(targ);
                     tasks.Add(t);
                 }
-                Task.WaitAll(tasks.ToArray(),options.TimeoutSeconds > 0 ? options.TimeoutSeconds * 1000 : -1);
+                Task.WaitAll(tasks.ToArray(), options.TimeoutSeconds > 0 ? options.TimeoutSeconds * 1000 : -1);
             }
             else
             {
@@ -235,10 +273,13 @@ namespace XESmartTarget
             }
 
             // delete the file downloaded from URI
-            if (deleteTempFile) {
+            if (deleteTempFile)
+            {
+                Console.WriteLine($"Final check to deleteTempFile: '{options.ConfigurationFile}'");
                 if (File.Exists(options.ConfigurationFile))
                 {
                     File.Delete(options.ConfigurationFile);
+                    Console.WriteLine($"Temp file '{options.ConfigurationFile}' deleted (final cleanup).");
                 }
             }
 
@@ -265,16 +306,16 @@ namespace XESmartTarget
 
     class Options
     {
-        [Option('F', "File", Default = "XESMartTarget.json", HelpText = "Configuration file")]
+        [Option('F', "File", Default = "XESmartTarget.json", HelpText = "Configuration file")]
         public string ConfigurationFile { get; set; }
 
-        [Option('N', "NoLogo", Default = false , HelpText = "Hides copyright banner at startup")]
+        [Option('N', "NoLogo", Default = false, HelpText = "Hides copyright banner at startup")]
         public bool NoLogo { get; set; }
 
         [Option('Q', "Quiet", Default = false, HelpText = "Prevents output to console")]
         public bool Quiet { get; set; }
 
-        [Option('G', "GlobalVariables",  HelpText = "Global variables in the form key1=value1 key2=value2")]
+        [Option('G', "GlobalVariables", HelpText = "Global variables in the form key1=value1 key2=value2")]
         public IEnumerable<string> GlobalVariables { get; set; }
 
         [Option('L', "LogFile", HelpText = "Log File")]
