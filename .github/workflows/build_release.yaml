@@ -40,20 +40,6 @@ jobs:
       #  shell: pwsh
       #  run: TODO
 
-      - name: Build (Windows Single File)
-        run: dotnet publish "${{ github.workspace }}\XESmartTarget\XESmartTarget.csproj" -c Release -p:PublishSingleFile=true
-
-      - name: Compress Windows build output
-        shell: pwsh
-        run: |
-          $publishFolder = Join-Path ${{ github.workspace }} "XESmartTarget\bin\Release\win-x64\publish\" 
-          $publishFolder = Join-Path $publishFolder (Get-ChildItem $publishFolder -Directory -Recurse | 
-                         Where-Object { $_.Name -eq 'publish' -and $_.FullName -like '*win-x64*' }).FullName
-
-          $zipPath = "C:\temp\XESmartTarget-win-${{ steps.extract_version.outputs.version }}.zip"
-          
-          Compress-Archive -Path "$($publishFolder)\*" -DestinationPath $zipPath -Force
-
       - name: Build (Linux)
         run: dotnet publish "${{ github.workspace }}\XESmartTarget\XESmartTarget.csproj" -c Release -r linux-x64 -p:PublishSingleFile=true 
 
@@ -87,16 +73,6 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: "C:/temp/XESmartTarget-${{ steps.extract_version.outputs.version }}.msi"
           asset_name: "XESmartTarget-${{ steps.extract_version.outputs.version }}.msi"
-          asset_content_type: application/octet-stream
-
-      - name: Upload Windows zip
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: "C:/temp/XESmartTarget-win-${{ steps.extract_version.outputs.version }}.zip"
-          asset_name: "XESmartTarget-win-${{ steps.extract_version.outputs.version }}.zip"
           asset_content_type: application/octet-stream
 
       - name: Upload Linux zip

@@ -15,6 +15,11 @@
   <?define CompanyName="sqlconsulting.it" ?>
   <?define ProductVersion="$(var.BuildVersion)" ?>
 
+  <?if $(var.Platform) = x64 ?>
+    <Property Id="INSTALLFOLDER" Value="[ProgramFiles64Folder]\XESmartTarget" />
+  <?else ?>
+    <Property Id="INSTALLFOLDER" Value="[ProgramFilesFolder]\XESmartTarget" />
+  <?endif ?>
 
   <Product Id="*" Name="$(var.ProductName)" Language="1033" Version="$(var.ProductVersion)" Manufacturer="$(var.CompanyName)" UpgradeCode="AA8AB9E2-639E-4E6C-9CB9-BD842F76F0AD">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
@@ -23,8 +28,6 @@
     <MediaTemplate EmbedCab="yes" />
 
     <Property Id="REINSTALLMODE" Value="amus" />
-
-
 
     <Feature Id="ProductFeature" Title="XESmartTarget" Level="1">
 			<ComponentGroupRef Id="ProductComponents" />
@@ -39,28 +42,4 @@
 		</Directory>
 	</Fragment>
 
-  <!--
-	<Fragment>
-		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
-        <Component Id="cmp_01" Guid="{7AEE49EC-5CFB-4085-BC34-0F0AC0300725}"><File Id="file_01" KeyPath="yes" Source="..\XESmartTarget\bin\Release\CommandLine.dll" /></Component>
-        <Component Id="cmp_02" Guid="{3A85BB98-F862-4BFB-8FB6-01EEC1AA2AC0}"><File Id="file_02" KeyPath="yes" Source="..\XESmartTarget\bin\Release\CommandLine.xml" /></Component>
-        <Component Id="cmp_03" Guid="{BF2E841E-218A-46C5-8006-0364646D7E95}"><File Id="file_03" KeyPath="yes" Source="..\XESmartTarget\bin\Release\Microsoft.SqlServer.XE.Core.dll" /></Component>
-        <Component Id="cmp_04" Guid="{542A01A3-75EC-4F2F-8C1F-49CFF078E113}"><File Id="file_04" KeyPath="yes" Source="..\XESmartTarget\bin\Release\Microsoft.SqlServer.XEvent.Linq.dll" /></Component>
-        <Component Id="cmp_05" Guid="{6E9E6E4B-2F6B-4FB1-B0A8-813801271380}"><File Id="file_05" KeyPath="yes" Source="..\XESmartTarget\bin\Release\NLog.config" /></Component>
-        <Component Id="cmp_06" Guid="{43A880A8-E413-4FA9-A1E0-7DFDEFF74AB8}"><File Id="file_06" KeyPath="yes" Source="..\XESmartTarget\bin\Release\NLog.dll" /></Component>
-        <Component Id="cmp_07" Guid="{C494C7D3-5796-43C8-8A9A-77BFA634B728}"><File Id="file_07" KeyPath="yes" Source="..\XESmartTarget\bin\Release\NLog.xml" /></Component>
-        <Component Id="cmp_08" Guid="{B1C51D06-6563-452C-9ACC-5CD2B2C6FD57}"><File Id="file_08" KeyPath="yes" Source="..\XESmartTarget\bin\Release\XESmartTarget.Core.dll" /></Component>
-        <Component Id="cmp_09" Guid="{1FB094C9-C3D3-46E0-9874-0AB700A32866}"><File Id="file_09" KeyPath="yes" Source="..\XESmartTarget\bin\Release\XESmartTarget.Core.pdb" /></Component>
-        <Component Id="cmp_10" Guid="{8444CD6D-D129-46CB-99A6-0BA39AA4C81F}"><File Id="file_10" KeyPath="yes" Source="..\XESmartTarget\bin\Release\XESmartTarget.exe" /></Component>
-        <Component Id="cmp_11" Guid="{638E19A5-EC2E-47D7-A333-C89558B6E9D5}"><File Id="file_11" KeyPath="yes" Source="..\XESmartTarget\bin\Release\XESmartTarget.exe.config" /></Component>
-        <Component Id="cmp_12" Guid="{58961F6E-3929-4DB0-9BAA-6D0653E920C7}"><File Id="file_12" KeyPath="yes" Source="..\XESmartTarget\bin\Release\XESmartTarget.pdb" /></Component>
-        <Component Id="cmp_13" Guid="{96B88BA7-A376-45E1-9D4E-D8A655786706}"><File Id="file_13" KeyPath="yes" Source="..\XESmartTarget\bin\Release\SmartFormat.dll" /></Component>
-        <Component Id="cmp_14" Guid="{26D79629-B1AA-4F69-8A99-F96B2485342C}"><File Id="file_14" KeyPath="yes" Source="..\XESmartTarget\bin\Release\DouglasCrockford.JsMin.dll" /></Component>
-        <Component Id="cmp_15" Guid="{A18759FB-7B9B-46DA-9B55-B457AD3F1205}"><File Id="file_15" KeyPath="yes" Source="..\XelToCsv\bin\Release\XelToCsv.exe" /></Component>
-        <Component Id="cmp_16" Guid="{397A469A-CB3E-4E39-B72E-C1905EDF4260}"><File Id="file_16" KeyPath="yes" Source="..\XelToCsv\bin\Release\XelToCsv.pdb" /></Component>
-        <Component Id="cmp_17" Guid="{BF028A74-5314-4F9E-8622-F5926A035FEC}"><File Id="file_17" KeyPath="yes" Source="..\XESmartTarget\bin\Release\CsvHelper.dll" /></Component>
-        <Component Id="cmp_18" Guid="{E3162683-B12F-47D3-9607-E7148724C9E6}"><File Id="file_18" KeyPath="yes" Source="..\XESmartTarget\bin\Release\CsvHelper.xml" /></Component>
-    </ComponentGroup>
-	</Fragment>
-  -->
 </Wix>
