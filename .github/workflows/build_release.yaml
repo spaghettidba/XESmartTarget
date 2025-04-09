@@ -40,17 +40,20 @@ jobs:
       #  shell: pwsh
       #  run: TODO
 
-      - name: Build (Linux single file)
-        run: dotnet publish XESmartTarget.sln -c Release -r linux-x64 -p:PublishSingleFile=true --self-contained=false
+      - name: Build (Linux)
+        run: dotnet publish "${{ github.workspace }}\XESmartTarget\XESmartTarget.csproj" -c Release -r linux-x64 -p:PublishSingleFile=true --self-contained=false
 
       - name: Compress Linux build output
         shell: pwsh
         run: |
-          $linuxOutputPath = Join-Path ${{ github.workspace }} "XESmartTarget\bin\Release\net*"
-          $publishFolder = Get-ChildItem $linuxOutputPath -Directory -Recurse | Where-Object { $_.Name -eq 'publish' }
-          $zipPath = "C:\temp\XESmartTarget-linux-${{ steps.extract_version.outputs.version }}.zip"
-          Compress-Archive -Path "$($publishFolder.FullName)\*" -DestinationPath $zipPath
+          $publishFolder = Join-Path ${{ github.workspace }} "XESmartTarget\bin\Release\linux-x64\publish\" 
+          $publishFolder = Join-Path $publishFolder (Get-ChildItem $publishFolder -Directory -Recurse | 
+                         Where-Object { $_.Name -eq 'publish' -and $_.FullName -like '*linux-x64*' }).FullName
 
+          $zipPath = "C:\temp\XESmartTarget-linux-${{ steps.extract_version.outputs.version }}.zip"
+          
+          Compress-Archive -Path "$($publishFolder)\*" -DestinationPath $zipPath
+          
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
