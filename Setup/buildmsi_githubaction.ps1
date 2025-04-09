@@ -9,7 +9,7 @@ param (
 Set-Location $PSScriptRoot
 
 #    qui genero ProductComponents perchè nel product.wxs c'era scritto cosi...
-& "$WixBinPath\heat.exe" dir "..\XESmartTarget\bin\Release" `
+& "$WixBinPath\heat.exe" dir "..\XESmartTarget\bin\Release\win-x64\publish" `
     -gg -sfrag -sreg -srd -nologo `
     -cg "ProductComponents" `
     -dr "INSTALLFOLDER" `
@@ -19,7 +19,7 @@ Set-Location $PSScriptRoot
 & "$WixBinPath\candle.exe" `
     -nologo `
     -out "$PSScriptRoot\candleout\" `
-    -dXESmartTargetDir="..\XESmartTarget\bin\Release" `
+    -dXESmartTargetDir="..\XESmartTarget\bin\Release\win-x64\publish" `
     -dBuildVersion="$BuildVersion" `
     -dPlatform="x64" `
     "$PSScriptRoot\Product.wxs" `

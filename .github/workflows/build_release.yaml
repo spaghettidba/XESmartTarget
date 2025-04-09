@@ -29,6 +29,9 @@ jobs:
       - name: Build (Windows Installer)
         run: dotnet build XESmartTarget.sln --configuration Release
 
+      - name: Publish
+        run: dotnet publish ${{ github.workspace }}/XESmartTarget/XESmartTarget.csproj -c Release -p:PublishSingleFile=true 
+
       #- name: Sign executables
       #  shell: pwsh
       #  run: TODO
