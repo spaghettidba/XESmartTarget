@@ -52,7 +52,7 @@ jobs:
 
           $zipPath = "C:\temp\XESmartTarget-win-${{ steps.extract_version.outputs.version }}.zip"
           
-          Compress-Archive -Path "$($publishFolder)\*" -DestinationPath $zipPath
+          Compress-Archive -Path "$($publishFolder)\*" -DestinationPath $zipPath -Force
 
       - name: Build (Linux)
         run: dotnet publish "${{ github.workspace }}\XESmartTarget\XESmartTarget.csproj" -c Release -r linux-x64 -p:PublishSingleFile=true 
@@ -66,7 +66,7 @@ jobs:
 
           $zipPath = "C:\temp\XESmartTarget-linux-${{ steps.extract_version.outputs.version }}.zip"
           
-          Compress-Archive -Path "$($publishFolder)\*" -DestinationPath $zipPath
+          Compress-Archive -Path "$($publishFolder)\*" -DestinationPath $zipPath -Force
           
       - name: Create GitHub Release
         id: create_release
