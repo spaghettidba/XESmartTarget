@@ -2,8 +2,8 @@ name: XESmartTarget Build & MSI
 
 on:
   push:
-    paths:
-      - 'AssemblyInfo.cs'
+    #paths:
+    #  - 'AssemblyInfo.cs'
 
 jobs:
   build-msi:
@@ -26,20 +26,31 @@ jobs:
           echo "version=$assemblyVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "::set-output name=version::$assemblyVersion"
 
-      - name: Build
+      - name: Build (Windows)
         run: dotnet build XESmartTarget.sln --configuration Release
 
       #- name: Sign executables
       #  shell: pwsh
       #  run: TODO
-      
+
       - name: Generate MSI
         run: powershell Setup\buildmsi_githubaction.ps1 -BuildVersion ${{ steps.extract_version.outputs.version }} -WixBinPath C:\wix
 
       #- name: Sign MSI
       #  shell: pwsh
       #  run: TODO
-          
+
+      - name: Build (Linux single file)
+        run: dotnet publish XESmartTarget.sln -c Release -r linux-x64 -p:PublishSingleFile=true --self-contained=false
+
+      - name: Compress Linux build output
+        shell: pwsh
+        run: |
+          $linuxOutputPath = Join-Path ${{ github.workspace }} "XESmartTarget\bin\Release\net*"
+          $publishFolder = Get-ChildItem $linuxOutputPath -Directory -Recurse | Where-Object { $_.Name -eq 'publish' }
+          $zipPath = "C:\temp\XESmartTarget-linux-${{ steps.extract_version.outputs.version }}.zip"
+          Compress-Archive -Path "$($publishFolder.FullName)\*" -DestinationPath $zipPath
+
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
@@ -59,4 +70,14 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: "C:/temp/XESmartTarget-${{ steps.extract_version.outputs.version }}.msi"
           asset_name: "XESmartTarget-${{ steps.extract_version.outputs.version }}.msi"
+          asset_content_type: application/octet-stream
+
+      - name: Upload Linux zip
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: "C:/temp/XESmartTarget-linux-${{ steps.extract_version.outputs.version }}.zip"
+          asset_name: "XESmartTarget-linux-${{ steps.extract_version.outputs.version }}.zip"
           asset_content_type: application/octet-stream
