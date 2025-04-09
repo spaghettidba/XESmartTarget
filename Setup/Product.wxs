@@ -16,12 +16,6 @@
   <?define ProductVersion="$(var.BuildVersion)" ?>
 
   <Product Id="*" Name="$(var.ProductName)" Language="1033" Version="$(var.ProductVersion)" Manufacturer="$(var.CompanyName)" UpgradeCode="AA8AB9E2-639E-4E6C-9CB9-BD842F76F0AD">
-    <?if $(var.Platform) = x64 ?>
-      <Property Id="INSTALLFOLDER" Value="C:\Program Files\XESmartTarget" />
-    <?else ?>
-      <Property Id="INSTALLFOLDER" Value="C:\Program Files (x86)\XESmartTarget" />
-    <?endif ?>
-
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
     <MajorUpgrade AllowDowngrades="yes" />
@@ -35,6 +29,12 @@
 	</Product>
 
 	<Fragment>
+    <?if $(var.Platform) = x64 ?>
+      <Property Id="INSTALLFOLDER" Value="C:\Program Files\XESmartTarget" />
+    <?else ?>
+      <Property Id="INSTALLFOLDER" Value="C:\Program Files (x86)\XESmartTarget" />
+    <?endif ?>
+
 		<Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="$(var.PlatformProgramFilesFolder)">
 				<Directory Id="INSTALLFOLDER" Name="XESmartTarget" />
