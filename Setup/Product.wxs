@@ -15,13 +15,13 @@
   <?define CompanyName="sqlconsulting.it" ?>
   <?define ProductVersion="$(var.BuildVersion)" ?>
 
-  <?if $(var.Platform) = x64 ?>
-    <Property Id="INSTALLFOLDER" Value="[ProgramFiles64Folder]\XESmartTarget" />
-  <?else ?>
-    <Property Id="INSTALLFOLDER" Value="[ProgramFilesFolder]\XESmartTarget" />
-  <?endif ?>
-
   <Product Id="*" Name="$(var.ProductName)" Language="1033" Version="$(var.ProductVersion)" Manufacturer="$(var.CompanyName)" UpgradeCode="AA8AB9E2-639E-4E6C-9CB9-BD842F76F0AD">
+    <?if $(var.Platform) = x64 ?>
+      <Property Id="INSTALLFOLDER" Value="[ProgramFiles64Folder]\XESmartTarget" />
+    <?else ?>
+      <Property Id="INSTALLFOLDER" Value="[ProgramFilesFolder]\XESmartTarget" />
+    <?endif ?>
+
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
     <MajorUpgrade AllowDowngrades="yes" />
