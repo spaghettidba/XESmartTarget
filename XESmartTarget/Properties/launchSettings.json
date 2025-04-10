@@ -2,7 +2,7 @@
   "profiles": {
     "XESmartTarget": {
       "commandName": "Project",
-      "commandLineArgs": "--File https://girodiprova:e861697a-fc15-4cdb-87da-377cd2ec71e2@qmonitorapidev.quantumdatis.com/api/v1/configuration/xesmarttarget/linux"
+      "commandLineArgs": "--File https://girodiprova@qmonitorapidev.quantumdatis.com/api/v1/configuration/xesmarttarget/linux"
     }
   }
 }
