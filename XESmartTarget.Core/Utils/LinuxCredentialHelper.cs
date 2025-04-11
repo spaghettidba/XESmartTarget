@@ -7,59 +7,61 @@ namespace XESmartTarget.Core.Utils
     {
         private static readonly string CredentialsFilePath = Path.Combine("/tmp/QMonitor/", "cred.json");
         private static readonly object _locker = new object();
-        private static Logger _logger = LogManager.GetCurrentClassLogger();
+        private static Logger _logger = LogManager.GetCurrentClassLogger();        
 
-        private static Dictionary<string, (string userName, string password)> LoadCredentials()
+        private static List<CredentialItem> LoadCredentialItems()
         {
-            try
+            lock (_locker)
             {
-                _logger.Debug("Reading credentials from: " + CredentialsFilePath);
-                if (!File.Exists(CredentialsFilePath))
+                try
                 {
-                    _logger.Debug("File not found!");
-                    return new Dictionary<string, (string, string)>();
-                }
+                    if (!File.Exists(CredentialsFilePath))
+                    {
+                        return new List<CredentialItem>();
+                    }
 
-                string json = File.ReadAllText(CredentialsFilePath);
-                var tempDict = JsonSerializer.Deserialize<Dictionary<string, StoredCredential>>(json);
-                if (tempDict == null)
-                {
-                    _logger.Debug("Can't read!");
-                    return new Dictionary<string, (string, string)>();
-                }
+                    string json = File.ReadAllText(CredentialsFilePath);
+                    var items = JsonSerializer.Deserialize<List<CredentialItem>>(json);
+                    if (items == null)
+                    {
+                        return new List<CredentialItem>();
+                    }
 
-                var dict = new Dictionary<string, (string, string)>();
-                foreach (var kvp in tempDict)
-                {
-                    dict[kvp.Key] = (kvp.Value.UserName ?? "", kvp.Value.Password ?? "");
+                    return items;
                 }
-                return dict;
-            }
-            catch (Exception ex)
-            {
-                _logger.Debug("Error " + ex.Message);
-                return new Dictionary<string, (string, string)>();
+                catch (Exception ex)
+                {
+                    _logger.Error("Error reading cred.json: " + ex.Message);
+                    return new List<CredentialItem>();
+                }
             }
         }
-
+        
         public static (string username, string password) ReadCredential(string target)
         {
             lock (_locker)
             {
-                var allCreds = LoadCredentials();
-                if (allCreds.ContainsKey(target))
+                var items = LoadCredentialItems();
+                var item = items.FirstOrDefault(x =>
+                    x.Target != null &&
+                    x.Target.Equals(target, StringComparison.OrdinalIgnoreCase)
+                );
+
+                if (item != null)
                 {
-                    var (usr, pwd) = allCreds[target];
-                    _logger.Debug($"Cred {target}: {usr} {pwd}");
-                    return (usr, pwd);
+                    return (item.UserName ?? "", item.Password ?? "");
                 }
-                _logger.Debug($"No credential {target}!");
-                return ("", "");
+                else
+                {
+                    _logger.Warn($"No credential found for {target}!");
+                    return ("", "");
+                }
             }
         }
 
-        private class StoredCredential //TODO rendere più sicura
+        private class CredentialItem
         {
+            public string Target { get; set; }
             public string UserName { get; set; }
             public string Password { get; set; }
         }

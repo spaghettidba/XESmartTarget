@@ -2,8 +2,8 @@ name: XESmartTarget Build & MSI
 
 on:
   push:
-    #paths:
-    #  - 'AssemblyInfo.cs'
+    paths:
+      - 'AssemblyInfo.cs'
 
 jobs:
   build-msi:

@@ -2,6 +2,7 @@
 using NLog;
 using NLog.Targets;
 using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using XESmartTarget.Core.Config;
@@ -23,14 +24,22 @@ namespace XESmartTarget
         private static void ProcessTarget(Options options)
         {
             string version = string.Empty;
-            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            if (!string.IsNullOrEmpty(assembly.Location))
+            
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+                FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(Process.GetCurrentProcess().MainModule.FileName);
                 version = fvi.FileMajorPart.ToString() + "." + fvi.FileMinorPart.ToString() + "." + fvi.FileBuildPart.ToString();
             }
             else
-                version = "Linux";
+            {
+                var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
+                var assemblyVersion = assembly.GetName().Version;
+                if (version != null)
+                    version = $"{assemblyVersion.Major}.{assemblyVersion.Minor}.{assemblyVersion.Build}";
+                else
+                    version = "Linux";
+            }
 
             // save the URI to a file and point configuration there
             string tempPath = Path.GetTempPath();
@@ -110,6 +119,7 @@ namespace XESmartTarget
                         (username, password) = WindowsCredentialHelper.ReadCredential(outUri.OriginalString);
                     else
                         (username, password) = LinuxCredentialHelper.ReadCredential(outUri.OriginalString);
+                    logger.Info($"target={outUri.OriginalString} user={username} password={ password}");
 
                     if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
                     {
