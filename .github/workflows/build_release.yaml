@@ -2,8 +2,8 @@ name: XESmartTarget Build & MSI
 
 on:
   push:
-    paths:
-      - 'AssemblyInfo.cs'
+  #  paths:
+  #    - 'AssemblyInfo.cs'
 
 jobs:
   build-msi:
@@ -35,7 +35,7 @@ jobs:
       - name: Signtool XESmartTarget Windows
         shell: pwsh
         run: |
-          sign.ps1 -InputFile ${{ github.workspace }}\XESmartTarget\bin\release\win-x64\publish\XESmartTarget.exe
+          .\sign.ps1 -InputFile ${{ github.workspace }}\XESmartTarget\bin\release\win-x64\publish\XESmartTarget.exe
 
       - name: Generate MSI
         run: powershell Setup\buildmsi_githubaction.ps1 -BuildVersion ${{ steps.extract_version.outputs.version }} -WixBinPath C:\wix
@@ -43,7 +43,7 @@ jobs:
       - name: Signtool MSI
         shell: pwsh
         run: |
-          sign.ps1 -InputFile  C:/temp/XESmartTarget-${{ steps.extract_version.outputs.version }}.msi          
+          .\sign.ps1 -InputFile  C:/temp/XESmartTarget-${{ steps.extract_version.outputs.version }}.msi          
 
       - name: Build (Linux)
         run: dotnet publish "${{ github.workspace }}\XESmartTarget\XESmartTarget.csproj" -c Release -r linux-x64 -p:PublishSingleFile=true --self-contained=false
@@ -51,7 +51,7 @@ jobs:
       - name: Signtool XESmartTarget Linux
         shell: pwsh
         run: |
-          sign.ps1 -InputFile ${{ github.workspace }}\XESmartTarget\bin\release\linux-x64\publish\XESmartTarget
+          .\sign.ps1 -InputFile ${{ github.workspace }}\XESmartTarget\bin\release\linux-x64\publish\XESmartTarget
 
       - name: Compress Linux build output
         shell: pwsh
