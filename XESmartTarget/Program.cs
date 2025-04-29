@@ -119,7 +119,6 @@ namespace XESmartTarget
                         (username, password) = WindowsCredentialHelper.ReadCredential(outUri.OriginalString);
                     else
                         (username, password) = LinuxCredentialHelper.ReadCredential(outUri.OriginalString);
-                    logger.Info($"target={outUri.OriginalString} user={username} password={ password}");
 
                     if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
                     {

@@ -32,19 +32,26 @@ jobs:
       - name: Publish
         run: dotnet publish ${{ github.workspace }}/XESmartTarget/XESmartTarget.csproj -c Release -p:PublishSingleFile=true 
 
-      #- name: Sign executables
-      #  shell: pwsh
-      #  run: TODO
+      - name: Signtool XESmartTarget Windows
+        shell: pwsh
+        run: |
+          signtool sign /fd sha256 /t http://timestamp.digicert.com /f c:\github\XESmartTarget.cer /csp "eToken Base Cryptographic Provider" /k "${{ secrets.SIGN_CERT_PWD }}=Sectigo_20240429144724" ${{ github.workspace }}\XESmartTarget\bin\release\win-x64\publish\XESmartTarget.exe
 
       - name: Generate MSI
         run: powershell Setup\buildmsi_githubaction.ps1 -BuildVersion ${{ steps.extract_version.outputs.version }} -WixBinPath C:\wix
 
-      #- name: Sign MSI
-      #  shell: pwsh
-      #  run: TODO
+      - name: Signtool MSI
+        shell: pwsh
+        run: |
+          signtool sign /fd sha256 /t http://timestamp.digicert.com /f c:\github\XESmartTarget.cer /csp "eToken Base Cryptographic Provider" /k "${{ secrets.SIGN_CERT_PWD}}=Sectigo_20240429144724" C:/temp/XESmartTarget-${{ steps.extract_version.outputs.version }}.msi          
 
       - name: Build (Linux)
         run: dotnet publish "${{ github.workspace }}\XESmartTarget\XESmartTarget.csproj" -c Release -r linux-x64 -p:PublishSingleFile=true 
+
+      - name: Signtool XESmartTarget Linux
+        shell: pwsh
+        run: |
+          signtool sign /fd sha256 /t http://timestamp.digicert.com /f c:\github\XESmartTarget.cer /csp "eToken Base Cryptographic Provider" /k "${{ secrets.SIGN_CERT_PWD }}=Sectigo_20240429144724" ${{ github.workspace }}\XESmartTarget\bin\release\linux-x64\publish\XESmartTarget
 
       - name: Compress Linux build output
         shell: pwsh
