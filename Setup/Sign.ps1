@@ -16,7 +16,7 @@ if(-not (Test-Path c:\xesmarttarget\SignParams.ps1))
 }
 
 # read paramters
-$signParams = get-content $PSScriptRoot\SignParams.ps1 -Raw
+$signParams = get-content c:\xesmarttarget\SignParams.ps1 -Raw
 Invoke-Expression $signParams
 
 $params = $(
