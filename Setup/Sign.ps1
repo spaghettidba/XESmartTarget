@@ -2,12 +2,12 @@
 Param(
     [Parameter(Mandatory=$True,Position=1)]
     [string]$InputFile,
-    [Parameter(Mandatory=$True,Position=2)]
-    [string]$OutputFile
+    [Parameter(Mandatory=$False,Position=2)]
+    [string]$OutputFile = $InputFile
 )
 
 
-if(-not (Test-Path $PSScriptRoot\SignParams.ps1)) 
+if(-not (Test-Path c:\xesmarttarget\SignParams.ps1)) 
 {
     Write-Warning "No code signing is applied to the .msi file."
     Write-Warning "You need to create a file called SignParams.ps1 and provide signing info."
