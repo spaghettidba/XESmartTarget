@@ -30,6 +30,12 @@ namespace XESmartTarget
             {
                 FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(Process.GetCurrentProcess().MainModule.FileName);
                 version = fvi.FileMajorPart.ToString() + "." + fvi.FileMinorPart.ToString() + "." + fvi.FileBuildPart.ToString();
+                if (!options.NoLogo)
+                {
+                    Console.WriteLine(fvi.FileDescription + " " + version);
+                    Console.WriteLine(fvi.LegalCopyright + " - " + fvi.CompanyName);
+                    Console.WriteLine();
+                }
             }
             else
             {
@@ -39,6 +45,8 @@ namespace XESmartTarget
                     version = $"{assemblyVersion.Major}.{assemblyVersion.Minor}.{assemblyVersion.Build}";
                 else
                     version = "Linux";
+                Console.WriteLine(version);
+                Console.WriteLine();
             }
 
             // save the URI to a file and point configuration there
@@ -48,15 +56,6 @@ namespace XESmartTarget
 
             if (!Directory.Exists(tempPath))
                 Directory.CreateDirectory(tempPath);
-
-            /*
-            if (!options.NoLogo)
-            {
-                Console.WriteLine(fvi.FileDescription + " " + version);
-                Console.WriteLine(fvi.LegalCopyright + " - " + fvi.CompanyName);
-                Console.WriteLine();
-            }
-            */
 
             if (options.Quiet)
             {
@@ -134,7 +133,7 @@ namespace XESmartTarget
                 }
                 catch (Exception ex)
                 {
-                    logger.Error($"Couldn't retrieve Windows Credentials: {ex.Message}");
+                    logger.Error($"Couldn't retrieve Credentials: {ex.Message}");
                 }
 
                 
