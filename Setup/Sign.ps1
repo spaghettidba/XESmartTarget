@@ -35,7 +35,7 @@ $params = $(
     ,"sha1"
 )
 
-& $signTool ($params + $InputFile)
+Start-Process -FilePath $signTool -ArgumentList ($params + $InputFile) -NoNewWindow -Wait
 
 Write-Output "Moving $InputFile --> $OutputFile"
 Move-Item $InputFile $OutputFile -Force
