@@ -1,14 +1,6 @@
-﻿using Microsoft.SqlServer.XEvent.Linq;
+﻿using Microsoft.SqlServer.XEvent.XELite;
 using NLog;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using XESmartTarget.Core.Utils;
 
 namespace XESmartTarget.Core.Responses
@@ -47,13 +39,13 @@ namespace XESmartTarget.Core.Responses
 
         private bool writeHeaders = true;
 
-        public override void Process(PublishedEvent evt)
+        public override void Process(IXEvent evt)
         {
             Enqueue(evt);
         }
 
 
-        protected void Enqueue(PublishedEvent evt)
+        protected void Enqueue(IXEvent evt)
         {
             if (xeadapter == null)
             {

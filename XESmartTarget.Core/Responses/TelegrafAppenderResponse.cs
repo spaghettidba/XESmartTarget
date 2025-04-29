@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.SqlServer.XEvent.Linq;
+﻿using System.Data;
 using NLog;
 using XESmartTarget.Core.Utils;
+using Microsoft.SqlServer.XEvent.XELite;
 
 namespace XESmartTarget.Core.Responses
 {
@@ -28,28 +23,26 @@ namespace XESmartTarget.Core.Responses
             logger.Info(String.Format("Initializing Response of Type '{0}'", this.GetType().FullName));
         }
 
-        public override void Process(PublishedEvent evt)
+        public override void Process(IXEvent evt)
         {
             Enqueue(evt);
         }
 
-        protected void Enqueue(PublishedEvent evt)
+        protected void Enqueue(IXEvent evt)
         {
             if (xeadapter == null)
             {
                 xeadapter = new XEventDataTableAdapter(EventsTable);
                 xeadapter.Filter = this.Filter;
                 xeadapter.OutputColumns = new List<OutputColumn>(
-                    OutputFields.Select(col => new OutputColumn(col) {ColumnType = OutputColumn.ColType.Field })
+                    OutputFields.Select(col => new OutputColumn(col) { ColumnType = OutputColumn.ColType.Field })
                     .Union(OutputTags.Select(col => new OutputColumn(col) { ColumnType = OutputColumn.ColType.Tag }))
                 );
                 xeadapter.OutputColumns.Add(new OutputColumn("collection_time") { ColumnType = OutputColumn.ColType.Column });
-
             }
             xeadapter.ReadEvent(evt);
 
             WriteToStdOut();
-
         }
 
         private void WriteToStdOut()
@@ -63,3 +56,4 @@ namespace XESmartTarget.Core.Responses
         }
     }
 }
+

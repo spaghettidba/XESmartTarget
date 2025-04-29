@@ -1,0 +1,96 @@
+name: XESmartTarget Build & MSI
+
+on:
+  push:
+    paths:
+      - 'AssemblyInfo.cs'
+
+jobs:
+  build-msi:
+    runs-on: self-hosted
+    
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Extract Version
+        id: extract_version
+        shell: pwsh
+        run: |
+          $assemblyInfoPath = "${{ github.workspace }}\AssemblyInfo.cs"
+          $assemblyVersion = Get-Content $assemblyInfoPath |
+            Select-String -Pattern 'AssemblyFileVersion\("([0-9.]+)"\)' |
+            ForEach-Object { $_.Matches.Groups[1].Value }
+          
+          Write-Host "Version: $assemblyVersion"
+          echo "version=$assemblyVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "::set-output name=version::$assemblyVersion"
+
+      - name: Build (Windows Installer)
+        run: dotnet build XESmartTarget.sln --configuration Release
+
+      - name: Publish
+        run: dotnet publish ${{ github.workspace }}/XESmartTarget/XESmartTarget.csproj -c Release -p:PublishSingleFile=true --self-contained=false
+
+      - name: Signtool XESmartTarget Windows
+        shell: pwsh
+        run: |
+          signtool sign /fd sha256 /t http://timestamp.digicert.com /f c:\github\XESmartTarget.cer /csp "eToken Base Cryptographic Provider" /k "${{ secrets.SIGN_CERT_PWD }}=Sectigo_20240429144724" ${{ github.workspace }}\XESmartTarget\bin\release\win-x64\publish\XESmartTarget.exe
+
+      - name: Generate MSI
+        run: powershell Setup\buildmsi_githubaction.ps1 -BuildVersion ${{ steps.extract_version.outputs.version }} -WixBinPath C:\wix
+
+      - name: Signtool MSI
+        shell: pwsh
+        run: |
+          signtool sign /fd sha256 /t http://timestamp.digicert.com /f c:\github\XESmartTarget.cer /csp "eToken Base Cryptographic Provider" /k "${{ secrets.SIGN_CERT_PWD}}=Sectigo_20240429144724" C:/temp/XESmartTarget-${{ steps.extract_version.outputs.version }}.msi          
+
+      - name: Build (Linux)
+        run: dotnet publish "${{ github.workspace }}\XESmartTarget\XESmartTarget.csproj" -c Release -r linux-x64 -p:PublishSingleFile=true --self-contained=false
+
+      - name: Signtool XESmartTarget Linux
+        shell: pwsh
+        run: |
+          signtool sign /fd sha256 /t http://timestamp.digicert.com /f c:\github\XESmartTarget.cer /csp "eToken Base Cryptographic Provider" /k "${{ secrets.SIGN_CERT_PWD }}=Sectigo_20240429144724" ${{ github.workspace }}\XESmartTarget\bin\release\linux-x64\publish\XESmartTarget
+
+      - name: Compress Linux build output
+        shell: pwsh
+        run: |
+          $publishFolder = Join-Path ${{ github.workspace }} "XESmartTarget\bin\Release\linux-x64\publish\" 
+          $publishFolder = Join-Path $publishFolder (Get-ChildItem $publishFolder -Directory -Recurse | 
+                         Where-Object { $_.Name -eq 'publish' -and $_.FullName -like '*linux-x64*' }).FullName
+
+          $zipPath = "C:\temp\XESmartTarget-linux-${{ steps.extract_version.outputs.version }}.zip"
+          
+          Compress-Archive -Path "$($publishFolder)\*" -DestinationPath $zipPath -Force
+          
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.extract_version.outputs.version }}
+          release_name: "Release ${{ steps.extract_version.outputs.version }}"
+          draft: false
+          prerelease: false
+
+      - name: Upload MSI to GitHub Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: "C:/temp/XESmartTarget-${{ steps.extract_version.outputs.version }}.msi"
+          asset_name: "XESmartTarget-${{ steps.extract_version.outputs.version }}.msi"
+          asset_content_type: application/octet-stream
+
+      - name: Upload Linux zip
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: "C:/temp/XESmartTarget-linux-${{ steps.extract_version.outputs.version }}.zip"
+          asset_name: "XESmartTarget-linux-${{ steps.extract_version.outputs.version }}.zip"
+          asset_content_type: application/octet-stream

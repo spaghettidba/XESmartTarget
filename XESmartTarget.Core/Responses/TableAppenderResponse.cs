@@ -1,13 +1,8 @@
-﻿using Microsoft.SqlServer.XEvent.Linq;
-using NLog;
-using System;
-using System.Collections.Generic;
+﻿using NLog;
 using System.Data;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+using Microsoft.Data.SqlClient;
 using XESmartTarget.Core.Utils;
+using Microsoft.SqlServer.XEvent.XELite;
 
 namespace XESmartTarget.Core.Responses
 {
@@ -19,13 +14,47 @@ namespace XESmartTarget.Core.Responses
         public TableAppenderResponse()
         {
             logger.Info(String.Format("Initializing Response of Type '{0}'", this.GetType().FullName));
+            ConnectTimeout = 15;
+            TrustServerCertificate = true;
         }
 
-        public string ServerName { get; set; }
-        public string DatabaseName { get; set; }
         public string TableName { get; set; }
-        public string UserName { get; set; }
-        public string Password { get; set; }
+        public string ServerName
+        {
+            get => ConnectionInfo.ServerName;
+            set => ConnectionInfo.ServerName = value;
+        }
+
+        public string DatabaseName
+        {
+            get => ConnectionInfo.DatabaseName;
+            set => ConnectionInfo.DatabaseName = value;
+        }
+
+        public string UserName
+        {
+            get => ConnectionInfo.UserName;
+            set => ConnectionInfo.UserName = value;
+        }
+
+        public string Password
+        {
+            get => ConnectionInfo.Password;
+            set => ConnectionInfo.Password = value;
+        }
+
+        public int? ConnectTimeout
+        {
+            get => ConnectionInfo.ConnectTimeout;
+            set => ConnectionInfo.ConnectTimeout = value;
+        }
+
+        public bool TrustServerCertificate
+        {
+            get => ConnectionInfo.TrustServerCertificate;
+            set => ConnectionInfo.TrustServerCertificate = value;
+        }
+
         public bool AutoCreateTargetTable { get; set; }
         public int UploadIntervalSeconds { get; set; } = 10;
 
@@ -76,28 +105,8 @@ namespace XESmartTarget.Core.Responses
         protected Task Uploader;
 
         private XEventDataTableAdapter xeadapter;
-
-        protected string ConnectionString
-        {
-            get
-            {
-                int ConnectionTimeout = 15;
-                string s = "Server=" + SmartFormatHelper.Format(ServerName,Tokens) + ";";
-                s += "Database=" + SmartFormatHelper.Format(DatabaseName,Tokens) + ";";
-                if (String.IsNullOrEmpty(UserName))
-                {
-                    s += "Integrated Security = True;";
-                }
-                else
-                {
-                    s += "User Id=" + UserName + ";";
-                    s += "Password=" + Password + ";";
-                }
-                s += "Connection Timeout=" + ConnectionTimeout;
-                logger.Debug(s);
-                return s;
-            }
-        }
+        protected string ConnectionString => ConnectionInfo.ConnectionString;
+        private SqlConnectionInfo ConnectionInfo { get; set; } = new();
 
         private DataTable eventsTable = new DataTable("events");
 
@@ -108,7 +117,7 @@ namespace XESmartTarget.Core.Responses
         public bool IsSingleEvent = true;
         public bool FailOnSingleEventViolation = false;
 
-        public override void Process(PublishedEvent evt)
+        public override void Process(IXEvent evt)
         {
             Enqueue(evt);
         }
@@ -116,7 +125,7 @@ namespace XESmartTarget.Core.Responses
         protected bool UploaderStarted = false;
         protected bool TargetTableCreated = false;
 
-        protected void Enqueue(PublishedEvent evt)
+        protected void Enqueue(IXEvent evt)
         {
             if(xeadapter == null)
             {

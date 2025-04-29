@@ -1,12 +1,7 @@
-﻿using Microsoft.SqlServer.XEvent.Linq;
+﻿using Microsoft.SqlServer.XEvent.XELite;
 using NLog;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using XESmartTarget.Core.Responses;
 
 namespace XESmartTarget.Core.Utils
@@ -19,12 +14,10 @@ namespace XESmartTarget.Core.Utils
         public List<OutputColumn> OutputColumns { get; set; }
         public string Filter { get; set; }
 
-
         public XEventDataTableAdapter(DataTable table)
         {
             eventsTable = table;
         }
-
 
         private void Prepare()
         {
@@ -44,7 +37,6 @@ namespace XESmartTarget.Core.Utils
                     eventsTable.Columns.Add(cl_dt);
                 }
 
-                
                 //
                 // Add Collection Time ISO
                 //
@@ -59,7 +51,6 @@ namespace XESmartTarget.Core.Utils
                     eventsTable.Columns.Add(cl_dt);
                 }
 
-
                 //
                 // Add Name column
                 //
@@ -68,10 +59,8 @@ namespace XESmartTarget.Core.Utils
                     eventsTable.Columns.Add("name", typeof(String));
                     eventsTable.Columns["name"].ExtendedProperties.Add("auto_column", true);
                 }
-
             }
         }
-
 
         // sets the column as hidden when not present in the list of visible columns
         private void SetColHiddenProperty(DataColumn cl_dt)
@@ -87,7 +76,7 @@ namespace XESmartTarget.Core.Utils
             }
         }
 
-        public void ReadEvent(PublishedEvent evt)
+        public void ReadEvent(IXEvent xevent)
         {
             Prepare();
             //
@@ -95,25 +84,25 @@ namespace XESmartTarget.Core.Utils
             //
             lock (eventsTable)
             {
-                foreach (PublishedEventField fld in evt.Fields)
+                foreach (var fld in xevent.Fields)
                 {
                     if (
-                        !eventsTable.Columns.Contains(fld.Name) 
+                        !eventsTable.Columns.Contains(fld.Key)
                         && (
-                            OutputColumns.Count == 0 
-                            || OutputColumns.Exists(x => x.Name == fld.Name) 
-                            || OutputColumns.Exists(x => x.Calculated && Regex.IsMatch(x.Name, @"\s+AS\s+.*" + fld.Name, RegexOptions.IgnoreCase))
-                            || (Filter != null && Filter.Contains(fld.Name))
+                            OutputColumns.Count == 0
+                            || OutputColumns.Exists(x => x.Name == fld.Key)
+                            || OutputColumns.Exists(x => x.Calculated && Regex.IsMatch(x.Name, @"\s+AS\s+.*" + fld.Key, RegexOptions.IgnoreCase))
+                            || (Filter != null && Filter.Contains(fld.Key))
                         )
                     )
                     {
-                        OutputColumn col = OutputColumns.FirstOrDefault(x => x.Name == fld.Name);
+                        OutputColumn col = OutputColumns.FirstOrDefault(x => x.Name == fld.Key);
 
-                        if(col == null)
+                        if (col == null)
                         {
                             col = new OutputColumn()
                             {
-                                Name = fld.Name,
+                                Name = fld.Key,
                                 ColumnType = OutputColumn.ColType.Column
                             };
                         }
@@ -121,15 +110,15 @@ namespace XESmartTarget.Core.Utils
                         Type t;
                         DataColumn dc;
                         bool disallowed = false;
-                        if (DataTableTSQLAdapter.AllowedDataTypes.Contains(fld.Type.ToString()))
+                        if (DataTableTSQLAdapter.AllowedDataTypes.Contains(fld.Value.GetType().ToString()))
                         {
-                            t = fld.Type;
+                            t = fld.Value.GetType();
                         }
                         else
                         {
                             t = Type.GetType("System.String");
                         }
-                        dc = eventsTable.Columns.Add(fld.Name, t);
+                        dc = eventsTable.Columns.Add(fld.Key, t);
                         dc.ExtendedProperties.Add("subtype", "field");
                         dc.ExtendedProperties.Add("disallowedtype", disallowed);
                         dc.ExtendedProperties.Add("calculated", false);
@@ -138,24 +127,24 @@ namespace XESmartTarget.Core.Utils
                     }
                 }
 
-                foreach (PublishedAction act in evt.Actions)
+                foreach (var act in xevent.Actions)
                 {
                     if (
-                        !eventsTable.Columns.Contains(act.Name) 
+                        !eventsTable.Columns.Contains(act.Key)
                         && (
-                            OutputColumns.Count == 0 
-                            || OutputColumns.Exists(x => x.Name == act.Name)
-                            || OutputColumns.Exists(x => x.Calculated && Regex.IsMatch(x.Name, @"\s+AS\s+.*" + act.Name, RegexOptions.IgnoreCase))
+                            OutputColumns.Count == 0
+                            || OutputColumns.Exists(x => x.Name == act.Key)
+                            || OutputColumns.Exists(x => x.Calculated && Regex.IsMatch(x.Name, @"\s+AS\s+.*" + act.Key, RegexOptions.IgnoreCase))
                         )
                     )
                     {
-                        OutputColumn col = OutputColumns.FirstOrDefault(x => x.Name == act.Name);
+                        OutputColumn col = OutputColumns.FirstOrDefault(x => x.Name == act.Key);
 
                         if (col == null)
                         {
                             col = new OutputColumn()
                             {
-                                Name = act.Name,
+                                Name = act.Key,
                                 ColumnType = OutputColumn.ColType.Column
                             };
                         }
@@ -163,15 +152,15 @@ namespace XESmartTarget.Core.Utils
                         Type t;
                         DataColumn dc;
                         bool disallowed = false;
-                        if (DataTableTSQLAdapter.AllowedDataTypes.Contains(act.Type.ToString()))
+                        if (DataTableTSQLAdapter.AllowedDataTypes.Contains(act.Value.GetType().ToString()))
                         {
-                            t = act.Type;
+                            t = act.Value.GetType();
                         }
                         else
                         {
                             t = Type.GetType("System.String");
                         }
-                        dc = eventsTable.Columns.Add(act.Name, t);
+                        dc = eventsTable.Columns.Add(act.Key, t);
                         dc.ExtendedProperties.Add("subtype", "action");
                         dc.ExtendedProperties.Add("disallowedtype", disallowed);
                         dc.ExtendedProperties.Add("calculated", false);
@@ -180,16 +169,15 @@ namespace XESmartTarget.Core.Utils
                     }
                 }
 
-
                 // add calculated columns
-                for(int i=0;i<OutputColumns.Count;i++)
+                for (int i = 0; i < OutputColumns.Count; i++)
                 {
                     string outCol = OutputColumns[i].Name;
                     if (!eventsTable.Columns.Contains(outCol))
                     {
-                        if (Regex.IsMatch(outCol,@"\s+AS\s+",RegexOptions.IgnoreCase))
+                        if (Regex.IsMatch(outCol, @"\s+AS\s+", RegexOptions.IgnoreCase))
                         {
-                            var tokens = Regex.Split(outCol, @"\s+AS\s+", RegexOptions.IgnoreCase); 
+                            var tokens = Regex.Split(outCol, @"\s+AS\s+", RegexOptions.IgnoreCase);
                             string colName = tokens[0];
                             string colDefinition = tokens[1];
 
@@ -208,7 +196,6 @@ namespace XESmartTarget.Core.Utils
                             //change OutputColumns
                             OutputColumns[i].Name = colName;
                         }
-
                     }
                 }
             }
@@ -217,50 +204,49 @@ namespace XESmartTarget.Core.Utils
             DataRow row = tmpTab.NewRow();
             if (row.Table.Columns.Contains("name"))
             {
-                row.SetField("name", evt.Name);
+                row.SetField("name", xevent.Name);
             }
             if (row.Table.Columns.Contains("collection_time"))
             {
-                row.SetField("collection_time", evt.Timestamp.LocalDateTime);
+                row.SetField("collection_time", xevent.Timestamp.LocalDateTime);
             }
             if (row.Table.Columns.Contains("collection_time_iso"))
             {
-                row.SetField("collection_time_iso", evt.Timestamp.ToString("o"));
+                row.SetField("collection_time_iso", xevent.Timestamp.ToString("o"));
             }
 
-            foreach (PublishedEventField fld in evt.Fields)
+            foreach (var fld in xevent.Fields)
             {
-                if (row.Table.Columns.Contains(fld.Name))
+                if (row.Table.Columns.Contains(fld.Key))
                 {
-                    if ((bool)row.Table.Columns[fld.Name].ExtendedProperties["disallowedtype"])
+                    if ((bool)row.Table.Columns[fld.Key].ExtendedProperties["disallowedtype"])
                     {
-                        row.SetField(fld.Name, fld.Value.ToString());
+                        row.SetField(fld.Key, fld.Value.ToString());
                     }
                     else
                     {
-                        row.SetField(fld.Name, fld.Value);
+                        row.SetField(fld.Key, fld.Value);
                     }
                 }
             }
 
-            foreach (PublishedAction act in evt.Actions)
+            foreach (var act in xevent.Actions)
             {
-                if (row.Table.Columns.Contains(act.Name))
+                if (row.Table.Columns.Contains(act.Key))
                 {
-                    if ((bool)row.Table.Columns[act.Name].ExtendedProperties["disallowedtype"])
+                    if ((bool)row.Table.Columns[act.Key].ExtendedProperties["disallowedtype"])
                     {
-                        row.SetField(act.Name, act.Value.ToString());
+                        row.SetField(act.Key, act.Value.ToString());
                     }
                     else
                     {
-                        row.SetField(act.Name, act.Value);
+                        row.SetField(act.Key, act.Value);
                     }
                 }
             }
 
             if (!String.IsNullOrEmpty(Filter))
             {
-
                 DataView dv = new DataView(tmpTab);
                 dv.RowFilter = Filter;
 
@@ -285,7 +271,6 @@ namespace XESmartTarget.Core.Utils
                     }
                 }
             }
-
         }
     }
 }

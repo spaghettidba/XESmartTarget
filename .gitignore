@@ -213,3 +213,6 @@ ModelManifest.xml
 
 Setup/harvest\.wxs
 /Setup/SignParams.ps1
+Setup/candleout/Product.wixobj
+Setup/candleout/ProductComponents.wixobj
+Setup/ProductComponents.wxs

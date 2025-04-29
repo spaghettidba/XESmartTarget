@@ -1,8 +1,6 @@
 ﻿using InfluxDB.Client.Api.Domain;
 using InfluxDB.Client.Writes;
-using System;
 using System.Data;
-using System.IO;
 using XESmartTarget.Core.Responses;
 
 namespace XESmartTarget.Core.Utils

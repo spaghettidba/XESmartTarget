@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.SqlServer.XEvent.Linq;
+﻿using System.Text;
 using NLog;
 using System.Data;
 using XESmartTarget.Core.Utils;
@@ -11,6 +8,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.SqlServer.XEvent.XELite;
 
 namespace XESmartTarget.Core.Responses
 {
@@ -39,7 +37,7 @@ namespace XESmartTarget.Core.Responses
             };
         }
 
-        public override void Process(PublishedEvent evt)
+        public override void Process(IXEvent evt)
         {
             if (xeadapter == null)
             {
