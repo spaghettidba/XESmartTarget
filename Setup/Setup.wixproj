@@ -33,7 +33,7 @@
   <ItemGroup>
     <Content Include="prebuild.bat" />
     <Content Include="postbuild.bat" />
-    <Content Include="SignMsi.ps1" />
+    <Content Include="Sign.ps1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\XESmartTarget\XESmartTarget.csproj">
@@ -58,7 +58,6 @@
 	<Target Name="AfterBuild">
 	</Target>
 	-->
- 
   <PropertyGroup>
     <PostBuildEvent>call $(ProjectDir)postbuild.bat "!(TargetPath)" "$(TargetDir)$(SolutionName)_$(Platform)$(TargetExt)"</PostBuildEvent>
   </PropertyGroup>
