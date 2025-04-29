@@ -30,7 +30,7 @@ jobs:
         run: dotnet build XESmartTarget.sln --configuration Release
 
       - name: Publish
-        run: dotnet publish ${{ github.workspace }}/XESmartTarget/XESmartTarget.csproj -c Release -p:PublishSingleFile=true 
+        run: dotnet publish ${{ github.workspace }}/XESmartTarget/XESmartTarget.csproj -c Release -p:PublishSingleFile=true --self-contained=false
 
       - name: Signtool XESmartTarget Windows
         shell: pwsh
@@ -46,7 +46,7 @@ jobs:
           signtool sign /fd sha256 /t http://timestamp.digicert.com /f c:\github\XESmartTarget.cer /csp "eToken Base Cryptographic Provider" /k "${{ secrets.SIGN_CERT_PWD}}=Sectigo_20240429144724" C:/temp/XESmartTarget-${{ steps.extract_version.outputs.version }}.msi          
 
       - name: Build (Linux)
-        run: dotnet publish "${{ github.workspace }}\XESmartTarget\XESmartTarget.csproj" -c Release -r linux-x64 -p:PublishSingleFile=true 
+        run: dotnet publish "${{ github.workspace }}\XESmartTarget\XESmartTarget.csproj" -c Release -r linux-x64 -p:PublishSingleFile=true --self-contained=false
 
       - name: Signtool XESmartTarget Linux
         shell: pwsh
