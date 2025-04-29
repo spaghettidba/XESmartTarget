@@ -2,8 +2,8 @@ name: XESmartTarget Build & MSI
 
 on:
   push:
-  #  paths:
-  #    - 'AssemblyInfo.cs'
+    paths:
+      - 'AssemblyInfo.cs'
 
 jobs:
   build-msi:
@@ -93,4 +93,14 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: "C:/temp/XESmartTarget-linux-${{ steps.extract_version.outputs.version }}.zip"
           asset_name: "XESmartTarget-linux-${{ steps.extract_version.outputs.version }}.zip"
+          asset_content_type: application/octet-stream
+
+      - name: Upload Windows exe
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: "${{ github.workspace }}\\XESmartTarget\\bin\\release\\win-x64\\publish\\XESmartTarget.exe"
+          asset_name: "XESmartTarget.exe"
           asset_content_type: application/octet-stream
