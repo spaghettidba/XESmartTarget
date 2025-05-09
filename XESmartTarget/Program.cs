@@ -52,7 +52,7 @@ namespace XESmartTarget
             // save the URI to a file and point configuration there
             string tempPath = Path.GetTempPath();
             if (string.IsNullOrEmpty(tempPath) && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                tempPath = "/tmp/XECredentials";
+                tempPath = "/var/XECredentials";
 
             if (!Directory.Exists(tempPath))
                 Directory.CreateDirectory(tempPath);
