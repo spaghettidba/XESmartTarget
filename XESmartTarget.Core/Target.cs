@@ -72,13 +72,15 @@ namespace XESmartTarget.Core
         public string PreExecutionScript { get; set; }
         public string PostExecutionScript { get; set; }
 
-        private bool stopped = false;
         private List<Task> allTasks = new List<Task>();
+        private CancellationTokenSource cts;
 
         public void Start()
         {
             try
             {
+                cts = new CancellationTokenSource();
+
                 foreach (var conn in ConnectionInfo)
                 {
                     TargetWorker worker = new TargetWorker()
@@ -88,6 +90,7 @@ namespace XESmartTarget.Core
                         FailOnProcessingError = FailOnProcessingError,
                         PreExecutionScript = PreExecutionScript,
                         PostExecutionScript = PostExecutionScript,
+                        CancellationToken = cts.Token
                     };
 
                     foreach (Response r in Responses)
@@ -102,16 +105,9 @@ namespace XESmartTarget.Core
                         r.Tokens.Add("ServerName", conn.ServerName);
                     }
 
-                    allTasks.Add(new Task(() => worker.Process()));
+                    allTasks.Add(Task.Run(() => worker.Process()));
                 }
-                foreach (var t in allTasks)
-                {
-                    t.Start();
-                }
-                foreach (var t in allTasks)
-                {
-                    t.Wait();
-                }
+                Task.WaitAll(allTasks.ToArray());
             }
             catch (Exception e)
             {
@@ -122,22 +118,25 @@ namespace XESmartTarget.Core
         }
         public void Stop()
         {
-            stopped = true;
+            cts?.Cancel();
         }
 
         private class TargetWorker
         {
             internal List<Response> Responses { get; set; } = new List<Response>();
-            internal string SessionName { get; set; }            
+            internal string SessionName { get; set; }
             internal string ConnectionString => ConnectionInfo.ConnectionString;
             internal SqlConnectionInfo ConnectionInfo { get; set; } = new();
             internal string PreExecutionScript { get; set; }
-            internal string PostExecutionScript { get; set; }           
+            internal string PostExecutionScript { get; set; }
 
             internal bool FailOnProcessingError { get; set; } = false;
-            private bool stopped = false;
 
-            internal async void Process()
+            internal CancellationToken CancellationToken { get; set; }
+
+            private bool connectedOnce = false;
+
+            internal async Task Process()
             {
                 if (!String.IsNullOrEmpty(PreExecutionScript))
                 {
@@ -146,14 +145,12 @@ namespace XESmartTarget.Core
 
                 logger.Info($"Connecting to XE session '{SessionName}' on server '{ConnectionInfo.ServerName}'");
 
-                bool connectedOnce = false;
                 bool shouldContinue = true;
                 int attempts = 0;
 
-                XELiveEventStreamer eventStream = null;
-
-                while (shouldContinue)
+                while (shouldContinue && !CancellationToken.IsCancellationRequested)
                 {
+                    XELiveEventStreamer eventStream = null;
                     try
                     {
                         if (attempts < 240) attempts++; // connect attempts will be at least every 1 hour (240 * 15 sec = 3600 sec = 1 hour)
@@ -193,7 +190,7 @@ namespace XESmartTarget.Core
                     }
                     try
                     {
-                        ProcessStreamData(eventStream);
+                        await ProcessStreamDataAsync(eventStream, CancellationToken);
                     }
                     catch (Exception e)
                     {
@@ -208,70 +205,74 @@ namespace XESmartTarget.Core
                             shouldContinue = connectedOnce;
                         }
                     }
+                    finally
+                    {
+                        eventStream = null;
+                    }
+                }
+
+                if (!String.IsNullOrEmpty(PostExecutionScript))
+                {
+                    logger.Info($"Running Post-Execution script '{SessionName}' on server '{ConnectionInfo.ServerName}'");
                 }
             }
 
-            private void ProcessStreamData(XELiveEventStreamer eventStream)
+            private async Task ProcessStreamDataAsync(XELiveEventStreamer eventStream, CancellationToken parentToken)
             {
-                var cancellationTokenSource = new CancellationTokenSource();
-
-                Task waitTask = Task.Run(() =>
+                using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(parentToken))
                 {
-                    while (!stopped)
+                    var eventTask = eventStream.ReadEventStream(async xevent =>
                     {
-                        Thread.Sleep(1000);
-                    }
-                    cancellationTokenSource.Cancel();                    
-                });
+                        // Pass events to the responses
+                        foreach (Response r in Responses)
+                        {
+                            // filter out unwanted events
+                            // if no events are specified, will process all
+                            if (r.Events.Count > 0)
+                            {
+                                if (!r.Events.Contains(xevent.Name, StringComparer.CurrentCultureIgnoreCase))
+                                {
+                                    continue;
+                                }
+                            }
+                            try
+                            {
+                                r.Process(xevent);
+                            }
+                            catch (Exception e)
+                            {
+                                if (FailOnProcessingError)
+                                {
+                                    throw;
+                                }
+                                else
+                                {
+                                    logger.Error(e.Message);
+                                    logger.Error(e.StackTrace);
+                                    logger.Error(e, ConnectionInfo.ServerName);
+                                }
+                            }
+                        }
+                        await Task.CompletedTask;
+                    },
+                    linkedCts.Token);
 
-                Task eventTask = eventStream.ReadEventStream(xevent =>
-                {
-                    // Pass events to the responses
-                    foreach (Response r in Responses)
+                    try
                     {
-                        // filter out unwanted events
-                        // if no events are specified, will process all
-                        if (r.Events.Count > 0)
-                        {
-                            if (!r.Events.Contains(xevent.Name, StringComparer.CurrentCultureIgnoreCase))
-                            {
-                                continue;
-                            }
-                        }
-                        try
-                        {
-                            r.Process(xevent);
-                        }
-                        catch (Exception e)
-                        {
-                            if (FailOnProcessingError)
-                            {
-                                throw;
-                            }
-                            else
-                            {
-                                logger.Error(e.Message);
-                                logger.Error(e.StackTrace);
-                                logger.Error(e, ConnectionInfo.ServerName);
-                            }
-                        }
+                        await Task.WhenAny(eventTask, Task.Delay(Timeout.Infinite, linkedCts.Token));
                     }
-                    return Task.CompletedTask;
-                },
-                cancellationTokenSource.Token);
-
-                try
-                {
-                    Task.WaitAny(waitTask, eventTask);
-                }
-                catch (Exception e)
-                {
-                    logger.Error(e);
-                    throw;
-                }
-                if (eventTask.IsFaulted)
-                {
-                    logger.Error("Failed with: {0}", eventTask.Exception);
+                    catch (OperationCanceledException)
+                    {
+                    }
+                    catch (Exception e)
+                    {
+                        logger.Error(e);
+                        throw;
+                    }
+                    if (eventTask.IsFaulted)
+                    {
+                        logger.Error("Failed with: {0}", eventTask.Exception);
+                    }
                 }
             }
 
