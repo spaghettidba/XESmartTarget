@@ -150,7 +150,7 @@ namespace XESmartTarget.Core
                 bool shouldContinue = true;
                 int attempts = 0;
 
-                XELiveEventStreamer eventStream = null;
+                XELiveEventStreamer? eventStream = null;
 
                 while (shouldContinue)
                 {
@@ -165,6 +165,7 @@ namespace XESmartTarget.Core
                     }
                     catch (Exception e)
                     {
+                        eventStream = null;
                         if (attempts == 1)
                         {
                             logger.Error($"Error connecting to '{ConnectionInfo.ServerName}'");
@@ -197,6 +198,7 @@ namespace XESmartTarget.Core
                     }
                     catch (Exception e)
                     {
+                        eventStream = null;
                         logger.Error($"Error processing event data from '{ConnectionInfo.ServerName}'");
                         logger.Error(e);
                         if (FailOnProcessingError)
@@ -277,13 +279,14 @@ namespace XESmartTarget.Core
 
             private XELiveEventStreamer ConnectSessionStream(string connectionString)
             {
-                XELiveEventStreamer eventStream;
+                XELiveEventStreamer? eventStream;
                 try
                 {
                     eventStream = new XELiveEventStreamer(connectionString, SessionName);
                 }
                 catch (Exception e)
                 {
+                    eventStream = null;
                     var ioe = new InvalidOperationException($"Unable to connect to the Extended Events session {SessionName} on server {ConnectionInfo.ServerName}", e);
                     throw ioe;
                 }
