@@ -1,4 +1,5 @@
-﻿using Microsoft.SqlServer.XEvent.XELite;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.SqlServer.XEvent.XELite;
 using NLog;
 using System.Diagnostics;
 using XESmartTarget.Core.Utils;
@@ -161,7 +162,6 @@ namespace XESmartTarget.Core
                         eventStream = ConnectSessionStream(ConnectionString);
                         connectedOnce = true;
                         attempts = 0;
-                        logger.Info($"Connected to '{ConnectionInfo.ServerName}'.");
                     }
                     catch (Exception e)
                     {
@@ -265,6 +265,7 @@ namespace XESmartTarget.Core
                 try
                 {
                     Task.WaitAny(waitTask, eventTask);
+                
                 }
                 catch (Exception e)
                 {
@@ -273,7 +274,7 @@ namespace XESmartTarget.Core
                 }
                 if (eventTask.IsFaulted)
                 {
-                    logger.Error("Failed with: {0}", eventTask.Exception);
+                    throw eventTask.Exception;
                 }
             }
 
@@ -282,6 +283,21 @@ namespace XESmartTarget.Core
                 XELiveEventStreamer? eventStream;
                 try
                 {
+                    using (var conn = new SqlConnection(connectionString))
+                    {
+                        conn.Open();
+                        logger.Info($"Connected to {ConnectionInfo.ServerName}");
+                        var cmd = conn.CreateCommand();
+                        cmd.CommandText = "SELECT name FROM sys.dm_xe_sessions WHERE name = @sessionName";
+                        cmd.Parameters.Add(new SqlParameter("@sessionName", SessionName));
+                        var name = cmd.ExecuteScalar();
+                        if(name == null)
+                        {
+                            throw new ArgumentException($"Connected to {ConnectionInfo.ServerName}. Session {SessionName} not found.");
+                        }
+                        conn.Close();
+                        logger.Info($"Session {SessionName} found on {ConnectionInfo.ServerName}.");
+                    }
                     eventStream = new XELiveEventStreamer(connectionString, SessionName);
                 }
                 catch (Exception e)
