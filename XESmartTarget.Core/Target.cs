@@ -286,7 +286,6 @@ namespace XESmartTarget.Core
                     using (var conn = new SqlConnection(connectionString))
                     {
                         conn.Open();
-                        logger.Info($"Connected to {ConnectionInfo.ServerName}");
                         var cmd = conn.CreateCommand();
                         cmd.CommandText = "SELECT name FROM sys.dm_xe_sessions WHERE name = @sessionName";
                         cmd.Parameters.Add(new SqlParameter("@sessionName", SessionName));
@@ -296,7 +295,7 @@ namespace XESmartTarget.Core
                             throw new ArgumentException($"Connected to {ConnectionInfo.ServerName}. Session {SessionName} not found.");
                         }
                         conn.Close();
-                        logger.Info($"Session {SessionName} found on {ConnectionInfo.ServerName}.");
+                        logger.Info($"Connected to session {SessionName} on {ConnectionInfo.ServerName}.");
                     }
                     eventStream = new XELiveEventStreamer(connectionString, SessionName);
                 }
