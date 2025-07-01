@@ -5,7 +5,9 @@ namespace XESmartTarget.Core.Utils
 {
     public class LinuxCredentialHelper
     {
-        private static readonly string CredentialsFilePath = Path.Combine("/var/XECredentials/", "cred.json");
+        private static readonly string CredentialsDirectory = Path.Combine(AppContext.BaseDirectory, "XECredentials");
+        private static readonly string CredentialsFilePath = Path.Combine(CredentialsDirectory, "cred.json");
+
         private static readonly object _locker = new object();
         private static Logger _logger = LogManager.GetCurrentClassLogger();        
 
