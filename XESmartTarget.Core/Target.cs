@@ -287,7 +287,14 @@ namespace XESmartTarget.Core
                     {
                         conn.Open();
                         var cmd = conn.CreateCommand();
-                        cmd.CommandText = "SELECT name FROM sys.dm_xe_sessions WHERE name = @sessionName";
+                        cmd.CommandText = @"IF SERVERPROPERTY('EngineEdition') = 5 
+                                            BEGIN
+	                                            SELECT name FROM sys.dm_xe_database_sessions WHERE name = @sessionName
+                                            END
+                                            ELSE
+                                            BEGIN
+	                                            SELECT name FROM sys.dm_xe_sessions WHERE name = @sessionName
+                                            END ";
                         cmd.Parameters.Add(new SqlParameter("@sessionName", SessionName));
                         var name = cmd.ExecuteScalar();
                         if(name == null)
