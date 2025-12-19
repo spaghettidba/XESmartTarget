@@ -68,6 +68,17 @@ namespace XESmartTarget.Core
                     conn.TrustServerCertificate = value;
             }
         }
+
+        public string Authentication
+        {
+            get => ConnectionInfo.FirstOrDefault()?.Authentication;
+            set
+            {
+                foreach (var conn in ConnectionInfo)
+                    conn.Authentication = value;
+            }
+        }
+
         public List<SqlConnectionInfo> ConnectionInfo { get; set; } = new();
         public bool FailOnProcessingError { get; set; } = false;
         public string PreExecutionScript { get; set; }

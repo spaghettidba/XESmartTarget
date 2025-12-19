@@ -41,6 +41,33 @@ namespace XESmartTarget.Core.Utils
         public string FailoverPartner { get; set; }
         public int? ConnectTimeout { get; set; } = 15;
         public string PoolBlockingPeriod { get; set; } = "Auto";
+        private SqlAuthenticationMethod _authMethod = SqlAuthenticationMethod.NotSpecified;
+
+        public string Authentication
+        {
+            get => _authMethod.ToString();
+            set
+            {
+                if (Enum.TryParse<SqlAuthenticationMethod>(value, true, out var result))
+                {
+                    _authMethod = result;
+                }
+                else
+                {
+                    throw new ArgumentException(
+                        $"Invalid authentication method:  {value}. " +
+                        $"Valid values are: {string.Join(", ", Enum.GetNames(typeof(SqlAuthenticationMethod)))}");
+                }
+            }
+        }
+
+        // strongly-typed property for direct access to the enum
+        internal SqlAuthenticationMethod AuthenticationMethod
+        {
+            get => _authMethod;
+            set => _authMethod = value;
+        }
+
 
 
 
@@ -92,6 +119,7 @@ namespace XESmartTarget.Core.Utils
             FailoverPartner = info.FailoverPartner;
             ConnectTimeout = info.ConnectTimeout;
             PoolBlockingPeriod = info.PoolBlockingPeriod;
+            AuthenticationMethod = info.AuthenticationMethod;
         }
 
 
@@ -154,6 +182,7 @@ namespace XESmartTarget.Core.Utils
             FailoverPartner = builder.FailoverPartner;
             ConnectTimeout = builder.ConnectTimeout;
             PoolBlockingPeriod = builder.PoolBlockingPeriod.ToString();
+            AuthenticationMethod = builder.Authentication;
         }
 
 
@@ -215,6 +244,7 @@ namespace XESmartTarget.Core.Utils
 
                 if (string.IsNullOrEmpty(builder.UserID) && string.IsNullOrEmpty(builder.Password))
                     builder.IntegratedSecurity = true;
+                builder.Authentication = AuthenticationMethod;
 
                 return builder.ConnectionString;
             }

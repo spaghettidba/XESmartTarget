@@ -185,7 +185,15 @@ namespace XESmartTarget
                 TargetConfig.GlobalVariables.Add(pair[0], pair[1]);
             }
 
-            TargetConfig config = TargetConfig.LoadFromFile(options.ConfigurationFile);
+            TargetConfig config;
+            try
+            {
+                config = TargetConfig.LoadFromFile(options.ConfigurationFile);
+            }
+            catch (Exception x)
+            {
+                throw new ArgumentException("Unable to load configuration. Check the syntax of the configuration file", x);
+            }
 
             // delete the file downloaded from URI
             if (deleteTempFile)
