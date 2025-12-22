@@ -2,7 +2,7 @@
   "profiles": {
     "XeSmartTarget": {
       "commandName": "Project",
-      "commandLineArgs": "-F c:\\temp\\xe\\qmonitor2.json"
+      "commandLineArgs": "-F c:\\temp\\xe\\qmonitor3.json"
     }
   }
 }

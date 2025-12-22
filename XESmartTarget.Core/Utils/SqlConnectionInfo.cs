@@ -242,7 +242,7 @@ namespace XESmartTarget.Core.Utils
                 Enum.TryParse(PoolBlockingPeriod, true, out PoolBlockingPeriod period);
                 if (PoolBlockingPeriod != "Auto") builder.PoolBlockingPeriod = period;
 
-                if (string.IsNullOrEmpty(builder.UserID) && string.IsNullOrEmpty(builder.Password))
+                if (string.IsNullOrEmpty(builder.UserID) && string.IsNullOrEmpty(builder.Password) && AuthenticationMethod == SqlAuthenticationMethod.NotSpecified)
                     builder.IntegratedSecurity = true;
                 builder.Authentication = AuthenticationMethod;
 
