@@ -149,6 +149,36 @@ namespace XESmartTarget.Core.Responses
                 }
                 lock (Lock)
                 {
+                    // before writing, replace tokens
+                    foreach(DataColumn dc in EventsTable.Columns)
+                    {
+                        if (dc.DataType == typeof(string))
+                        {
+                            if (!dc.ReadOnly)
+                            {
+                                foreach (DataRow dr in EventsTable.Rows)
+                                {
+                                    string cellValue = dr[dc] as string;
+                                    if (!string.IsNullOrEmpty(cellValue))
+                                    {
+                                        dr[dc] = SmartFormatHelper.Format(cellValue, Tokens);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // readonly means that the column is computed
+                                // we need to replace tokens in the expression
+                                // this should be fine as the tokens are static per response
+                                // and each server/target will have its own response instance
+                                string expression = dc.Expression;
+                                dc.Expression = SmartFormatHelper.Format(expression, Tokens);
+                            }
+                        }
+                    }
+                    
+
+                    // proceed with writing
                     if (_outputFormat == OutputFormatEnum.Json)
                     {
                         DataTableJsonAdapter adapter = new DataTableJsonAdapter(EventsTable)
