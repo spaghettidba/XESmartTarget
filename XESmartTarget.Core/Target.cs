@@ -2,6 +2,7 @@
 using Microsoft.SqlServer.XEvent.XELite;
 using NLog;
 using System.Diagnostics;
+using System.Runtime.Intrinsics.Arm;
 using XESmartTarget.Core.Utils;
 
 namespace XESmartTarget.Core
@@ -297,21 +298,59 @@ namespace XESmartTarget.Core
                     using (var conn = new SqlConnection(connectionString))
                     {
                         conn.Open();
-                        var cmd = conn.CreateCommand();
-                        cmd.CommandText = @"IF SERVERPROPERTY('EngineEdition') = 5 
-                                            BEGIN
-	                                            SELECT name FROM sys.dm_xe_database_sessions WHERE name = @sessionName
-                                            END
-                                            ELSE
-                                            BEGIN
-	                                            SELECT name FROM sys.dm_xe_sessions WHERE name = @sessionName
-                                            END ";
+                        using var cmd = conn.CreateCommand();
+                        cmd.CommandText = """
+                            IF SERVERPROPERTY('EngineEdition') = 5 
+                            BEGIN
+                                SELECT 
+                                    @@SERVERNAME AS server_name, 
+                                    SERVERPROPERTY('EngineEdition') AS engine_edition, 
+                                    name 
+                                FROM sys.dm_xe_database_sessions 
+                                WHERE name = @sessionName
+                            END
+                            ELSE
+                            BEGIN
+                                SELECT 
+                                    @@SERVERNAME AS server_name, 
+                                    SERVERPROPERTY('EngineEdition') AS engine_edition, 
+                                    name 
+                                FROM sys.dm_xe_sessions 
+                                WHERE name = @sessionName
+                            END
+                            """;
                         cmd.Parameters.Add(new SqlParameter("@sessionName", SessionName));
-                        var name = cmd.ExecuteScalar();
-                        if(name == null)
+                        string? serverName = null, sessionName = null;
+                        int engineEdition;
+                        using (var rdr = cmd.ExecuteReader())
+                        if (rdr.Read())
+                        {
+                            serverName = rdr.GetString(0);
+                            engineEdition = rdr.GetInt32(1);
+                            sessionName = rdr.GetString(2);
+                        }
+                        if (sessionName == null)
                         {
                             throw new ArgumentException($"Connected to {ConnectionInfo.ServerName}. Session {SessionName} not found.");
                         }
+                        
+                        // we need to store the actual server name in the tokens
+                        // actual server name might be different from the one used to connect
+                        // which is particularly true in case of AG listeners
+                        // Also Azure SQL Managed Instance and Azure SQL Database
+                        // might return different server names
+                        foreach (Response r in Responses)
+                        {
+                            if (!r.Tokens.ContainsKey("ActualServerName"))
+                            {
+                                r.Tokens.Add("ActualServerName", serverName);
+                            }
+                            else
+                            {
+                                r.Tokens["ActualServerName"] = serverName;
+                            }
+                        }
+                        
                         conn.Close();
                         logger.Info($"Connected to session {SessionName} on {ConnectionInfo.ServerName}.");
                     }
