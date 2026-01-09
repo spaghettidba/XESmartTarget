@@ -1,5 +1,6 @@
 ﻿using Microsoft.SqlServer.XEvent.XELite;
 using NLog;
+using SmartFormat.Core.Formatting;
 using System.Data;
 using XESmartTarget.Core.Utils;
 
@@ -149,8 +150,47 @@ namespace XESmartTarget.Core.Responses
                 }
                 lock (Lock)
                 {
+                    //
                     // before writing, replace tokens
-                    foreach(DataColumn dc in EventsTable.Columns)
+                    //
+
+                    // 
+                    // we need to treat computed columns (readonly) first
+                    //
+                    var columnsToModify = new List<(DataColumn column, string newExpression)>();
+
+                    foreach (DataColumn dc in EventsTable.Columns)
+                    {
+                        // readonly means that the column is computed
+                        // we need to replace tokens in the expression
+                        // this should be fine as the tokens are static per response
+                        // and each server/target will have its own response instance
+
+                        if (dc.DataType == typeof(string) && dc.ReadOnly)
+                        {
+                            string expression = dc.Expression;
+                            try
+                            {
+                                string formatted = SmartFormatHelper.Format(expression, Tokens);
+                                columnsToModify.Add((dc, formatted));
+                            }
+                            catch (FormattingException) 
+                            {
+                                logger.Warn($"The value {dc.Expression} contains placeholders that cannot be formatted.");
+                            }
+                        }
+                    }
+
+                    foreach (var (column, newExpression) in columnsToModify)
+                    {
+                        column.Expression = newExpression;
+                    }
+
+
+                    //
+                    // now process non computed columns
+                    //
+                    foreach (DataColumn dc in EventsTable.Columns)
                     {
                         if (dc.DataType == typeof(string))
                         {
@@ -161,18 +201,18 @@ namespace XESmartTarget.Core.Responses
                                     string cellValue = dr[dc] as string;
                                     if (!string.IsNullOrEmpty(cellValue))
                                     {
-                                        dr[dc] = SmartFormatHelper.Format(cellValue, Tokens);
+                                        try
+                                        {
+                                            dr[dc] = SmartFormatHelper.Format(cellValue, Tokens);
+                                        }
+                                        catch (FormattingException)
+                                        {
+                                            // tokens can't be formatted
+                                            logger.Warn($"The value {cellValue} contains placeholders that cannot be formatted.");
+                                            dr[dc] = cellValue;
+                                        }
                                     }
                                 }
-                            }
-                            else
-                            {
-                                // readonly means that the column is computed
-                                // we need to replace tokens in the expression
-                                // this should be fine as the tokens are static per response
-                                // and each server/target will have its own response instance
-                                string expression = dc.Expression;
-                                dc.Expression = SmartFormatHelper.Format(expression, Tokens);
                             }
                         }
                     }
