@@ -176,7 +176,8 @@ namespace XESmartTarget.Core.Responses
                             }
                             catch (FormattingException) 
                             {
-                                logger.Warn($"The value {dc.Expression} contains placeholders that cannot be formatted.");
+                                // Do not log here as this can flood the logs
+                                // logger.Warn($"The value {dc.Expression} contains placeholders that cannot be formatted.");
                             }
                         }
                     }
