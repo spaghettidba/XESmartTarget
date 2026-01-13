@@ -9,6 +9,8 @@ namespace XESmartTarget.Core
 
         }
 
+        internal string Id { get; set; }
+
         public string Filter { get; set; }
         public List<string> Events { get; set; } = new List<string>();
 
@@ -22,15 +24,17 @@ namespace XESmartTarget.Core
             return Events.Count == 0 || Events.Contains("*") || Events.Contains(evt.Name);
         }
 
-        public object Clone()
+        // Make Clone abstract to force all subclasses to implement proper deep copying
+        public abstract object Clone();
+
+        // Helper method for subclasses to call for base cloning
+        protected Response CloneBase()
         {
-            Response res = (Response)this.MemberwiseClone();
-            res.Tokens = new Dictionary<string, string>();
-            foreach (string s in Tokens.Keys)
-            {
-                res.Tokens.Add(s, Tokens[s]);
-            }
-            return res;
+            var clone = (Response)this.MemberwiseClone();
+            // Deep copy the Tokens dictionary to avoid sharing references
+            clone.Tokens = new Dictionary<string, string>(this.Tokens);
+            clone.Events = new List<string>(this.Events);
+            return clone;
         }
     }
 }

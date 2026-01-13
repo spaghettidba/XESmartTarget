@@ -229,6 +229,18 @@ namespace XESmartTarget.Core.Responses
                 }
             }
         }
+
+        public override object Clone()
+        {
+            // deep copy of all members
+            TableAppenderResponse clone = (TableAppenderResponse)CloneBase();
+            // deep copy of complex members
+            clone._outputColumns = new List<OutputColumn>(this._outputColumns);
+            clone.EventsTable = new DataTable("events");
+            clone.xeadapter = null;
+            clone.Uploader = null;
+            return clone;
+        }
     }
 }
 

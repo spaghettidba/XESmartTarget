@@ -266,5 +266,21 @@ namespace XESmartTarget.Core.Responses
                 Commands.Enqueue(new ReplayCommand() { CommandText = commandText, Database = databaseName });
             }
         }
+
+        public override object Clone()
+        {
+            ReplayResponse clone = (ReplayResponse)CloneBase();
+            // deep clone of all complex properties
+            clone.ConnectionInfo = new SqlConnectionInfo()
+            {
+                ServerName = this.ConnectionInfo.ServerName,
+                DatabaseName = this.ConnectionInfo.DatabaseName,
+                UserName = this.ConnectionInfo.UserName,
+                Password = this.ConnectionInfo.Password,
+                ConnectTimeout = this.ConnectionInfo.ConnectTimeout,
+                TrustServerCertificate = this.ConnectionInfo.TrustServerCertificate
+            };
+            return clone;
+        }
     }
 }

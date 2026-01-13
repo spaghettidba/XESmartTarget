@@ -128,6 +128,23 @@ namespace XESmartTarget.Core.Responses
                 }
             }
         }
+
+        public override object Clone()
+        {
+            ExecuteTSQLResponse clone = (ExecuteTSQLResponse)CloneBase();
+            clone.ConnectionInfo = new SqlConnectionInfo()
+            {
+                ServerName = this.ConnectionInfo.ServerName,
+                DatabaseName = this.ConnectionInfo.DatabaseName,
+                UserName = this.ConnectionInfo.UserName,
+                Password = this.ConnectionInfo.Password,
+                ConnectTimeout = this.ConnectionInfo.ConnectTimeout,
+                TrustServerCertificate = this.ConnectionInfo.TrustServerCertificate
+            };
+            clone.EventsTable = new DataTable("events");
+            clone.xeadapter = null;
+            return clone;
+        }
     }
 }
 

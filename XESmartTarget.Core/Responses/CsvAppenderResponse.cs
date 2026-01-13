@@ -83,5 +83,17 @@ namespace XESmartTarget.Core.Responses
             }
         }
 
+        public override object Clone()
+        {
+            CsvAppenderResponse clone = (CsvAppenderResponse)CloneBase();
+            // Deep copy the EventsTable to avoid sharing references
+            clone.EventsTable = new DataTable("events");
+            // Deep copy the OutputColumns list to avoid sharing references
+            clone.OutputColumns = new List<string>(this.OutputColumns);
+            // Reset the adapter so it will be initialized with the new EventsTable
+            clone.xeadapter = null;
+            return clone;
+        }
+
     }
 }

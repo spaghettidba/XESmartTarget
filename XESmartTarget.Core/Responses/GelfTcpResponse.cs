@@ -247,5 +247,14 @@ namespace XESmartTarget.Core.Responses
                 writer.WriteEndObject();
             }
         }
+
+        public override object Clone()
+        {
+            GelfTcpResponse clone = (GelfTcpResponse)CloneBase();
+            // Deep copy any reference type members here if necessary
+            clone.EventsTable = new DataTable("events");
+            clone.xeadapter = null; // Reset adapter for the clone
+            return clone;
+        }
     }
 }

@@ -94,6 +94,18 @@ namespace XESmartTarget.Core.Responses
             logger.Info(String.Format("Initializing Response of Type '{0}'", this.GetType().FullName));
         }
 
+        public override object Clone()
+        {
+            var clone = (OutputStreamAppenderResponse)CloneBase();
+            // Create a new EventsTable for this clone to prevent sharing
+            clone.EventsTable = new DataTable("events");
+            // Reset the adapter so it will be initialized with the new EventsTable
+            clone.xeadapter = null;
+            clone.writerTask = null;
+            clone.writerTaskStarted = false;
+            return clone;
+        }
+
         public override void Process(IXEvent evt)
         {
             Enqueue(evt);
@@ -199,7 +211,7 @@ namespace XESmartTarget.Core.Responses
                             {
                                 foreach (DataRow dr in EventsTable.Rows)
                                 {
-                                    string cellValue = dr[dc] as string;
+                                    string? cellValue = dr[dc] as string;
                                     if (!string.IsNullOrEmpty(cellValue))
                                     {
                                         try
@@ -209,7 +221,8 @@ namespace XESmartTarget.Core.Responses
                                         catch (FormattingException)
                                         {
                                             // tokens can't be formatted
-                                            logger.Warn($"The value {cellValue} contains placeholders that cannot be formatted.");
+                                            // but don't flood the logs
+                                            // logger.Warn($"The value {cellValue} contains placeholders that cannot be formatted.");
                                             dr[dc] = cellValue;
                                         }
                                     }

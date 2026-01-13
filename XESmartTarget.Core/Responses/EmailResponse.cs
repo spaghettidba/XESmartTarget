@@ -114,5 +114,13 @@ namespace XESmartTarget.Core.Responses
 
         }
 
+        public override object Clone()
+        {
+            EmailResponse clone = (EmailResponse)this.CloneBase();
+            clone.EventsTable = new DataTable("events");
+            clone.xeadapter = null;
+            return clone;
+        }
+
     }
 }

@@ -54,6 +54,19 @@ namespace XESmartTarget.Core.Responses
                 EventsTable.Rows.Clear();
             }
         }
+
+        public override object Clone()
+        {
+            TelegrafAppenderResponse clone = (TelegrafAppenderResponse)CloneBase();
+            // Deep copy all properties to avoid sharing references
+            clone.OutputTags = new List<string>(this.OutputTags);
+            clone.OutputFields = new List<string>(this.OutputFields);
+            // Create a new EventsTable for this clone to prevent sharing
+            clone.EventsTable = new DataTable("events");
+            // Reset the adapter so it will be initialized with the new EventsTable
+            clone.xeadapter = null;
+            return clone;
+        }
     }
 }
 
