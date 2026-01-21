@@ -13,9 +13,10 @@ namespace XESmartTarget.Core.Responses
         public CsvAppenderResponse()
         {
             logger.Info(String.Format("Initializing Response of Type '{0}'", this.GetType().FullName));
+            _outputFile = String.Empty;
         }
 
-        public string OutputFile {
+        public required string OutputFile {
             get
             {
                 return _outputFile;
@@ -28,14 +29,14 @@ namespace XESmartTarget.Core.Responses
         }
 
         private string _outputFile;
-        private string _formattedOutputFile;
+        private string _formattedOutputFile = String.Empty;
 
         public bool Overwrite { get; set; } = true;
 
         public List<string> OutputColumns { get; set; } = new List<string>(); 
         protected DataTable EventsTable { get => eventsTable; set => eventsTable = value; }
         private DataTable eventsTable = new DataTable("events");
-        private XEventDataTableAdapter xeadapter;
+        private XEventDataTableAdapter? xeadapter;
 
         private bool writeHeaders = true;
 

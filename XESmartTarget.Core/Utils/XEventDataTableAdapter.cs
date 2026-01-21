@@ -12,7 +12,7 @@ namespace XESmartTarget.Core.Utils
 
         public DataTable eventsTable { get; }
         public List<OutputColumn> OutputColumns { get; set; }
-        public string Filter { get; set; }
+        public string? Filter { get; set; }
 
         public XEventDataTableAdapter(DataTable table)
         {

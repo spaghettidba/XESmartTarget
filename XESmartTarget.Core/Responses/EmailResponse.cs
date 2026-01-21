@@ -11,21 +11,21 @@ namespace XESmartTarget.Core.Responses
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
 
-        public string SMTPServer { get; set; }
-        public string Sender { get; set; }
-        public string To { get; set; }
-        public string Cc { get; set; }
-        public string Bcc { get; set; }
-        public string Subject { get; set; }
-        public string Body { get; set; }
+        public string SMTPServer { get; set; } = string.Empty;
+        public string Sender { get; set; } = string.Empty;
+        public string To { get; set; } = string.Empty;
+        public string Cc { get; set; } = string.Empty;
+        public string Bcc { get; set; } = string.Empty;
+        public string Subject { get; set; } = string.Empty;
+        public string Body { get; set; } = string.Empty;
         public bool HTMLFormat { get; set; }
-        public string Attachment { get; set; }
-        public string AttachmentFileName { get; set; }
-        public string UserName { get; set; }
-        public string Password { get; set; }
+        public string Attachment { get; set; } = string.Empty;
+        public string AttachmentFileName { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
 
         protected DataTable EventsTable = new DataTable("events");
-        private XEventDataTableAdapter xeadapter;
+        private XEventDataTableAdapter? xeadapter;
 
         public EmailResponse()
         {
@@ -85,7 +85,10 @@ namespace XESmartTarget.Core.Responses
 
                                 System.Net.Mime.ContentType ct = new System.Net.Mime.ContentType(System.Net.Mime.MediaTypeNames.Text.Plain);
                                 Attachment at = new Attachment(attachStream, ct);
-                                at.ContentDisposition.FileName = AttachmentFileName;
+                                if (at.ContentDisposition != null)
+                                {
+                                    at.ContentDisposition.FileName = AttachmentFileName;
+                                }
                                 msg.Attachments.Add(at);
 
                             }
