@@ -10,7 +10,7 @@ namespace XESmartTarget.Core.Utils
     {
         private DataTable Table;
 
-        public string[] OutputColumns { get; set; }
+        public string[] OutputColumns { get; set; } = Array.Empty<string>();
         public Dictionary<string,object> StaticAttributes { get; set; } = new Dictionary<string,object>();
         public bool Minify { get; set; }
         public enum OutputFormatEnum { 
@@ -38,10 +38,14 @@ namespace XESmartTarget.Core.Utils
 
             if (OutputColumns != null)
             {
-                Table = Table.DefaultView.ToTable(false, OutputColumns.Where(c => Table.Columns.Contains(c)).ToArray());
+                var validColumns = OutputColumns.Where(c => Table.Columns.Contains(c)).ToArray();
+                if (validColumns.Length > 0)
+                {
+                    Table = Table.DefaultView.ToTable(false, validColumns);
+                }
             }
 
-            List<Object> outputList = null;
+            List<Object>? outputList = null;
             if(OutputFormat == OutputFormatEnum.ObjectArray)
             {
                 outputList = new List<Object>();
@@ -55,7 +59,11 @@ namespace XESmartTarget.Core.Utils
                 IDictionary<string, object> outputObject = (IDictionary<string, object>)data;
                 foreach (DataColumn dc in Table.Columns)
                 {
-                    outputObject.Add(dc.ColumnName, dr[dc.ColumnName]);
+                    var value = dr[dc.ColumnName];
+                    if (value != null && value != DBNull.Value)
+                    {
+                        outputObject.Add(dc.ColumnName, value);
+                    }
                 }
                 foreach (var k in StaticAttributes.Keys)
                 {
@@ -64,7 +72,7 @@ namespace XESmartTarget.Core.Utils
 
                 if (OutputFormat == OutputFormatEnum.ObjectArray)
                 {
-                    outputList.Add(outputObject);
+                    outputList?.Add(outputObject);
                 }
                 else if(OutputFormat== OutputFormatEnum.IndependentObjects) 
                 {
@@ -78,7 +86,7 @@ namespace XESmartTarget.Core.Utils
                 
             }
 
-            if (OutputFormat == OutputFormatEnum.ObjectArray)
+            if (OutputFormat == OutputFormatEnum.ObjectArray && outputList != null)
             {
                 string outString = JsonConvert.SerializeObject(outputList.ToArray(), converter);
                 if (Minify)
@@ -91,7 +99,7 @@ namespace XESmartTarget.Core.Utils
             {
                 dynamic data = new ExpandoObject();
                 IDictionary<string, object> outputObject = (IDictionary<string, object>)data;
-                outputObject.Add("data", outputList);
+                outputObject.Add("data", outputList ?? new List<Object>());
 
                 string outString = JsonConvert.SerializeObject(outputObject, converter);
                 if (Minify)

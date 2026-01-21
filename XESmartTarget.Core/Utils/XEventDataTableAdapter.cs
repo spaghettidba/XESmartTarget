@@ -11,7 +11,7 @@ namespace XESmartTarget.Core.Utils
         private static Logger logger = LogManager.GetCurrentClassLogger();
 
         public DataTable eventsTable { get; }
-        public List<OutputColumn> OutputColumns { get; set; }
+        public List<OutputColumn> OutputColumns { get; set; } = new List<OutputColumn>();
         public string? Filter { get; set; }
 
         public XEventDataTableAdapter(DataTable table)
@@ -57,7 +57,7 @@ namespace XESmartTarget.Core.Utils
                 if (!eventsTable.Columns.Contains("name") && (OutputColumns.Count == 0 || OutputColumns.Exists(x => x.Name == "name") || (Filter != null && Filter.Contains("name"))))
                 {
                     eventsTable.Columns.Add("name", typeof(String));
-                    eventsTable.Columns["name"].ExtendedProperties.Add("auto_column", true);
+                    eventsTable.Columns["name"]!.ExtendedProperties.Add("auto_column", true);
                 }
             }
         }
@@ -65,7 +65,7 @@ namespace XESmartTarget.Core.Utils
         // sets the column as hidden when not present in the list of visible columns
         private void SetColHiddenProperty(DataColumn cl_dt)
         {
-            OutputColumn currentCol = OutputColumns.FirstOrDefault(x => x.Name == cl_dt.ColumnName);
+            OutputColumn? currentCol = OutputColumns.FirstOrDefault(x => x.Name == cl_dt.ColumnName);
             if (currentCol != null)
             {
                 cl_dt.ExtendedProperties.Add("hidden", currentCol.Hidden);
@@ -96,7 +96,7 @@ namespace XESmartTarget.Core.Utils
                         )
                     )
                     {
-                        OutputColumn col = OutputColumns.FirstOrDefault(x => x.Name == fld.Key);
+                        OutputColumn? col = OutputColumns.FirstOrDefault(x => x.Name == fld.Key);
 
                         if (col == null)
                         {
@@ -107,7 +107,7 @@ namespace XESmartTarget.Core.Utils
                             };
                         }
 
-                        Type t;
+                        Type? t;
                         DataColumn dc;
                         bool disallowed = false;
                         if (DataTableTSQLAdapter.AllowedDataTypes.Contains(fld.Value.GetType().ToString()))
@@ -118,7 +118,7 @@ namespace XESmartTarget.Core.Utils
                         {
                             t = Type.GetType("System.String");
                         }
-                        dc = eventsTable.Columns.Add(fld.Key, t);
+                        dc = eventsTable.Columns.Add(fld.Key, t ?? typeof(string));
                         dc.ExtendedProperties.Add("subtype", "field");
                         dc.ExtendedProperties.Add("disallowedtype", disallowed);
                         dc.ExtendedProperties.Add("calculated", false);
@@ -138,7 +138,7 @@ namespace XESmartTarget.Core.Utils
                         )
                     )
                     {
-                        OutputColumn col = OutputColumns.FirstOrDefault(x => x.Name == act.Key);
+                        OutputColumn? col = OutputColumns.FirstOrDefault(x => x.Name == act.Key);
 
                         if (col == null)
                         {
@@ -149,7 +149,7 @@ namespace XESmartTarget.Core.Utils
                             };
                         }
 
-                        Type t;
+                        Type? t;
                         DataColumn dc;
                         bool disallowed = false;
                         if (DataTableTSQLAdapter.AllowedDataTypes.Contains(act.Value.GetType().ToString()))
@@ -160,7 +160,7 @@ namespace XESmartTarget.Core.Utils
                         {
                             t = Type.GetType("System.String");
                         }
-                        dc = eventsTable.Columns.Add(act.Key, t);
+                        dc = eventsTable.Columns.Add(act.Key, t ?? typeof(string));
                         dc.ExtendedProperties.Add("subtype", "action");
                         dc.ExtendedProperties.Add("disallowedtype", disallowed);
                         dc.ExtendedProperties.Add("calculated", false);
@@ -219,7 +219,8 @@ namespace XESmartTarget.Core.Utils
             {
                 if (row.Table.Columns.Contains(fld.Key))
                 {
-                    if ((bool)row.Table.Columns[fld.Key].ExtendedProperties["disallowedtype"])
+                    var extProps = row.Table.Columns[fld.Key]!.ExtendedProperties;
+                    if (extProps["disallowedtype"] is bool disallowed && disallowed)
                     {
                         row.SetField(fld.Key, fld.Value.ToString());
                     }
@@ -234,7 +235,8 @@ namespace XESmartTarget.Core.Utils
             {
                 if (row.Table.Columns.Contains(act.Key))
                 {
-                    if ((bool)row.Table.Columns[act.Key].ExtendedProperties["disallowedtype"])
+                    var extProps = row.Table.Columns[act.Key]!.ExtendedProperties;
+                    if (extProps["disallowedtype"] is bool disallowed && disallowed)
                     {
                         row.SetField(act.Key, act.Value.ToString());
                     }

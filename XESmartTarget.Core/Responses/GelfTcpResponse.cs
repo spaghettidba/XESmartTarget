@@ -17,13 +17,13 @@ namespace XESmartTarget.Core.Responses
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
 
-        public string ServerName { get; set; }
+        public string? ServerName { get; set; }
         public int Port { get; set; }
         public bool Encrypt { get; set; }
         public bool TrustServerCertificate { get; set; }
 
         protected DataTable EventsTable = new DataTable("events");
-        private XEventDataTableAdapter xeadapter;
+        private XEventDataTableAdapter? xeadapter;
         private JsonSerializerSettings jsonSettings;
 
         public GelfTcpResponse()

@@ -10,13 +10,13 @@ namespace XESmartTarget.Core.Responses
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
 
-        public string OutputMeasurement { get; set; }
+        public string OutputMeasurement { get; set; } = string.Empty;
         public List<string> OutputTags { get; set; } = new List<string>();
         public List<string> OutputFields { get; set; } = new List<string>();
 
         protected DataTable EventsTable { get; set; } = new DataTable("events");
 
-        private XEventDataTableAdapter xeadapter;
+        private XEventDataTableAdapter? xeadapter;
 
         public TelegrafAppenderResponse()
         {

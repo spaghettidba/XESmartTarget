@@ -8,7 +8,7 @@ namespace XESmartTarget.Core.Utils
     public class DataTableCSVAdapter
     {
         private DataTable Table { get; set; }
-        public string[] OutputColumns { get; set; }
+        public string[] OutputColumns { get; set; } = Array.Empty<string>();
         public String OutputFile { get; set; }
 
         private bool headersWritten = false;
@@ -17,16 +17,16 @@ namespace XESmartTarget.Core.Utils
         {
         }
 
-        public DataTableCSVAdapter(DataTable table, String outFile) : this(table, outFile, null)
+        public DataTableCSVAdapter(DataTable table, String? outFile) : this(table, outFile, null)
         {
         }
 
 
-        public DataTableCSVAdapter(DataTable table, String outFile, string[] outColumns)
+        public DataTableCSVAdapter(DataTable table, String? outFile, string[]? outColumns)
         {
-            OutputFile = outFile;
+            OutputFile = outFile ?? String.Empty;
             Table = table;
-            OutputColumns = outColumns;
+            OutputColumns = outColumns ?? Array.Empty<string>();
         }
 
         [MethodImpl(MethodImplOptions.Synchronized)]

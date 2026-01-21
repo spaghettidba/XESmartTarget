@@ -11,7 +11,7 @@ namespace XESmartTarget.Core.Responses
             Field
         }
 
-        private string _name;
+        private string _name = string.Empty;
 
         public string Name {
             get
@@ -31,8 +31,8 @@ namespace XESmartTarget.Core.Responses
 
         public virtual bool Calculated { get; set; } = false;
         public bool Hidden { get; set; } = false;
-        public string Expression { get; set; }
-        public string Alias { get; set; }
+        public string Expression { get; set; } = string.Empty;
+        public string Alias { get; set; } = string.Empty;
         public ColType ColumnType { get; set; } = ColType.Column;
 
         public OutputColumn()
@@ -57,10 +57,9 @@ namespace XESmartTarget.Core.Responses
         // This is particularly useful when reading
         // the configuration from a .json file, in order
         // to keep it as simple as possible
-        public static implicit operator OutputColumn(string name)
+        public static implicit operator OutputColumn(string? name)
         {
-            OutputColumn result = null;
-            result = new OutputColumn(name);
+            OutputColumn result = new OutputColumn(name ?? string.Empty);
             return result;
         }
 

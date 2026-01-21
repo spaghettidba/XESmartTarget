@@ -14,7 +14,7 @@ namespace XESmartTarget.Core.Utils
             this.eventsTable = eventsTable;
         }
 
-        public string OutputMeasurement { get; set; }
+        public string OutputMeasurement { get; set; } = string.Empty;
 
         internal void WriteToStdOut(string OutputMeasurement)
         {
@@ -35,7 +35,10 @@ namespace XESmartTarget.Core.Utils
         {
             foreach (DataRow dr in eventsTable.Rows)
             {
-                var dtOffs = new DateTimeOffset((DateTime)dr["collection_time"]);
+                if (dr["collection_time"] is not DateTime collectionTime)
+                    continue;
+
+                var dtOffs = new DateTimeOffset(collectionTime);
                 var point = PointData.Measurement(OutputMeasurement).Timestamp(dtOffs, WritePrecision.Ns);
 
                 foreach (DataColumn dc in eventsTable.Columns)
@@ -43,15 +46,18 @@ namespace XESmartTarget.Core.Utils
                     OutputColumn.ColType prop = OutputColumn.ColType.Column;
                     if (dc.ExtendedProperties.ContainsKey("coltype"))
                     {
-                        prop = (OutputColumn.ColType)dc.ExtendedProperties["coltype"];
+                        prop = (OutputColumn.ColType)dc.ExtendedProperties["coltype"]!;
                     }
                     if (prop == OutputColumn.ColType.Tag)
                     {
-                        point = point.Tag(dc.ColumnName, dr[dc.ColumnName].ToString());
+                        point = point.Tag(dc.ColumnName, dr[dc.ColumnName]?.ToString() ?? string.Empty);
                     }
                     else if (prop == OutputColumn.ColType.Field)
                     {
                         var colValue = dr[dc.ColumnName];
+                        if (colValue == null || colValue == DBNull.Value)
+                            continue;
+
                         if (colValue is bool)
                         {
                             point = point.Field(dc.ColumnName, Convert.ToBoolean(colValue));
@@ -68,15 +74,15 @@ namespace XESmartTarget.Core.Utils
                         {
                             point = point.Field(dc.ColumnName, Convert.ToSingle(colValue));
                         }
-                        else if (colValue is long || colValue is int || colValue is short || colValue is sbyte || colValue is Int16 || colValue is Int32 || colValue is Int64)
+                        else if (colValue is long or int or short or sbyte or Int16 or Int32 or Int64)
                         {
                             point = point.Field(dc.ColumnName, Convert.ToInt64(colValue));
                         }
                         else if (colValue is string)
                         {
-                            point = point.Field(dc.ColumnName, Convert.ToString(colValue));
+                            point = point.Field(dc.ColumnName, Convert.ToString(colValue) ?? string.Empty);
                         }
-                        else if (colValue is ulong || colValue is uint || colValue is ushort || colValue is byte || colValue is UInt16 || colValue is UInt32 || colValue is UInt64)
+                        else if (colValue is ulong or uint or ushort or byte or UInt16 or UInt32 or UInt64)
                         {
                             point = point.Field(dc.ColumnName, Convert.ToUInt64(colValue));
                         }

@@ -18,7 +18,7 @@ namespace XESmartTarget.Core.Responses
             TrustServerCertificate = true;
         }
 
-        public string TableName { get; set; }
+        public string TableName { get; set; } = string.Empty;
         public string ServerName
         {
             get => ConnectionInfo.ServerName;

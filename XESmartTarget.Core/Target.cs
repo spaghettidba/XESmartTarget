@@ -34,7 +34,7 @@ namespace XESmartTarget.Core
             get => ConnectionInfo.FirstOrDefault()?.UserName;
             set { 
                     foreach (var conn in ConnectionInfo)
-                        conn.UserName = value; 
+                        conn.UserName = value ?? string.Empty; 
                 }
         }
         public string? Password
@@ -43,7 +43,7 @@ namespace XESmartTarget.Core
             set
             {
                 foreach (var conn in ConnectionInfo)
-                    conn.Password = value;
+                    conn.Password = value ?? string.Empty;
             }
         }
         public string? DatabaseName
@@ -52,7 +52,7 @@ namespace XESmartTarget.Core
             set
             {
                 foreach (var conn in ConnectionInfo)
-                    conn.DatabaseName = value;
+                    conn.DatabaseName = value ?? string.Empty;
             }
         }
         public int? ConnectTimeout
@@ -80,7 +80,7 @@ namespace XESmartTarget.Core
             set
             {
                 foreach (var conn in ConnectionInfo)
-                    conn.Authentication = value;
+                    conn.Authentication = value ?? string.Empty;
             }
         }
 
