@@ -103,6 +103,8 @@ namespace XESmartTarget.Core.Responses
         protected DataTable EventsTable { get => eventsTable; set => eventsTable = value; }
 
         protected Task Uploader;
+        private CancellationTokenSource uploaderCancellationSource;
+        private bool uploaderStopped = false;
 
         private XEventDataTableAdapter xeadapter;
         protected string ConnectionString => ConnectionInfo.ConnectionString;
@@ -156,20 +158,22 @@ namespace XESmartTarget.Core.Responses
 
             if(Uploader == null)
             {
-                Uploader = Task.Factory.StartNew(() => UploadTaskMain());
+                uploaderCancellationSource = new CancellationTokenSource();
+                Uploader = Task.Factory.StartNew(() => UploadTaskMain(uploaderCancellationSource.Token), uploaderCancellationSource.Token);
             }
             UploaderStarted = true;
         }
 
 
-        protected void UploadTaskMain()
+        protected void UploadTaskMain(CancellationToken cancellationToken)
         {
-            while (true)
+            while (!cancellationToken.IsCancellationRequested && !uploaderStopped)
             {
                 try
                 {
                     Upload();
-                    Thread.Sleep(UploadIntervalSeconds * 1000);
+                    // Wait with cancellation support
+                    cancellationToken.WaitHandle.WaitOne(TimeSpan.FromSeconds(UploadIntervalSeconds));
                 }
                 catch(Exception e)
                 {
@@ -177,8 +181,14 @@ namespace XESmartTarget.Core.Responses
                     logger.Error(e);
                 }
             }
+            logger.Info($"Uploader task stopped for response {Id}");
         }
 
+        public override void Stop()
+        {
+            uploaderStopped = true;
+            uploaderCancellationSource?.Cancel();
+        }
 
         protected virtual void Upload()
         {
@@ -239,6 +249,10 @@ namespace XESmartTarget.Core.Responses
             clone.EventsTable = new DataTable("events");
             clone.xeadapter = null;
             clone.Uploader = null;
+            clone.uploaderCancellationSource = null;
+            clone.uploaderStopped = false;
+            clone.UploaderStarted = false;
+            clone.TargetTableCreated = false;
             return clone;
         }
     }

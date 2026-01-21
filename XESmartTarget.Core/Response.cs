@@ -36,5 +36,12 @@ namespace XESmartTarget.Core
             clone.Events = new List<string>(this.Events);
             return clone;
         }
+
+        // Virtual method to allow responses to clean up background tasks
+        public virtual void Stop()
+        {
+            // Default implementation does nothing
+            // Subclasses with background tasks should override this
+        }
     }
 }

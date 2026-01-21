@@ -88,7 +88,7 @@ namespace XESmartTarget.Core
         public string PostExecutionScript { get; set; }
 
         private bool stopped = false;
-        private List<Task> allTasks = new List<Task>();
+        private List<TargetWorker> allWorkers = new List<TargetWorker>();
 
         public void Start()
         {
@@ -116,16 +116,17 @@ namespace XESmartTarget.Core
                         worker.Responses.Add(pr);
                     }
 
-                    allTasks.Add(new Task(() => worker.Process()));
+                    allWorkers.Add(worker);
                 }
-                foreach (var t in allTasks)
-                {
-                    t.Start();
-                }
-                foreach (var t in allTasks)
-                {
-                    t.Wait();
-                }
+
+                // Create tasks array and start all workers
+                // keep the tasks in an array to be able to wait for all of them to complete
+                // toArray forces immediate execution of the Select LINQ query
+                // otherwise the tasks would not start until enumerated
+                var allTasks = allWorkers.Select(w => Task.Run(() => w.Process())).ToArray();
+                
+                // Wait for all tasks to complete
+                Task.WaitAll(allTasks);
             }
             catch (Exception e)
             {
@@ -134,9 +135,28 @@ namespace XESmartTarget.Core
             }
             logger.Info("Quitting");
         }
+        
         public void Stop()
         {
             stopped = true;
+            
+            logger.Info("Stopping all workers and responses...");
+            
+            // Stop all workers
+            foreach (var worker in allWorkers)
+            {
+                try
+                {
+                    worker.Stop();
+                }
+                catch (Exception e)
+                {
+                    logger.Error($"Error stopping worker");
+                    logger.Error(e);
+                }
+            }
+            
+            logger.Info("All workers stopped");
         }
     }
 }

@@ -234,6 +234,25 @@ namespace XESmartTarget.Core
 
             return eventStream;
         }
+
+        public void Stop()
+        {
+            stopped = true;
+            
+            // Stop all responses
+            foreach (var response in Responses)
+            {
+                try
+                {
+                    response.Stop();
+                }
+                catch (Exception e)
+                {
+                    logger.Error($"Error stopping response {response.Id}");
+                    logger.Error(e);
+                }
+            }
+        }
     }
     
 }

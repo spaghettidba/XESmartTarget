@@ -54,6 +54,8 @@ namespace XESmartTarget.Core.Responses
         private XEventDataTableAdapter xeadapter;
 
         private Task ReplayTask = null;
+        private CancellationTokenSource replayCancellationSource;
+        private bool replayStopped = false;
 
         public ReplayResponse()
         {
@@ -80,18 +82,50 @@ namespace XESmartTarget.Core.Responses
                 // start replay asynchronously
                 if (ReplayTask == null)
                 {
-                    ReplayTask = Task.Factory.StartNew(() => ReplayTaskMain());
+                    replayCancellationSource = new CancellationTokenSource();
+                    ReplayTask = Task.Factory.StartNew(() => ReplayTaskMain(replayCancellationSource.Token), replayCancellationSource.Token);
                 }
             }
         }
 
-        private void ReplayTaskMain()
+        private void ReplayTaskMain(CancellationToken cancellationToken)
         {
-            Thread.Sleep(DelaySeconds * 1000);
-            while (true)
+            // Initial delay with cancellation support
+            if (DelaySeconds > 0)
             {
-                Replay();
-                Thread.Sleep(ReplayIntervalSeconds * 1000);
+                if (cancellationToken.WaitHandle.WaitOne(TimeSpan.FromSeconds(DelaySeconds)))
+                    return; // Cancelled during initial delay
+            }
+
+            while (!cancellationToken.IsCancellationRequested && !replayStopped)
+            {
+                try
+                {
+                    Replay();
+                    // Wait with cancellation support
+                    if (ReplayIntervalSeconds > 0)
+                    {
+                        cancellationToken.WaitHandle.WaitOne(TimeSpan.FromSeconds(ReplayIntervalSeconds));
+                    }
+                }
+                catch (Exception e)
+                {
+                    logger.Error($"Error in replay task for response {Id}");
+                    logger.Error(e);
+                }
+            }
+            logger.Info($"Replay task stopped for response {Id}");
+        }
+
+        public override void Stop()
+        {
+            replayStopped = true;
+            replayCancellationSource?.Cancel();
+            
+            // Stop all replay workers
+            foreach (var worker in ReplayWorkers.Values)
+            {
+                worker.Stop();
             }
         }
 
@@ -169,6 +203,7 @@ namespace XESmartTarget.Core.Responses
 
         class ReplayWorker
         {
+            private static Logger logger = LogManager.GetCurrentClassLogger();
             private SqlConnection conn { get; set; }
 
             public int ReplayIntervalSeconds { get; set; } = 0;
@@ -178,6 +213,8 @@ namespace XESmartTarget.Core.Responses
             private bool stopped = false;
             private ConcurrentQueue<ReplayCommand> Commands = new ConcurrentQueue<ReplayCommand>();
             private Task runner;
+            private CancellationTokenSource cancellationSource;
+
             private void InitializeConnection()
             {
                 logger.Info(String.Format("Connecting to server {0} for replay...", ConnectionInfo.ServerName));
@@ -190,20 +227,22 @@ namespace XESmartTarget.Core.Responses
 
             public void Start()
             {
-                runner = Task.Factory.StartNew(() => Run());
+                cancellationSource = new CancellationTokenSource();
+                runner = Task.Factory.StartNew(() => Run(cancellationSource.Token), cancellationSource.Token);
             }
 
-            public void Run()
+            public void Run(CancellationToken cancellationToken)
             {
                 if (conn == null)
                 {
                     InitializeConnection();
                 }
-                while (!stopped)
+                while (!stopped && !cancellationToken.IsCancellationRequested)
                 {
                     if (Commands.Count == 0)
                     {
-                        Thread.Sleep(10);
+                        // Wait with cancellation support - use 10ms for better responsiveness
+                        cancellationToken.WaitHandle.WaitOne(TimeSpan.FromMilliseconds(10));
                         continue;
                     }
                     ReplayCommand cmd = null;
@@ -211,8 +250,19 @@ namespace XESmartTarget.Core.Responses
                     {
                         ExecuteCommand(cmd);
                     }
-                    Thread.Sleep(ReplayIntervalSeconds * 1000);
+                    if (ReplayIntervalSeconds > 0)
+                    {
+                        cancellationToken.WaitHandle.WaitOne(TimeSpan.FromSeconds(ReplayIntervalSeconds));
+                    }
                 }
+                
+                // Clean up connection
+                if (conn != null && conn.State == System.Data.ConnectionState.Open)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                }
+                logger.Info($"Replay worker {Name} stopped");
             }
 
             private void ExecuteCommand(ReplayCommand command)
@@ -233,7 +283,7 @@ namespace XESmartTarget.Core.Responses
                     SqlCommand cmd = new SqlCommand(command.CommandText);
                     cmd.Connection = conn;
                     cmd.ExecuteNonQuery();
-                    logger.Trace(String.Format("SUCCES - {0}", command.CommandText));
+                    logger.Trace(String.Format("SUCCESS - {0}", command.CommandText));
                 }
                 catch (SqlException e)
                 {
@@ -254,6 +304,7 @@ namespace XESmartTarget.Core.Responses
             public void Stop()
             {
                 stopped = true;
+                cancellationSource?.Cancel();
             }
 
             public void AppendCommand(ReplayCommand cmd)
@@ -280,6 +331,12 @@ namespace XESmartTarget.Core.Responses
                 ConnectTimeout = this.ConnectionInfo.ConnectTimeout,
                 TrustServerCertificate = this.ConnectionInfo.TrustServerCertificate
             };
+            clone.eventsTable = new DataTable("events");
+            clone.xeadapter = null;
+            clone.ReplayTask = null;
+            clone.replayCancellationSource = null;
+            clone.replayStopped = false;
+            clone.ReplayWorkers = new ConcurrentDictionary<int, ReplayWorker>();
             return clone;
         }
     }

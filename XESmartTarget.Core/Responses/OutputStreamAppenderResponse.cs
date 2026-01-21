@@ -88,6 +88,9 @@ namespace XESmartTarget.Core.Responses
         protected Task writerTask;
         private bool writerTaskStarted;
 
+        private CancellationTokenSource writerCancellationSource;
+        private bool writerStopped = false;
+
         public OutputStreamAppenderResponse()
         {
             Output = "stdout";
@@ -103,6 +106,8 @@ namespace XESmartTarget.Core.Responses
             clone.xeadapter = null;
             clone.writerTask = null;
             clone.writerTaskStarted = false;
+            clone.writerCancellationSource = null;
+            clone.writerStopped = false;
             return clone;
         }
 
@@ -130,19 +135,21 @@ namespace XESmartTarget.Core.Responses
         {
             if (writerTask == null)
             {
-                writerTask = Task.Factory.StartNew(() => WriteTaskMain());
+                writerCancellationSource = new CancellationTokenSource();
+                writerTask = Task.Factory.StartNew(() => WriteTaskMain(writerCancellationSource.Token), writerCancellationSource.Token);
             }
             writerTaskStarted = true;
         }
 
-        private void WriteTaskMain()
+        private void WriteTaskMain(CancellationToken cancellationToken)
         {
-            while (true)
+            while (!cancellationToken.IsCancellationRequested && !writerStopped)
             {
                 try
                 {
                     Write();
-                    Thread.Sleep(100);
+                    // Wait with cancellation support
+                    cancellationToken.WaitHandle.WaitOne(TimeSpan.FromMilliseconds(100));
                 }
                 catch (Exception e)
                 {
@@ -150,6 +157,14 @@ namespace XESmartTarget.Core.Responses
                     logger.Error(e);
                 }
             }
+            logger.Info($"Writer task stopped for response {Id}");
+        }
+
+        // Add method to stop the writer gracefully
+        public void Stop()
+        {
+            writerStopped = true;
+            writerCancellationSource?.Cancel();
         }
 
         protected void Write()
