@@ -9,9 +9,9 @@ namespace XESmartTarget.Core
 
         }
 
-        internal string Id { get; set; }
+        internal string Id { get; set; } = string.Empty;
 
-        public string Filter { get; set; }
+        public string? Filter { get; set; }
         public List<string> Events { get; set; } = new List<string>();
 
         public Dictionary<string, string> Tokens = new Dictionary<string, string>();

@@ -10,11 +10,11 @@ namespace XESmartTarget.Core
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
         internal List<Response> Responses { get; set; } = new List<Response>();
-        internal string SessionName { get; set; }            
+        internal string SessionName { get; set; }
         internal string ConnectionString => ConnectionInfo.ConnectionString;
         internal SqlConnectionInfo ConnectionInfo { get; set; } = new();
-        internal string PreExecutionScript { get; set; }
-        internal string PostExecutionScript { get; set; }           
+        internal string? PreExecutionScript { get; set; }
+        internal string? PostExecutionScript { get; set; }
 
         internal bool FailOnProcessingError { get; set; } = false;
         private bool stopped = false;
@@ -34,7 +34,7 @@ namespace XESmartTarget.Core
 
             XELiveEventStreamer? eventStream = null;
 
-            while (shouldContinue)
+            while (shouldContinue && !stopped)
             {
                 try
                 {
@@ -69,10 +69,19 @@ namespace XESmartTarget.Core
                     }
                     else
                     {
-                        Thread.Sleep(attempts * 15000); // linear reconnect backoff
+                        if (!stopped)
+                        {
+                            Thread.Sleep(attempts * 15000);
+                        }
                         continue;
                     }
                 }
+                
+                if (stopped)
+                {
+                    break;
+                }
+                
                 try
                 {
                     ProcessStreamData(eventStream);
@@ -92,6 +101,8 @@ namespace XESmartTarget.Core
                     }
                 }
             }
+            
+            logger.Info($"Worker stopped for session '{SessionName}' on server '{ConnectionInfo.ServerName}'");
         }
 
         private void ProcessStreamData(XELiveEventStreamer eventStream)
@@ -212,11 +223,11 @@ namespace XESmartTarget.Core
                     {
                         if (!r.Tokens.ContainsKey("ActualServerName"))
                         {
-                            r.Tokens.Add("ActualServerName", serverName);
+                            r.Tokens.Add("ActualServerName", serverName ?? string.Empty); 
                         }
                         else
                         {
-                            r.Tokens["ActualServerName"] = serverName;
+                            r.Tokens["ActualServerName"] = serverName ?? string.Empty; 
                         }
                     }
                         

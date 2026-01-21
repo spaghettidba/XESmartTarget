@@ -26,8 +26,10 @@ namespace XESmartTarget.Core
                     ConnectionInfo.Add(new SqlConnectionInfo { ServerName = value[i] });
             }
         }
-        public string SessionName { get; set; }
-        public string UserName
+        
+        public required string SessionName { get; set; }  
+        
+        public string? UserName
         {
             get => ConnectionInfo.FirstOrDefault()?.UserName;
             set { 
@@ -35,7 +37,7 @@ namespace XESmartTarget.Core
                         conn.UserName = value; 
                 }
         }
-        public string Password
+        public string? Password
         {
             get => ConnectionInfo.FirstOrDefault()?.Password;
             set
@@ -44,7 +46,7 @@ namespace XESmartTarget.Core
                     conn.Password = value;
             }
         }
-        public string DatabaseName
+        public string? DatabaseName
         {
             get => ConnectionInfo.FirstOrDefault()?.DatabaseName;
             set
@@ -72,7 +74,7 @@ namespace XESmartTarget.Core
             }
         }
 
-        public string Authentication
+        public string? Authentication
         {
             get => ConnectionInfo.FirstOrDefault()?.Authentication;
             set
@@ -84,11 +86,11 @@ namespace XESmartTarget.Core
 
         public List<SqlConnectionInfo> ConnectionInfo { get; set; } = new();
         public bool FailOnProcessingError { get; set; } = false;
-        public string PreExecutionScript { get; set; }
-        public string PostExecutionScript { get; set; }
+        public string? PreExecutionScript { get; set; }
+        public string? PostExecutionScript { get; set; }
 
-        private bool stopped = false;
         private List<TargetWorker> allWorkers = new List<TargetWorker>();
+        private readonly CancellationTokenSource stopTokenSource = new CancellationTokenSource();
 
         public void Start()
         {
@@ -138,8 +140,6 @@ namespace XESmartTarget.Core
         
         public void Stop()
         {
-            stopped = true;
-            
             logger.Info("Stopping all workers and responses...");
             
             // Stop all workers
@@ -155,8 +155,22 @@ namespace XESmartTarget.Core
                     logger.Error(e);
                 }
             }
+
+            // Stop all responses
+            foreach (var response in Responses)
+            {
+                try
+                {
+                    response.Stop();
+                }
+                catch (Exception e)
+                {
+                    logger.Error($"Error stopping response {response.Id}");
+                    logger.Error(e);
+                }
+            }
             
-            logger.Info("All workers stopped");
+            logger.Info("All workers and responses stopped");
         }
     }
 }

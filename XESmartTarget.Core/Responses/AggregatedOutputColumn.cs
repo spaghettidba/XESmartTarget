@@ -18,7 +18,7 @@ namespace XESmartTarget.Core.Responses
 
         public AggregationType Aggregation { get; private set; }
 
-        public string BaseColumn { get; private set; }
+        public string BaseColumn { get; private set; } = string.Empty;
 
 
         public AggregatedOutputColumn() : base()
@@ -46,11 +46,11 @@ namespace XESmartTarget.Core.Responses
         }
 
 
-        public static AggregatedOutputColumn TryParse(string name)
+        public static AggregatedOutputColumn? TryParse(string name)
         {
             // looks for aggregation expressions in the name string
             // example: COUNT(someColumn), MIN(someColumn) etc...
-            AggregatedOutputColumn result = null;
+            AggregatedOutputColumn? result = null;
             bool isAggregated = false;
 
             Match aggregationMatch = Regex.Match(name, @"(?<expression>\b(?<aggregationType>(COUNT|SUM|MAX|MIN))\s*\((?<baseColumn>(\w+|\*))\))\s+AS\s+(?<alias>\w+)", RegexOptions.IgnoreCase);

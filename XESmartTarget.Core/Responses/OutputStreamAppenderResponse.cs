@@ -11,9 +11,9 @@ namespace XESmartTarget.Core.Responses
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
 
-        private static object Lock = new object();
+        private readonly object writeLock = new object();
         public List<string> OutputColumns { get; set; } = new List<string>();
-        public string OutputMeasurement { get; set; }
+        public string? OutputMeasurement { get; set; }
         public DataTableJsonAdapter.OutputFormatEnum JsonOutputFormat { get; set; }
 
         private OutputFormatEnum _outputFormat;
@@ -35,10 +35,10 @@ namespace XESmartTarget.Core.Responses
             }
         }
 
-        protected TextWriter Writer { get; set; }
-        private string _output;
+        protected TextWriter? Writer { get; set; }
+        private string? _output;
 
-        protected virtual string Output
+        protected virtual string? Output
         {
             get 
             {
@@ -47,15 +47,15 @@ namespace XESmartTarget.Core.Responses
             set 
             {
                 _output = value;
-                if(_output.Equals("stderr",StringComparison.CurrentCultureIgnoreCase))
+                if(_output != null && _output.Equals("stderr",StringComparison.CurrentCultureIgnoreCase))
                 {
                     Writer = Console.Error;
                 }
-                else if (_output.Equals("stdout", StringComparison.CurrentCultureIgnoreCase))
+                else if (_output != null && _output.Equals("stdout", StringComparison.CurrentCultureIgnoreCase))
                 {
                     Writer = Console.Out;
                 }
-                else if (isValidPath(_output))
+                else if (_output != null && isValidPath(_output))
                 {
                     Writer = new StreamWriter(new FileStream(_output, FileMode.Append, FileAccess.Write));
                 }
@@ -84,11 +84,11 @@ namespace XESmartTarget.Core.Responses
         }
 
         protected DataTable EventsTable { get; set; } = new DataTable("events");
-        private XEventDataTableAdapter xeadapter;
-        protected Task writerTask;
+        private XEventDataTableAdapter? xeadapter;
+        protected Task? writerTask;
         private bool writerTaskStarted;
 
-        private CancellationTokenSource writerCancellationSource;
+        private CancellationTokenSource? writerCancellationSource;
         private bool writerStopped = false;
 
         public OutputStreamAppenderResponse()
@@ -153,18 +153,32 @@ namespace XESmartTarget.Core.Responses
                 }
                 catch (Exception e)
                 {
-                    logger.Error("Error writing to the output stream");
+                    logger.Error($"Error writing to the output stream for response {Id}");
                     logger.Error(e);
                 }
             }
             logger.Info($"Writer task stopped for response {Id}");
         }
 
-        // Add method to stop the writer gracefully
-        public void Stop()
+
+        public override void Stop()
         {
             writerStopped = true;
             writerCancellationSource?.Cancel();
+            
+            // Dispose file writer if it's not stdout/stderr
+            if (Writer != null && Writer != Console.Out && Writer != Console.Error)
+            {
+                try
+                {
+                    Writer.Flush();
+                    Writer.Dispose();
+                }
+                catch (Exception e)
+                {
+                    logger.Warn($"Error disposing writer for response {Id}: {e.Message}");
+                }
+            }
         }
 
         protected void Write()
@@ -175,7 +189,8 @@ namespace XESmartTarget.Core.Responses
                 {
                     return;
                 }
-                lock (Lock)
+
+                lock (writeLock)
                 {
                     //
                     // before writing, replace tokens

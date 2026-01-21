@@ -58,7 +58,7 @@ namespace XESmartTarget.Core.Utils
                 },
                 CancellationToken.None  
             );
-            Task.WaitAll(eventTask);
+            await eventTask;
 
             logger.Trace(String.Format("Parsing finished {0}", DateTime.Now));
 
@@ -114,7 +114,7 @@ namespace XESmartTarget.Core.Utils
                             },
                             CancellationToken.None 
                         );
-                        Task.WaitAll(eventTask2);
+                        await eventTask2;
                     }
                 }
             }

@@ -7,7 +7,7 @@ namespace XESmartTarget.Core.Config
 {
     public class TargetConfig
     {
-        public Target[] Target { get; set; }
+        public required Target[] Target { get; set; }
 
         public static Dictionary<string, object> GlobalVariables = new Dictionary<string, object>();
 
@@ -31,7 +31,10 @@ namespace XESmartTarget.Core.Config
 
             var dictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(Samples.Sample.ToString());
             ModelConverter converter = new ModelConverter();
-            TargetConfig tc = (TargetConfig)converter.Deserialize(dictionary, typeof(TargetConfig));
+            if (dictionary != null)
+            {
+                TargetConfig tc = (TargetConfig)converter.Deserialize(dictionary, typeof(TargetConfig));
+            }
         }
 
         public static TargetConfig LoadFromFile(string path)
@@ -51,7 +54,14 @@ namespace XESmartTarget.Core.Config
                 var dictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonMin);
 
                 ModelConverter converter = new ModelConverter();
-                return (TargetConfig)converter.Deserialize(dictionary, typeof(TargetConfig));
+                if (dictionary != null)
+                {
+                    return (TargetConfig)converter.Deserialize(dictionary, typeof(TargetConfig));
+                }
+                else 
+                {
+                    throw new Exception("Failed to deserialize configuration file.");
+                }
             }
         }
     }
