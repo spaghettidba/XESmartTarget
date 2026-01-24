@@ -338,9 +338,9 @@ namespace XESmartTarget.Core.Responses
                 TrustServerCertificate = this.ConnectionInfo.TrustServerCertificate
             };
             clone.eventsTable = new DataTable("events");
-            clone.xeadapter = null!;
-            clone.ReplayTask = null!;
-            clone.replayCancellationSource = null!;
+            clone.xeadapter = null;
+            clone.ReplayTask = null;
+            clone.replayCancellationSource = null;
             clone.replayStopped = false;
             clone.ReplayWorkers = new ConcurrentDictionary<int, ReplayWorker>();
             return clone;

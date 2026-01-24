@@ -142,7 +142,7 @@ namespace XESmartTarget.Core.Responses
                 TrustServerCertificate = this.ConnectionInfo.TrustServerCertificate
             };
             clone.EventsTable = new DataTable("events");
-            clone.xeadapter = null!;
+            clone.xeadapter = null;
             return clone;
         }
     }
