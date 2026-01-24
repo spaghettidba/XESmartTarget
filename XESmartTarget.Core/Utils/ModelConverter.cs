@@ -43,7 +43,9 @@ namespace XESmartTarget.Core.Utils
 
             JToken? token = JsonConvert.DeserializeObject<JToken>(json);
             var dictionary = token?.ToObject<Dictionary<string, object>>();
-            return Deserialize(dictionary!, type);
+            if (dictionary == null)
+                return null;
+            return Deserialize(dictionary, type);
         }
 
         public object Deserialize(IDictionary<string, object> dictionary, Type type)

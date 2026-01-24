@@ -105,7 +105,7 @@ namespace XESmartTarget
             // ******************************************
             Uri? outUri;
             bool deleteTempFile = false;
-            bool isUri = Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri!) && (outUri.Scheme == Uri.UriSchemeHttp || outUri.Scheme == Uri.UriSchemeHttps);
+            bool isUri = Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri) && outUri != null && (outUri.Scheme == Uri.UriSchemeHttp || outUri.Scheme == Uri.UriSchemeHttps);
 
             if (isUri)
             {

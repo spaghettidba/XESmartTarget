@@ -170,7 +170,7 @@ namespace XESmartTarget.Core.Responses
                     }
 
                     ReplayWorker? rw = null;
-                    if (ReplayWorkers.TryGetValue(session_id, out rw!))
+                    if (ReplayWorkers.TryGetValue(session_id, out rw))
                     {
                         rw.AppendCommand(command);
                     }
@@ -246,7 +246,7 @@ namespace XESmartTarget.Core.Responses
                         continue;
                     }
                     ReplayCommand? cmd = null;
-                    if (Commands.TryDequeue(out cmd!))
+                    if (Commands.TryDequeue(out cmd))
                     {
                         ExecuteCommand(cmd);
                     }
