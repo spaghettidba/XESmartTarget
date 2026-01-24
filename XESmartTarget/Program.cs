@@ -13,7 +13,7 @@ namespace XESmartTarget
     class Program
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
-        private static CancellationTokenSource source;
+        private static CancellationTokenSource source = null!;
 
         static void Main(string[] args)
         {
@@ -28,7 +28,7 @@ namespace XESmartTarget
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(Process.GetCurrentProcess().MainModule.FileName);
+                FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(Process.GetCurrentProcess().MainModule!.FileName);
                 version = fvi.FileMajorPart.ToString() + "." + fvi.FileMinorPart.ToString() + "." + fvi.FileBuildPart.ToString();
                 if (!options.NoLogo)
                 {
@@ -40,8 +40,8 @@ namespace XESmartTarget
             else
             {
                 var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
-                var assemblyVersion = assembly.GetName().Version;
-                if (version != null)
+                var assemblyVersion = assembly.GetName().Version!;
+                if (assemblyVersion != null)
                     version = $"{assemblyVersion.Major}.{assemblyVersion.Minor}.{assemblyVersion.Build}";
                 else
                     version = "Linux";
@@ -103,9 +103,9 @@ namespace XESmartTarget
             // ******************************************
             // check the configuration file: is it a URI?
             // ******************************************
-            Uri outUri;
+            Uri? outUri;
             bool deleteTempFile = false;
-            bool isUri = Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri) && (outUri.Scheme == Uri.UriSchemeHttp || outUri.Scheme == Uri.UriSchemeHttps);
+            bool isUri = Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri!) && (outUri.Scheme == Uri.UriSchemeHttp || outUri.Scheme == Uri.UriSchemeHttps);
 
             if (isUri)
             {
@@ -113,11 +113,11 @@ namespace XESmartTarget
                 //if it exists, otherwise execution proceeds with user passed uri
                 try
                 {
-                    (string username, string password) = (null, null);
+                    (string? username, string? password) = (null, null);
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                        (username, password) = WindowsCredentialHelper.ReadCredential(outUri.OriginalString);
+                        (username, password) = WindowsCredentialHelper.ReadCredential(outUri!.OriginalString);
                     else
-                        (username, password) = LinuxCredentialHelper.ReadCredential(outUri.OriginalString);
+                        (username, password) = LinuxCredentialHelper.ReadCredential(outUri!.OriginalString);
 
                     if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
                     {
@@ -128,7 +128,7 @@ namespace XESmartTarget
                         };
 
                         options.ConfigurationFile = uriBuilder.Uri.ToString();
-                        Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri);
+                        Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri!);
                     }
                 }
                 catch (Exception ex)
@@ -145,7 +145,7 @@ namespace XESmartTarget
                     client.DefaultRequestHeaders.Add("User-Agent", $"XESmartTarget/{version} (XESmartTarget; copyright spaghettidba)");
                     try
                     {
-                        if (!String.IsNullOrEmpty(outUri.UserInfo))
+                        if (!String.IsNullOrEmpty(outUri!.UserInfo))
                         {
                             var byteArray = Encoding.ASCII.GetBytes(outUri.UserInfo);
                             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
@@ -239,7 +239,7 @@ namespace XESmartTarget
             }
 
 
-            Console.CancelKeyPress += delegate (object sender, ConsoleCancelEventArgs e)
+            Console.CancelKeyPress += delegate (object? sender, ConsoleCancelEventArgs e)
             {
                 e.Cancel = true;
                 logger.Info("Received shutdown signal...");
@@ -302,7 +302,7 @@ namespace XESmartTarget
     class Options
     {
         [Option('F', "File", Default = "XESmartTarget.json", HelpText = "Configuration file")]
-        public string ConfigurationFile { get; set; }
+        public string ConfigurationFile { get; set; } = "XESmartTarget.json";
 
         [Option('N', "NoLogo", Default = false, HelpText = "Hides copyright banner at startup")]
         public bool NoLogo { get; set; }
@@ -311,18 +311,18 @@ namespace XESmartTarget
         public bool Quiet { get; set; }
 
         [Option('G', "GlobalVariables", HelpText = "Global variables in the form key1=value1 key2=value2")]
-        public IEnumerable<string> GlobalVariables { get; set; }
+        public IEnumerable<string> GlobalVariables { get; set; } = Enumerable.Empty<string>();
 
         [Option('L', "LogFile", HelpText = "Log File")]
-        public string LogFile { get; set; }
+        public string? LogFile { get; set; }
 
         [Option('T', "Timeout", HelpText = "Timeout in seconds")]
         public int TimeoutSeconds { get; set; } = -1;
 
         [Option('P', "PreExecutionScript", HelpText = "Pre-Execution Script File")]
-        public string PreExecutionScript { get; set; }
+        public string? PreExecutionScript { get; set; }
 
         [Option('O', "PostExecutionScript", HelpText = "Post-Execution Script File")]
-        public string PostExecutionScript { get; set; }
+        public string? PostExecutionScript { get; set; }
     }
 }

@@ -10,7 +10,7 @@ namespace XESmartTarget.Core
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
         internal List<Response> Responses { get; set; } = new List<Response>();
-        internal string SessionName { get; set; }
+        internal string SessionName { get; set; } = string.Empty;
         internal string ConnectionString => ConnectionInfo.ConnectionString;
         internal SqlConnectionInfo ConnectionInfo { get; set; } = new();
         internal string? PreExecutionScript { get; set; }

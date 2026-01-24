@@ -23,7 +23,7 @@ namespace XelToCsv
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
             string version = fvi.FileMajorPart.ToString() + "." + fvi.FileMinorPart.ToString() + "." + fvi.FileBuildPart.ToString();
-            string name = assembly.FullName;
+            string? name = assembly.FullName;
             logger.Info(name + " " + version);
 
             logger.Info("Converting {0} to {1}", options.SourceFile, options.DestinationFile);
@@ -62,10 +62,10 @@ namespace XelToCsv
         class Options
         {
             [Option('s', "SourceFile", Required = true, HelpText = "Source file")]
-            public string SourceFile { get; set; }
+            public string SourceFile { get; set; } = string.Empty;
 
             [Option('d', "DestinationFile", Required = true, HelpText = "Destination file")]
-            public string DestinationFile { get; set; }
+            public string DestinationFile { get; set; } = string.Empty;
 
         }
 

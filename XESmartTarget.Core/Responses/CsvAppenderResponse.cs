@@ -71,7 +71,7 @@ namespace XESmartTarget.Core.Responses
         {
             // Put columns in the correct order
             string[] outputColumnNames = (
-                from col in xeadapter.OutputColumns
+                from col in xeadapter?.OutputColumns ?? Enumerable.Empty<OutputColumn>()
                 where eventsTable.Columns.Contains(col.Alias)
                 select col.Alias
             ).ToArray();

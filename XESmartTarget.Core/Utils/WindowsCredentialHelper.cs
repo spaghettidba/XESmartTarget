@@ -59,12 +59,12 @@ namespace XESmartTarget.Core.Utils
             {
                 CREDENTIAL cred = Marshal.PtrToStructure<CREDENTIAL>(credPointer);
 
-                string username = Marshal.PtrToStringUni(cred.UserName);
-                string password = Marshal.PtrToStringUni(cred.CredentialBlob, (int)cred.CredentialBlobSize / 2);
+                string? username = Marshal.PtrToStringUni(cred.UserName);
+                string? password = Marshal.PtrToStringUni(cred.CredentialBlob, (int)cred.CredentialBlobSize / 2);
 
                 CredFree(credPointer);
 
-                return (username, password);
+                return (username ?? string.Empty, password ?? string.Empty);
             }
             else
                 return ("", "");

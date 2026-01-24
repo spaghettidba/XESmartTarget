@@ -11,7 +11,7 @@ namespace XESmartTarget.Core.Responses
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
 
-        public string TSQL { get; set; }
+        public string TSQL { get; set; } = string.Empty;
         public string ServerName
         {
             get => ConnectionInfo.ServerName;
@@ -52,7 +52,7 @@ namespace XESmartTarget.Core.Responses
         private SqlConnectionInfo ConnectionInfo { get; set; } = new();   
 
         protected DataTable EventsTable = new DataTable("events");
-        private XEventDataTableAdapter xeadapter;
+        private XEventDataTableAdapter? xeadapter;
 
         public override void Process(IXEvent evt)
         {
@@ -142,7 +142,7 @@ namespace XESmartTarget.Core.Responses
                 TrustServerCertificate = this.ConnectionInfo.TrustServerCertificate
             };
             clone.EventsTable = new DataTable("events");
-            clone.xeadapter = null;
+            clone.xeadapter = null!;
             return clone;
         }
     }

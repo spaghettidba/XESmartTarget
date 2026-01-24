@@ -102,11 +102,11 @@ namespace XESmartTarget.Core.Responses
         protected List<OutputColumn> _outputColumns { get; set; } = new List<OutputColumn>(); 
         protected DataTable EventsTable { get => eventsTable; set => eventsTable = value; }
 
-        protected Task Uploader;
-        private CancellationTokenSource uploaderCancellationSource;
+        protected Task? Uploader;
+        private CancellationTokenSource? uploaderCancellationSource;
         private bool uploaderStopped = false;
 
-        private XEventDataTableAdapter xeadapter;
+        private XEventDataTableAdapter? xeadapter;
         protected string ConnectionString => ConnectionInfo.ConnectionString;
         private SqlConnectionInfo ConnectionInfo { get; set; } = new();
 
@@ -247,9 +247,9 @@ namespace XESmartTarget.Core.Responses
             // deep copy of complex members
             clone._outputColumns = new List<OutputColumn>(this._outputColumns);
             clone.EventsTable = new DataTable("events");
-            clone.xeadapter = null;
-            clone.Uploader = null;
-            clone.uploaderCancellationSource = null;
+            clone.xeadapter = null!;
+            clone.Uploader = null!;
+            clone.uploaderCancellationSource = null!;
             clone.uploaderStopped = false;
             clone.UploaderStarted = false;
             clone.TargetTableCreated = false;
