@@ -221,20 +221,23 @@ namespace XESmartTarget.Core.Responses
         // https://stackoverflow.com/a/33400729
         class DataRowConverter : JsonConverter<DataRow>
         {
-            public override DataRow ReadJson(JsonReader reader, Type objectType, DataRow existingValue, bool hasExistingValue, JsonSerializer serializer)
+            public override DataRow ReadJson(JsonReader reader, Type objectType, DataRow? existingValue, bool hasExistingValue, JsonSerializer serializer)
             {
                 throw new NotImplementedException(string.Format("{0} is only implemented for writing.", this));
             }
 
-            public override void WriteJson(JsonWriter writer, DataRow row, JsonSerializer serializer)
+            public override void WriteJson(JsonWriter writer, DataRow? row, JsonSerializer serializer)
             {
+                if (row == null)
+                    throw new JsonSerializationException("row is null");
+                    
                 var table = row.Table;
                 if (table == null)
                     throw new JsonSerializationException("no table");
                 var contractResolver = serializer.ContractResolver as DefaultContractResolver;
 
                 writer.WriteStartObject();
-                foreach (DataColumn col in row.Table.Columns)
+                foreach (DataColumn col in table.Columns)
                 {
                     var value = row[col];
 

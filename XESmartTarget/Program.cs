@@ -13,7 +13,7 @@ namespace XESmartTarget
     class Program
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
-        private static CancellationTokenSource source = null!;
+        private static CancellationTokenSource? source;
 
         static void Main(string[] args)
         {
@@ -40,7 +40,7 @@ namespace XESmartTarget
             else
             {
                 var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
-                var assemblyVersion = assembly.GetName().Version!;
+                var assemblyVersion = assembly.GetName().Version;
                 if (assemblyVersion != null)
                     version = $"{assemblyVersion.Major}.{assemblyVersion.Minor}.{assemblyVersion.Build}";
                 else
@@ -128,7 +128,7 @@ namespace XESmartTarget
                         };
 
                         options.ConfigurationFile = uriBuilder.Uri.ToString();
-                        Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri!);
+                        Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri);
                     }
                 }
                 catch (Exception ex)
@@ -248,7 +248,7 @@ namespace XESmartTarget
                 {
                     t.Stop();
                 }
-                source.CancelAfter(TimeSpan.FromSeconds(10)); // give a 10 seconds cancellation grace period 
+                source?.CancelAfter(TimeSpan.FromSeconds(10)); // give a 10 seconds cancellation grace period 
             };
 
             logger.Info("Starting Target");

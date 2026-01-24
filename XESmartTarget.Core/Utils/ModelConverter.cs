@@ -33,7 +33,14 @@ namespace XESmartTarget.Core.Utils
 
         public T Deserialize<T>(string json)
         {
-            return (T)(Deserialize(json, typeof(T)) ?? Activator.CreateInstance(typeof(T))!);
+            var result = Deserialize(json, typeof(T));
+            if (result != null)
+                return (T)result;
+            
+            var instance = Activator.CreateInstance(typeof(T));
+            if (instance == null)
+                throw new InvalidOperationException($"Failed to create instance of type {typeof(T)}");
+            return (T)instance;
         }
 
         public object? Deserialize(string json, Type type)
@@ -166,7 +173,9 @@ namespace XESmartTarget.Core.Utils
             catch (Exception ex)
             {
                 Console.WriteLine("Exception during instance creation: " + ex.Message);
+#pragma warning disable SYSLIB0050 // FormatterServices.GetUninitializedObject is obsolete but needed as fallback
                 return FormatterServices.GetUninitializedObject(type);
+#pragma warning restore SYSLIB0050
             }
         }
 

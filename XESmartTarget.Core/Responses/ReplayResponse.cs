@@ -267,7 +267,13 @@ namespace XESmartTarget.Core.Responses
 
             private void ExecuteCommand(ReplayCommand command)
             {
-                if (conn!.State != System.Data.ConnectionState.Open)
+                if (conn == null)
+                {
+                    logger.Error("Connection is null, cannot execute command");
+                    return;
+                }
+                
+                if (conn.State != System.Data.ConnectionState.Open)
                 {
                     conn.Open();
                 }

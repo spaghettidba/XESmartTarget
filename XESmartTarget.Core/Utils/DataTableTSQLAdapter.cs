@@ -60,7 +60,7 @@ namespace XESmartTarget.Core.Utils
             Table = table;
         }
 
-        public DataTableTSQLAdapter(DataTable table, SqlConnection connection) : this(table, connection, null!) { }
+        public DataTableTSQLAdapter(DataTable table, SqlConnection connection) : this(table, connection, null) { }
 
         public DataTableTSQLAdapter(DataTable table, SqlConnection connection, SqlTransaction? transaction)
         {
@@ -71,7 +71,7 @@ namespace XESmartTarget.Core.Utils
 
         public void Create()
         {
-            Create(null!);
+            Create(null);
         }
 
         public void Create(int numKeys)
@@ -86,7 +86,7 @@ namespace XESmartTarget.Core.Utils
 
         public void Create(int[]? primaryKeys)
         {
-            string sql = GetCreateSQL(primaryKeys!);
+            string sql = GetCreateSQL(primaryKeys);
 
             SqlCommand cmd;
             if (_transaction != null && _transaction.Connection != null)
@@ -144,7 +144,7 @@ namespace XESmartTarget.Core.Utils
         }
         
 
-        private string GetCreateSQL(int[] primaryKeys)
+        private string GetCreateSQL(int[]? primaryKeys)
         {
             string tableName = _tableName;
             if (tableName.IndexOf('[') < 0)
@@ -171,10 +171,10 @@ namespace XESmartTarget.Core.Utils
             // primary keys
             string pk = ", CONSTRAINT PK_" + tableName + " PRIMARY KEY CLUSTERED (";
             bool hasKeys = (primaryKeys != null && primaryKeys.Length > 0);
-            if (hasKeys)
+            if (hasKeys && primaryKeys != null)
             {
                 // user defined keys
-                foreach (int key in primaryKeys!)
+                foreach (int key in primaryKeys)
                 {
                     pk += Table.Rows[key]["ColumnName"]?.ToString() + ", ";
                 }

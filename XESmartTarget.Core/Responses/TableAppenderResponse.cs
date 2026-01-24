@@ -247,9 +247,9 @@ namespace XESmartTarget.Core.Responses
             // deep copy of complex members
             clone._outputColumns = new List<OutputColumn>(this._outputColumns);
             clone.EventsTable = new DataTable("events");
-            clone.xeadapter = null!;
-            clone.Uploader = null!;
-            clone.uploaderCancellationSource = null!;
+            clone.xeadapter = null;
+            clone.Uploader = null;
+            clone.uploaderCancellationSource = null;
             clone.uploaderStopped = false;
             clone.UploaderStarted = false;
             clone.TargetTableCreated = false;

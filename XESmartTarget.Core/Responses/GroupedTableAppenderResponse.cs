@@ -135,7 +135,7 @@ namespace XESmartTarget.Core.Responses
             catch (Exception e)
             {
                 logger.Trace(e, "Something went wrong during the aggregation.");
-                throw e;
+                throw;
             }
 
             // Set all columns as visible
