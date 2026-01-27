@@ -15,7 +15,7 @@ namespace XESmartTarget.Core.Utils
                 List<Type> result = new List<Type>();
                 Assembly currentAssembly = Assembly.GetExecutingAssembly();
                 string nameSpace = "XESmartTarget.Core.";
-                Type[] types = currentAssembly.GetTypes().Where(t => t != null && t.FullName.StartsWith(nameSpace) & !t.FullName.Contains("+")).ToArray();
+                Type[] types = currentAssembly.GetTypes().Where(t => t != null && t.FullName != null && t.FullName.StartsWith(nameSpace) & !t.FullName.Contains("+")).ToArray();
                 foreach (Type t in types)
                 {
                     try
@@ -33,16 +33,25 @@ namespace XESmartTarget.Core.Utils
 
         public T Deserialize<T>(string json)
         {
-            return (T)Deserialize(json, typeof(T));
+            var result = Deserialize(json, typeof(T));
+            if (result != null)
+                return (T)result;
+            
+            var instance = Activator.CreateInstance(typeof(T));
+            if (instance == null)
+                throw new InvalidOperationException($"Failed to create instance of type {typeof(T)}");
+            return (T)instance;
         }
 
-        public object Deserialize(string json, Type type)
+        public object? Deserialize(string json, Type type)
         {
             if (string.IsNullOrWhiteSpace(json))
                 return null;
 
-            JToken token = JsonConvert.DeserializeObject<JToken>(json);
-            var dictionary = token.ToObject<Dictionary<string, object>>();
+            JToken? token = JsonConvert.DeserializeObject<JToken>(json);
+            var dictionary = token?.ToObject<Dictionary<string, object>>();
+            if (dictionary == null)
+                return null;
             return Deserialize(dictionary, type);
         }
 
@@ -67,23 +76,23 @@ namespace XESmartTarget.Core.Utils
                     var propValue = new List<string>();
 
                     if (rawValue is IList listVal)
-                        propValue = listVal.Cast<object>().Select(x => x?.ToString()).ToList();
+                        propValue = listVal.Cast<object>().Select(x => x?.ToString() ?? string.Empty).ToList();
                     else
-                        propValue = new List<string> { rawValue.ToString() };
+                        propValue = new List<string> { rawValue?.ToString() ?? string.Empty };
 
                     prop.SetValue(instance, propValue);
                     continue;
                 }
                 else if (prop.Name == "OutputMeasurement" && prop.PropertyType == typeof(string))
                 {
-                    prop.SetValue(instance, rawValue.ToString());
+                    prop.SetValue(instance, rawValue?.ToString() ?? string.Empty);
                     continue;
                 }
                 else if (prop.Name == "ServerName")
                 {
                     if (prop.PropertyType == typeof(string))
                     {
-                        prop.SetValue(instance, rawValue.ToString());
+                        prop.SetValue(instance, rawValue?.ToString() ?? string.Empty);
                     }
                     else
                     {
@@ -120,7 +129,7 @@ namespace XESmartTarget.Core.Utils
                 }
                 else if (rawValue is IList list && prop.PropertyType.IsGenericType)
                 {
-                    var listInstance = (IList)Activator.CreateInstance(prop.PropertyType);
+                    var listInstance = (IList?)Activator.CreateInstance(prop.PropertyType);
                     Type elementType = prop.PropertyType.GetGenericArguments()[0];
                     foreach (var item in list)
                     {
@@ -129,13 +138,13 @@ namespace XESmartTarget.Core.Utils
                         {
                             convertedItem = Deserialize(dictItem, elementType);
                         }
-                        listInstance.Add(convertedItem);
+                        listInstance?.Add(convertedItem);
                     }
                     prop.SetValue(instance, listInstance);
                 }
                 else if (prop.PropertyType.IsEnum)
                 {
-                    prop.SetValue(instance, Enum.Parse(prop.PropertyType, rawValue.ToString()));
+                    prop.SetValue(instance, Enum.Parse(prop.PropertyType, rawValue?.ToString() ?? string.Empty));
                 }
                 else
                 {
@@ -151,20 +160,22 @@ namespace XESmartTarget.Core.Utils
             {
                 if (type.IsAbstract && dictionary.TryGetValue("__type", out var subTypeObj) && subTypeObj != null)
                 {
-                    var subTypeName = subTypeObj.ToString();
-                    string fullTypeName = subTypeName.Contains(".")
-                        ? subTypeName
+                    var subTypeName = subTypeObj?.ToString();
+                    string fullTypeName = (subTypeName?.Contains(".") ?? false)
+                        ? subTypeName!
                         : $"XESmartTarget.Core.Responses.{subTypeName}";
                     var realType = Assembly.GetExecutingAssembly().GetType(fullTypeName) ?? Type.GetType(fullTypeName);
                     if (realType != null && !realType.IsAbstract)
-                        return Activator.CreateInstance(realType);
+                        return Activator.CreateInstance(realType)!;
                 }
-                return Activator.CreateInstance(type);
+                return Activator.CreateInstance(type)!;
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Exception during instance creation: " + ex.Message);
+#pragma warning disable SYSLIB0050 // FormatterServices.GetUninitializedObject is obsolete but needed as fallback
                 return FormatterServices.GetUninitializedObject(type);
+#pragma warning restore SYSLIB0050
             }
         }
 
@@ -190,12 +201,12 @@ namespace XESmartTarget.Core.Utils
             }
             else if (value is JValue jVal)
             {
-                return jVal.Value;
+                return jVal.Value ?? string.Empty;
             }
             return value;
         }
 
-        private string[] ConvertToStringArray(object val)
+        private string[]? ConvertToStringArray(object? val)
         {
             if (val == null)
                 return null;
@@ -204,17 +215,17 @@ namespace XESmartTarget.Core.Utils
                 var strList = new List<string>();
                 foreach (var item in enumerable)
                 {
-                    strList.Add(item?.ToString());
+                    strList.Add(item?.ToString() ?? string.Empty);
                 }
                 return strList.ToArray();
             }
-            return new string[] { val.ToString() };
+            return new string[] { val.ToString() ?? string.Empty };
         }
 
-        private object GetValueOfType(object v, Type propertyType)
+        private object? GetValueOfType(object? v, Type propertyType)
         {
             if (propertyType == typeof(string))
-                return v?.ToString();
+                return v?.ToString() ?? string.Empty;
             else if (propertyType == typeof(bool))
                 return Convert.ToBoolean(v);
             else if (propertyType == typeof(int))

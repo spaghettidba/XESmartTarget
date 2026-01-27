@@ -31,21 +31,21 @@ namespace XESmartTarget.Core.Utils
         };
 
 
-        private SqlConnection _connection;
+        private SqlConnection _connection = null!;
         public SqlConnection Connection
         {
             get { return _connection; }
             set { _connection = value; }
         }
 
-        private SqlTransaction _transaction;
-        public SqlTransaction Transaction
+        private SqlTransaction? _transaction;
+        public SqlTransaction? Transaction
         {
             get { return _transaction; }
             set { _transaction = value; }
         }
 
-        private string _tableName;
+        private string _tableName = string.Empty;
         public string DestinationTableName
         {
             get { return _tableName; }
@@ -62,7 +62,7 @@ namespace XESmartTarget.Core.Utils
 
         public DataTableTSQLAdapter(DataTable table, SqlConnection connection) : this(table, connection, null) { }
 
-        public DataTableTSQLAdapter(DataTable table, SqlConnection connection, SqlTransaction transaction)
+        public DataTableTSQLAdapter(DataTable table, SqlConnection connection, SqlTransaction? transaction)
         {
             _connection = connection;
             _transaction = transaction;
@@ -84,7 +84,7 @@ namespace XESmartTarget.Core.Utils
             Create(primaryKeys);
         }
 
-        public void Create(int[] primaryKeys)
+        public void Create(int[]? primaryKeys)
         {
             string sql = GetCreateSQL(primaryKeys);
 
@@ -116,7 +116,7 @@ namespace XESmartTarget.Core.Utils
             prm.ParameterName = "@ObjName";
             cmd.Parameters.Add(prm);
 
-            int result = (int)cmd.ExecuteScalar();
+            int result = (int)(cmd.ExecuteScalar() ?? -1);
             return result != -1;
         }
 
@@ -144,7 +144,7 @@ namespace XESmartTarget.Core.Utils
         }
         
 
-        private string GetCreateSQL(int[] primaryKeys)
+        private string GetCreateSQL(int[]? primaryKeys)
         {
             string tableName = _tableName;
             if (tableName.IndexOf('[') < 0)
@@ -158,7 +158,7 @@ namespace XESmartTarget.Core.Utils
             {
                 if (!(Table.Columns.Contains("IsHidden") && (bool)column["IsHidden"]))
                 {
-                    sql += "\t[" + column["ColumnName"].ToString() + "] " + SQLGetType(column);
+                    sql += "\t[" + column["ColumnName"]?.ToString() + "] " + SQLGetType(column);
 
                     if (Table.Columns.Contains("AllowDBNull") && (bool)column["AllowDBNull"] == false)
                         sql += " NOT NULL";
@@ -171,12 +171,12 @@ namespace XESmartTarget.Core.Utils
             // primary keys
             string pk = ", CONSTRAINT PK_" + tableName + " PRIMARY KEY CLUSTERED (";
             bool hasKeys = (primaryKeys != null && primaryKeys.Length > 0);
-            if (hasKeys)
+            if (hasKeys && primaryKeys != null)
             {
                 // user defined keys
                 foreach (int key in primaryKeys)
                 {
-                    pk += Table.Rows[key]["ColumnName"].ToString() + ", ";
+                    pk += Table.Rows[key]["ColumnName"]?.ToString() + ", ";
                 }
             }
             else
@@ -209,7 +209,7 @@ namespace XESmartTarget.Core.Utils
                 bool addThisColumn = true;
                 if(column.ExtendedProperties.ContainsKey("hidden")
                     && column.ExtendedProperties["hidden"] != null
-                    && (bool)column.ExtendedProperties["hidden"])
+                    && (bool)(column.ExtendedProperties["hidden"] ?? false))
                 {
                     addThisColumn = false;
                 }
@@ -241,7 +241,7 @@ namespace XESmartTarget.Core.Utils
             foreach (DataRow column in Table.Rows)
             {
                 if (Table.Columns.Contains("IsKey") && (bool)column["IsKey"])
-                    keys.Add(column["ColumnName"].ToString());
+                    keys.Add(column["ColumnName"]?.ToString() ?? string.Empty);
             }
 
             return keys.ToArray();
@@ -314,17 +314,17 @@ namespace XESmartTarget.Core.Utils
         {
             int numericPrecision, numericScale;
 
-            if (!int.TryParse(schemaRow["NumericPrecision"].ToString(), out numericPrecision))
+            if (!int.TryParse(schemaRow["NumericPrecision"]?.ToString(), out numericPrecision))
             {
                 numericPrecision = -1;
             }
-            if (!int.TryParse(schemaRow["NumericScale"].ToString(), out numericScale))
+            if (!int.TryParse(schemaRow["NumericScale"]?.ToString(), out numericScale))
             {
                 numericScale = -1;
             }
 
             return SQLGetType(schemaRow["DataType"],
-                                int.Parse(schemaRow["ColumnSize"].ToString()),
+                                int.Parse(schemaRow["ColumnSize"]?.ToString() ?? "-1"),
                                 numericPrecision,
                                 numericScale);
         }
@@ -498,7 +498,7 @@ namespace XESmartTarget.Core.Utils
             prm.ParameterName = "@ObjName";
             cmd.Parameters.Add(prm);
 
-            string sqlResult = (string)cmd.ExecuteScalar();
+            string? sqlResult = (string?)cmd.ExecuteScalar();
             if(sqlResult != null)
             {
                 result = sqlResult;

@@ -28,7 +28,7 @@ namespace XESmartTarget.Core.Responses
                 conn.ConnectionString = ConnectionString;
                 conn.Open();
 
-                DataTable groupedData = null;
+                DataTable? groupedData = null;
                 lock (EventsTable)
                 {
                     originalRows = EventsTable.Rows.Count;
@@ -88,7 +88,7 @@ namespace XESmartTarget.Core.Responses
             //adding columns for the aggregations
             foreach (var col in outCols)
             {
-                Type t = null;
+                Type? t = null;
                 // set the base type on the aggregation: 
                 // - MIN /MAX --> use the base column type
                 // - COUNT --> Int64
@@ -99,15 +99,15 @@ namespace XESmartTarget.Core.Responses
                 }
                 else if (col.Aggregation == AggregatedOutputColumn.AggregationType.Sum)
                 {
-                    t = EnlargeType(EventsTable.Columns[col.BaseColumn].DataType);
+                    t = EnlargeType(EventsTable.Columns[col.BaseColumn!]!.DataType);
                 }
                 else if (!(col.Aggregation == AggregatedOutputColumn.AggregationType.Max || col.Aggregation == AggregatedOutputColumn.AggregationType.Min))
                 {
-                    t = EnlargeType(EventsTable.Columns[col.BaseColumn].DataType);
+                    t = EnlargeType(EventsTable.Columns[col.BaseColumn!]!.DataType);
                 }
                 else if (EventsTable.Columns.Contains(col.BaseColumn))
                 {
-                    t = EventsTable.Columns[col.BaseColumn].DataType;
+                    t = EventsTable.Columns[col.BaseColumn!]!.DataType;
                 }
                 else
                 {
@@ -126,7 +126,7 @@ namespace XESmartTarget.Core.Responses
                         string filterString = " 1 = 1 ";
                         foreach (var grp in GroupByCols)
                         {
-                            filterString += String.Format(" AND {0} = '{1}' ", EscapeColumnName(grp), EscapeFilterValue(dr[grp].ToString()));
+                            filterString += String.Format(" AND {0} = '{1}' ", EscapeColumnName(grp), EscapeFilterValue(dr[grp]?.ToString() ?? string.Empty));
                         }
                         dr[col.Alias] = EventsTable.Compute(col.Expression, filterString);
                     }
@@ -135,7 +135,7 @@ namespace XESmartTarget.Core.Responses
             catch (Exception e)
             {
                 logger.Trace(e, "Something went wrong during the aggregation.");
-                throw e;
+                throw;
             }
 
             // Set all columns as visible

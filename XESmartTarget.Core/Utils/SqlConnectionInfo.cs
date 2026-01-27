@@ -6,15 +6,15 @@ namespace XESmartTarget.Core.Utils
     public class SqlConnectionInfo
     {
         [Required]
-        public string ServerName { get; set; }
-        public string DatabaseName { get; set; }
-        public string UserName { get; set; }
-        public string Password { get; set; }
+        public string ServerName { get; set; } = string.Empty;
+        public string DatabaseName { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
         public int? Port { get; set; }
         public bool UseIntegratedSecurity { get; set; }
         public bool Encrypt { get; set; }
         public bool TrustServerCertificate { get; set; } = true;
-        public string ApplicationName { get; set; }
+        public string ApplicationName { get; set; } = string.Empty;
         public bool UserInstance { get; set; }
         public int LoadBalanceTimeout { get; set; }
         public int MaxPoolSize { get; set; } = 100;
@@ -24,21 +24,21 @@ namespace XESmartTarget.Core.Utils
         public int PacketSize { get; set; } = 8000;
         public bool Replication { get; set; }
         public string TransactionBinding { get; set; } = "Implicit Unbind";
-        public string TypeSystemVersion { get; set; }
+        public string TypeSystemVersion { get; set; } = string.Empty;
         public string UserID { get => UserName; set => UserName = value; }
         public bool PersistSecurityInfo { get; set; }
         public bool Pooling { get; set; } = true;
         public bool IntegratedSecurity { get => UseIntegratedSecurity; set => UseIntegratedSecurity = value; }
         public string InitialCatalog { get => DatabaseName; set => DatabaseName = value; }
         public string ApplicationIntent { get; set; } = "ReadWrite";
-        public string WorkstationID { get; set; }
+        public string WorkstationID { get; set; } = string.Empty;
         public int ConnectRetryCount { get; set; } = 1;
         public int ConnectRetryInterval { get; set; } = 10;
-        public string AttachDBFilename { get; set; }
-        public string CurrentLanguage { get; set; }
+        public string AttachDBFilename { get; set; } = string.Empty;
+        public string CurrentLanguage { get; set; } = string.Empty;
         public string DataSource { get => ServerName; set => ServerName = value; }
         public bool Enlist { get; set; } = true;
-        public string FailoverPartner { get; set; }
+        public string FailoverPartner { get; set; } = string.Empty;
         public int? ConnectTimeout { get; set; } = 15;
         public string PoolBlockingPeriod { get; set; } = "Auto";
         private SqlAuthenticationMethod _authMethod = SqlAuthenticationMethod.NotSpecified;

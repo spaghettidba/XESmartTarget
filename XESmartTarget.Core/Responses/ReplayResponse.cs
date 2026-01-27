@@ -51,10 +51,10 @@ namespace XESmartTarget.Core.Responses
 
         private DataTable eventsTable = new DataTable("events");
         private ConcurrentDictionary<int, ReplayWorker> ReplayWorkers = new ConcurrentDictionary<int, ReplayWorker>();
-        private XEventDataTableAdapter xeadapter;
+        private XEventDataTableAdapter? xeadapter;
 
-        private Task ReplayTask = null;
-        private CancellationTokenSource replayCancellationSource;
+        private Task? ReplayTask = null;
+        private CancellationTokenSource? replayCancellationSource;
         private bool replayStopped = false;
 
         public ReplayResponse()
@@ -135,14 +135,14 @@ namespace XESmartTarget.Core.Responses
             {
                 foreach (DataRow dr in eventsTable.Rows)
                 {
-                    string commandText = null;
+                    string? commandText = null;
                     if (dr["name"].ToString() == "rpc_completed")
                     {
-                        commandText = dr["statement"].ToString();
+                        commandText = dr["statement"]?.ToString();
                     }
                     else if (dr["name"].ToString() == "sql_batch_completed")
                     {
-                        commandText = dr["batch_text"].ToString();
+                        commandText = dr["batch_text"]?.ToString();
                     }
                     else
                     {
@@ -151,12 +151,12 @@ namespace XESmartTarget.Core.Responses
                         continue;
                     }
 
-                    ReplayCommand command = new ReplayCommand() { CommandText = commandText };
+                    ReplayCommand command = new ReplayCommand() { CommandText = commandText! };
 
-                    if (dr.Table.Columns.Contains("database_name") && !String.IsNullOrEmpty((string)dr["database_name"]))
+                    if (dr.Table.Columns.Contains("database_name") && !String.IsNullOrEmpty((string?)dr["database_name"]))
                     {
-                        string dbname = dr["database_name"].ToString();
-                        command.Database = dbname;
+                        string? dbname = dr["database_name"]?.ToString();
+                        command.Database = dbname!;
                     }
 
                     int session_id = -1;
@@ -169,7 +169,7 @@ namespace XESmartTarget.Core.Responses
                         throw new Exception("Unable to replay if session_id is not collected. Please add this action to your session.");
                     }
 
-                    ReplayWorker rw = null;
+                    ReplayWorker? rw = null;
                     if (ReplayWorkers.TryGetValue(session_id, out rw))
                     {
                         rw.AppendCommand(command);
@@ -197,23 +197,23 @@ namespace XESmartTarget.Core.Responses
 
         class ReplayCommand
         {
-            public string CommandText { get; set; }
-            public string Database { get; set; }
+            public string CommandText { get; set; } = string.Empty;
+            public string? Database { get; set; }
         }
 
         class ReplayWorker
         {
             private static Logger logger = LogManager.GetCurrentClassLogger();
-            private SqlConnection conn { get; set; }
+            private SqlConnection? conn { get; set; }
 
             public int ReplayIntervalSeconds { get; set; } = 0;
             public bool StopOnError { get; set; } = false;
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
 
             private bool stopped = false;
             private ConcurrentQueue<ReplayCommand> Commands = new ConcurrentQueue<ReplayCommand>();
-            private Task runner;
-            private CancellationTokenSource cancellationSource;
+            private Task? runner;
+            private CancellationTokenSource? cancellationSource;
 
             private void InitializeConnection()
             {
@@ -223,7 +223,7 @@ namespace XESmartTarget.Core.Responses
                 conn.Open();
                 logger.Info("Connected");
             }
-            public SqlConnectionInfo ConnectionInfo { get; set; }
+            public SqlConnectionInfo ConnectionInfo { get; set; } = new();
 
             public void Start()
             {
@@ -245,7 +245,7 @@ namespace XESmartTarget.Core.Responses
                         cancellationToken.WaitHandle.WaitOne(TimeSpan.FromMilliseconds(10));
                         continue;
                     }
-                    ReplayCommand cmd = null;
+                    ReplayCommand? cmd = null;
                     if (Commands.TryDequeue(out cmd))
                     {
                         ExecuteCommand(cmd);
@@ -267,6 +267,12 @@ namespace XESmartTarget.Core.Responses
 
             private void ExecuteCommand(ReplayCommand command)
             {
+                if (conn == null)
+                {
+                    logger.Error("Connection is null, cannot execute command");
+                    return;
+                }
+                
                 if (conn.State != System.Data.ConnectionState.Open)
                 {
                     conn.Open();

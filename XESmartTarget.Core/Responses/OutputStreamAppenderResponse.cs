@@ -268,26 +268,26 @@ namespace XESmartTarget.Core.Responses
                         DataTableJsonAdapter adapter = new DataTableJsonAdapter(EventsTable)
                         {
                             OutputFormat = JsonOutputFormat,
-                            OutputColumns = xeadapter.OutputColumns.Select(x => x.Name).ToArray()
+                            OutputColumns = xeadapter?.OutputColumns.Select(x => x.Name).ToArray() ?? Array.Empty<string>()
                         };
-                        adapter.WriteToStream(Writer);
+                        adapter.WriteToStream(Writer!);
                     }
                     else if(_outputFormat == OutputFormatEnum.LineProtocol)
                     {
                         DataTableLineProtocolAdapter adapter = new DataTableLineProtocolAdapter(EventsTable)
                         {
-                            OutputMeasurement = OutputMeasurement
+                            OutputMeasurement = OutputMeasurement!
                             // todo: set output fields and tags
                         };
-                        adapter.WriteToStream(Writer);
+                        adapter.WriteToStream(Writer!);
                     }
                     else if (_outputFormat == OutputFormatEnum.Csv)
                     {
                         DataTableCSVAdapter adapter = new DataTableCSVAdapter(EventsTable)
                         {
-                            OutputColumns = xeadapter.OutputColumns.Select(x => x.Name).ToArray()
+                            OutputColumns = xeadapter?.OutputColumns.Select(x => x.Name).ToArray() ?? Array.Empty<string>()
                         };
-                        adapter.WriteToStream(Writer);
+                        adapter.WriteToStream(Writer!);
                     }
                 }
 

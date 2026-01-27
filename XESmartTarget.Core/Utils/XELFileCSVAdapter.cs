@@ -9,12 +9,12 @@ namespace XESmartTarget.Core.Utils
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
 
-        public string InputFile { get; set; }
-        public string OutputFile { get; set; }
+        public string InputFile { get; set; } = string.Empty;
+        public string OutputFile { get; set; } = string.Empty;
 
         private class CsvColumn
         {
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
             public char Type { get; set; }
             public int Position { get; set; }
         }

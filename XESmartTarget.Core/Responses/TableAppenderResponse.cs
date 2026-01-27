@@ -102,11 +102,11 @@ namespace XESmartTarget.Core.Responses
         protected List<OutputColumn> _outputColumns { get; set; } = new List<OutputColumn>(); 
         protected DataTable EventsTable { get => eventsTable; set => eventsTable = value; }
 
-        protected Task Uploader;
-        private CancellationTokenSource uploaderCancellationSource;
+        protected Task? Uploader;
+        private CancellationTokenSource? uploaderCancellationSource;
         private bool uploaderStopped = false;
 
-        private XEventDataTableAdapter xeadapter;
+        private XEventDataTableAdapter? xeadapter;
         protected string ConnectionString => ConnectionInfo.ConnectionString;
         private SqlConnectionInfo ConnectionInfo { get; set; } = new();
 

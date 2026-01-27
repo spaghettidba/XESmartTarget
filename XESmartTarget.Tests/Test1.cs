@@ -26,8 +26,8 @@ namespace XESmartTarget.Tests
 
                 try
                 {
-                    object obj = converter.Deserialize(json, typeof(TargetConfig));
-                    TargetConfig config = obj as TargetConfig;
+                    object? obj = converter.Deserialize(json, typeof(TargetConfig));
+                    TargetConfig? config = obj as TargetConfig;
                     Assert.IsNotNull(config, $"Deserialized object from {file} is null or not a TargetConfig.");
 
                     string dump = JsonConvert.SerializeObject(config, Formatting.Indented);
