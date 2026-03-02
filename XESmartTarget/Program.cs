@@ -45,8 +45,11 @@ namespace XESmartTarget
                     version = $"{assemblyVersion.Major}.{assemblyVersion.Minor}.{assemblyVersion.Build}";
                 else
                     version = "Linux";
-                Console.WriteLine(version);
-                Console.WriteLine();
+                if (!options.NoLogo)
+                {
+                    Console.WriteLine(version);
+                    Console.WriteLine();
+                }
             }
 
             // save the URI to a file and point configuration there
@@ -81,16 +84,16 @@ namespace XESmartTarget
                 if (target != null)
                 {
                     var pathToLog = options.LogFile;
-                    Console.WriteLine($"Current LogFile option: '{pathToLog}'");
+                    if (!options.Quiet) Console.WriteLine($"Current LogFile option: '{pathToLog}'");
                     if (pathToLog == null)
                     {
                         pathToLog = Path.Combine(Environment.CurrentDirectory, "XESmartTarget.log");
-                        Console.WriteLine($"LogFile is null, using default: '{pathToLog}'");
+                        if (!options.Quiet) Console.WriteLine($"LogFile is null, using default: '{pathToLog}'");
                     }
                     if (!Path.IsPathRooted(pathToLog))
                     {
                         pathToLog = Path.Combine(Environment.CurrentDirectory, pathToLog);
-                        Console.WriteLine($"LogFile was relative, new full path: '{pathToLog}'");
+                        if (!options.Quiet) Console.WriteLine($"LogFile was relative, new full path: '{pathToLog}'");
                     }
                     target.FileName = pathToLog;
 
