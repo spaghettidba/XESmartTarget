@@ -1,21 +1,39 @@
-﻿using SmartFormat;
+﻿using NLog;
+using SmartFormat;
 
 namespace XESmartTarget.Core.Utils
 {
     public static class SmartFormatHelper
     {
+        private static Logger logger = LogManager.GetCurrentClassLogger();
+
+        private static SmartFormatter fmt = Smart.CreateDefaultSmartFormat();
         public static string Format(string format, Dictionary<string, string> args)
         {
-            var fmt = Smart.CreateDefaultSmartFormat();
-            fmt.Settings.Parser.ConvertCharacterStringLiterals = false;
-            return fmt.Format(format, args);
+            try
+            {
+                fmt.Settings.Parser.ConvertCharacterStringLiterals = false;
+                return fmt.Format(format, args);
+            }
+            catch (Exception e)
+            {
+                logger.Debug(e.Message);
+                return format;
+            }
         }
 
         public static string Format(string format, Dictionary<string, object> args)
         {
-            var fmt = Smart.CreateDefaultSmartFormat();
-            fmt.Settings.Parser.ConvertCharacterStringLiterals = false;
-            return fmt.Format(format, args);
+            try
+            {
+                fmt.Settings.Parser.ConvertCharacterStringLiterals = false;
+                return fmt.Format(format, args);
+            }
+            catch (Exception e)
+            {
+                logger.Debug(e.Message);
+                return format;
+            }
         }
     }
 }
