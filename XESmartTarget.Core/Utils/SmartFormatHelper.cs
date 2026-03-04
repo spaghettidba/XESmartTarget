@@ -7,11 +7,12 @@ namespace XESmartTarget.Core.Utils
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
 
-        private static SmartFormatter fmt = Smart.CreateDefaultSmartFormat();
+        
         public static string Format(string format, Dictionary<string, string> args)
         {
             try
             {
+                SmartFormatter fmt = Smart.CreateDefaultSmartFormat();
                 fmt.Settings.Parser.ConvertCharacterStringLiterals = false;
                 return fmt.Format(format, args);
             }
@@ -26,6 +27,7 @@ namespace XESmartTarget.Core.Utils
         {
             try
             {
+                SmartFormatter fmt = Smart.CreateDefaultSmartFormat();
                 fmt.Settings.Parser.ConvertCharacterStringLiterals = false;
                 return fmt.Format(format, args);
             }
