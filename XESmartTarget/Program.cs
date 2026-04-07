@@ -114,24 +114,44 @@ namespace XESmartTarget
             {
                 //password can be read from Windows Credentials
                 //if it exists, otherwise execution proceeds with user passed uri
+                string? authScheme = null;
+                string? credPassword = null;
                 try
                 {
-                    (string? username, string? password) = (null, null);
+                    (string? username, string? password, string? scheme) = (null, null, null);
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                        (username, password) = WindowsCredentialHelper.ReadCredential(outUri!.OriginalString);
+                        (username, password, scheme) = WindowsCredentialHelper.ReadCredential(outUri!.OriginalString);
                     else
-                        (username, password) = LinuxCredentialHelper.ReadCredential(outUri!.OriginalString);
+                        (username, password, scheme) = LinuxCredentialHelper.ReadCredential(outUri!.OriginalString);
 
                     if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
                     {
-                        var uriBuilder = new UriBuilder(outUri)
-                        {
-                            UserName = username,
-                            Password = password
-                        };
+                        authScheme = scheme;
+                        credPassword = password;
 
-                        options.ConfigurationFile = uriBuilder.Uri.ToString();
-                        Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri);
+                        if (string.Equals(authScheme, "ApiKey", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Keep the username in the URL but do not embed the password
+                            var uriBuilder = new UriBuilder(outUri)
+                            {
+                                UserName = username,
+                                Password = string.Empty
+                            };
+                            options.ConfigurationFile = uriBuilder.Uri.ToString();
+                            Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri);
+                        }
+                        else
+                        {
+                            // Basic or unrecognised: embed credentials in URI (existing behaviour)
+                            var uriBuilder = new UriBuilder(outUri)
+                            {
+                                UserName = username,
+                                Password = password
+                            };
+
+                            options.ConfigurationFile = uriBuilder.Uri.ToString();
+                            Uri.TryCreate(options.ConfigurationFile, UriKind.Absolute, out outUri);
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -148,7 +168,12 @@ namespace XESmartTarget
                     client.DefaultRequestHeaders.Add("User-Agent", $"XESmartTarget/{version} (XESmartTarget; copyright spaghettidba)");
                     try
                     {
-                        if (!String.IsNullOrEmpty(outUri!.UserInfo))
+                        if (string.Equals(authScheme, "ApiKey", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // API key auth: send as X-Api-Key header; username stays in URL
+                            client.DefaultRequestHeaders.Add("X-Api-Key", credPassword ?? string.Empty);
+                        }
+                        else if (!String.IsNullOrEmpty(outUri!.UserInfo))
                         {
                             var byteArray = Encoding.ASCII.GetBytes(outUri.UserInfo);
                             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));

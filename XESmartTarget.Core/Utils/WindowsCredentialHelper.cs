@@ -53,7 +53,7 @@ namespace XESmartTarget.Core.Utils
             public uint dwHighDateTime;
         }
 
-        public static (string username, string password) ReadCredential(string target)
+        public static (string username, string password, string authScheme) ReadCredential(string target)
         {
             if (CredRead(target, CredentialType.GENERIC, 0, out IntPtr credPointer))
             {
@@ -61,13 +61,15 @@ namespace XESmartTarget.Core.Utils
 
                 string? username = Marshal.PtrToStringUni(cred.UserName);
                 string? password = Marshal.PtrToStringUni(cred.CredentialBlob, (int)cred.CredentialBlobSize / 2);
+                string? authScheme = Marshal.PtrToStringUni(cred.Comment);
 
                 CredFree(credPointer);
 
-                return (username ?? string.Empty, password ?? string.Empty);
+                return (username ?? string.Empty, password ?? string.Empty, string.IsNullOrEmpty(authScheme) ? "Basic" : authScheme);
             }
             else
-                return ("", "");
+                return ("", "", "Basic");
         }
+
     }
 }
