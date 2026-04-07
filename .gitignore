@@ -216,3 +216,4 @@ Setup/harvest\.wxs
 Setup/candleout/Product.wixobj
 Setup/candleout/ProductComponents.wixobj
 Setup/ProductComponents.wxs
+.nuget/
