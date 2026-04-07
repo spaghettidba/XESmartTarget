@@ -1,4 +1,5 @@
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -40,6 +41,8 @@ namespace XESmartTarget.Tests.Utils
         // Helpers
         // -----------------------------------------------------------------------
 
+        private static bool HasMachineId => File.Exists("/etc/machine-id");
+
         private static byte[] GetMachineKey()
         {
             string machineId = File.ReadAllText("/etc/machine-id").Trim();
@@ -55,6 +58,8 @@ namespace XESmartTarget.Tests.Utils
 
             using var aes = Aes.Create();
             aes.Key = key;
+            aes.Mode = CipherMode.CBC;
+            aes.Padding = PaddingMode.PKCS7;
             aes.GenerateIV();
 
             using var encryptor = aes.CreateEncryptor();
@@ -77,6 +82,8 @@ namespace XESmartTarget.Tests.Utils
         [Fact]
         public void ReadCredential_EncryptedFile_ReturnsCorrectBasicCredentials()
         {
+            if (!HasMachineId) return; // cred.enc is Linux-only; skip gracefully on other platforms
+
             WriteEncryptedCreds(new[]
             {
                 new { Target = "https://example.com/api", UserName = "alice", Password = "s3cr3t", AuthScheme = (string?)null }
@@ -92,6 +99,8 @@ namespace XESmartTarget.Tests.Utils
         [Fact]
         public void ReadCredential_EncryptedFile_ReturnsApiKeyScheme()
         {
+            if (!HasMachineId) return; // cred.enc is Linux-only; skip gracefully on other platforms
+
             WriteEncryptedCreds(new[]
             {
                 new { Target = "https://example.com/api", UserName = "myuser", Password = "apikey123", AuthScheme = "ApiKey" }
@@ -107,6 +116,8 @@ namespace XESmartTarget.Tests.Utils
         [Fact]
         public void ReadCredential_EncryptedFile_TargetMatchingIsCaseInsensitive()
         {
+            if (!HasMachineId) return; // cred.enc is Linux-only; skip gracefully on other platforms
+
             WriteEncryptedCreds(new[]
             {
                 new { Target = "HTTPS://EXAMPLE.COM/API", UserName = "bob", Password = "pass", AuthScheme = (string?)null }
@@ -120,6 +131,8 @@ namespace XESmartTarget.Tests.Utils
         [Fact]
         public void ReadCredential_EncryptedFile_UnknownTargetReturnsEmpty()
         {
+            if (!HasMachineId) return; // cred.enc is Linux-only; skip gracefully on other platforms
+
             WriteEncryptedCreds(new[]
             {
                 new { Target = "https://example.com/api", UserName = "alice", Password = "s3cr3t", AuthScheme = (string?)null }
@@ -135,6 +148,8 @@ namespace XESmartTarget.Tests.Utils
         [Fact]
         public void ReadCredential_EncryptedFilePreferredOverPlainJson()
         {
+            if (!HasMachineId) return; // cred.enc is Linux-only; skip gracefully on other platforms
+
             // Write a cred.json that would return "wronguser" if read.
             var jsonItems = new[]
             {

@@ -62,8 +62,8 @@ namespace XESmartTarget.Core.Utils
         {
             byte[] fileBytes = File.ReadAllBytes(EncryptedCredentialsFilePath);
 
-            if (fileBytes.Length < 17)
-                throw new InvalidDataException("cred.enc is too short to contain a valid IV and ciphertext.");
+            if (fileBytes.Length < 32)
+                throw new InvalidDataException("cred.enc is too short to contain a valid IV (16 bytes) and at least one ciphertext block (16 bytes).");
 
             byte[] iv = fileBytes[..16];
             byte[] ciphertext = fileBytes[16..];
@@ -73,6 +73,8 @@ namespace XESmartTarget.Core.Utils
             using var aes = Aes.Create();
             aes.Key = key;
             aes.IV = iv;
+            aes.Mode = CipherMode.CBC;
+            aes.Padding = PaddingMode.PKCS7;
 
             using var ms = new MemoryStream(ciphertext);
             using var cs = new CryptoStream(ms, aes.CreateDecryptor(), CryptoStreamMode.Read);
