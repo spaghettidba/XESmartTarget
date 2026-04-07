@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using System.Text;
 
 namespace XESmartTarget.Core.Utils
 {
@@ -70,50 +69,6 @@ namespace XESmartTarget.Core.Utils
             }
             else
                 return ("", "", "Basic");
-        }
-
-        public static void WriteCredential(string target, string username, string password, string authScheme = "Basic")
-        {
-            byte[] byteArray = Encoding.Unicode.GetBytes(password);
-            IntPtr commentPtr = IntPtr.Zero;
-            IntPtr targetNamePtr = IntPtr.Zero;
-            IntPtr credentialBlobPtr = IntPtr.Zero;
-            IntPtr userNamePtr = IntPtr.Zero;
-            try
-            {
-                commentPtr = Marshal.StringToHGlobalUni(authScheme);
-                targetNamePtr = Marshal.StringToHGlobalUni(target);
-                credentialBlobPtr = Marshal.AllocHGlobal(byteArray.Length);
-                userNamePtr = Marshal.StringToHGlobalUni(username);
-
-                Marshal.Copy(byteArray, 0, credentialBlobPtr, byteArray.Length);
-
-                CREDENTIAL credential = new CREDENTIAL
-                {
-                    Flags = 0,
-                    Type = CredentialType.GENERIC,
-                    TargetName = targetNamePtr,
-                    Comment = commentPtr,
-                    CredentialBlobSize = (uint)byteArray.Length,
-                    CredentialBlob = credentialBlobPtr,
-                    Persist = 2, // CRED_PERSIST_LOCAL_MACHINE
-                    UserName = userNamePtr,
-                    AttributeCount = 0,
-                    Attributes = IntPtr.Zero,
-                    TargetAlias = IntPtr.Zero,
-                    LastWritten = default
-                };
-
-                if (!CredWrite(ref credential, 0))
-                    throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
-            }
-            finally
-            {
-                if (commentPtr != IntPtr.Zero) Marshal.FreeHGlobal(commentPtr);
-                if (targetNamePtr != IntPtr.Zero) Marshal.FreeHGlobal(targetNamePtr);
-                if (credentialBlobPtr != IntPtr.Zero) Marshal.FreeHGlobal(credentialBlobPtr);
-                if (userNamePtr != IntPtr.Zero) Marshal.FreeHGlobal(userNamePtr);
-            }
         }
 
     }

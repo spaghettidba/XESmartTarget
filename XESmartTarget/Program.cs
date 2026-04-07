@@ -131,7 +131,7 @@ namespace XESmartTarget
 
                         if (string.Equals(authScheme, "ApiKey", StringComparison.OrdinalIgnoreCase))
                         {
-                            // Keep the org name in the URL (for routing) but do not embed credentials
+                            // Keep the username in the URL but do not embed the password
                             var uriBuilder = new UriBuilder(outUri)
                             {
                                 UserName = username,
@@ -170,7 +170,7 @@ namespace XESmartTarget
                     {
                         if (string.Equals(authScheme, "ApiKey", StringComparison.OrdinalIgnoreCase))
                         {
-                            // API key auth: send as X-Api-Key header; org name (username) stays in URL for routing
+                            // API key auth: send as X-Api-Key header; username stays in URL
                             client.DefaultRequestHeaders.Add("X-Api-Key", credPassword ?? string.Empty);
                         }
                         else if (!String.IsNullOrEmpty(outUri!.UserInfo))
