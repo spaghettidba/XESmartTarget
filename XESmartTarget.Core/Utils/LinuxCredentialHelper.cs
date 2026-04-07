@@ -39,7 +39,7 @@ namespace XESmartTarget.Core.Utils
             }
         }
         
-        public static (string username, string password) ReadCredential(string target)
+        public static (string username, string password, string authScheme) ReadCredential(string target)
         {
             lock (_locker)
             {
@@ -51,12 +51,12 @@ namespace XESmartTarget.Core.Utils
 
                 if (item != null)
                 {
-                    return (item.UserName ?? "", item.Password ?? "");
+                    return (item.UserName ?? "", item.Password ?? "", item.AuthScheme ?? "Basic");
                 }
                 else
                 {
                     _logger.Warn($"No credential found for {target}!");
-                    return ("", "");
+                    return ("", "", "Basic");
                 }
             }
         }
@@ -66,6 +66,7 @@ namespace XESmartTarget.Core.Utils
             public string Target { get; set; } = string.Empty;
             public string UserName { get; set; } = string.Empty;
             public string Password { get; set; } = string.Empty;
+            public string? AuthScheme { get; set; }
         }
     }
 }
