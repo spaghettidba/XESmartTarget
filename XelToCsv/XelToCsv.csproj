@@ -17,4 +17,11 @@
     <ProjectReference Include="..\XESmartTarget.Core\XESmartTarget.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <PropertyGroup>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
 </Project>
