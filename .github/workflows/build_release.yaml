@@ -27,7 +27,7 @@ jobs:
           echo "::set-output name=version::$assemblyVersion"
 
       - name: Build (Windows Installer)
-        run: dotnet build XESmartTarget.sln --configuration Release
+        run: dotnet build XESmartTarget.slnx --configuration Release
 
       - name: Publish
         run: dotnet publish ${{ github.workspace }}/XESmartTarget/XESmartTarget.csproj -c Release -p:PublishSingleFile=true --self-contained=false
