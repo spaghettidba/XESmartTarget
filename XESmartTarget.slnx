@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="AssemblyInfo.cs" />
+  </Folder>
+  <Project Path="Setup/Setup.wixproj">
+    <Platform Solution="Debug|*" Project="x86" />
+    <Platform Solution="Release|*" Project="x64" />
+  </Project>
+  <Project Path="XelToCsv/XelToCsv.csproj" />
+  <Project Path="XESmartTarget.Core/XESmartTarget.Core.csproj" />
+  <Project Path="XESmartTarget.Tests/XESmartTarget.Tests.csproj" />
+  <Project Path="XESmartTarget/XESmartTarget.csproj" />
+</Solution>
