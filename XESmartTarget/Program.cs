@@ -1,5 +1,6 @@
 ﻿using CommandLine;
 using NLog;
+using NLog.Config;
 using NLog.Targets;
 using System.Diagnostics;
 using System.Reflection;
@@ -99,6 +100,25 @@ namespace XESmartTarget
 
                     LogManager.ReconfigExistingLoggers();
                 }
+            }
+
+            if (!string.IsNullOrWhiteSpace(options.JsonLogFile))
+            {
+                var configuration = LogManager.Configuration
+                    ?? throw new InvalidOperationException("NLog configuration is unavailable.");
+                var target = configuration.FindTargetByName("jsonlogfile") as FileTarget
+                    ?? throw new InvalidOperationException("The JSON log target is missing from NLog.config.");
+                var pathToJsonLog = options.JsonLogFile;
+                if (!Path.IsPathRooted(pathToJsonLog))
+                    pathToJsonLog = Path.Combine(Environment.CurrentDirectory, pathToJsonLog);
+                var jsonLogDirectory = Path.GetDirectoryName(pathToJsonLog);
+                if (!string.IsNullOrEmpty(jsonLogDirectory))
+                    Directory.CreateDirectory(jsonLogDirectory);
+                var jsonLogName = Path.GetFileNameWithoutExtension(pathToJsonLog);
+                var jsonLogExtension = Path.GetExtension(pathToJsonLog);
+                target.FileName = Path.Combine(jsonLogDirectory ?? string.Empty, $"{jsonLogName}-${{date:format=yyyyMMdd}}{jsonLogExtension}");
+                configuration.AddRule(LogLevel.Info, LogLevel.Fatal, target);
+                LogManager.ReconfigExistingLoggers();
             }
 
             logger.Info(String.Format("Reading configuration from '{0}'", options.ConfigurationFile));
@@ -343,6 +363,9 @@ namespace XESmartTarget
 
         [Option('L', "LogFile", HelpText = "Log File")]
         public string? LogFile { get; set; }
+
+        [Option('J', "JsonLogFile", HelpText = "Machine-readable JSON Lines log file")]
+        public string? JsonLogFile { get; set; }
 
         [Option('T', "Timeout", HelpText = "Timeout in seconds")]
         public int TimeoutSeconds { get; set; } = -1;
